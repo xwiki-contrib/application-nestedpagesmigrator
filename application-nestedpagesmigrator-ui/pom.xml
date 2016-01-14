@@ -23,34 +23,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.xwiki.commons</groupId>
-    <artifactId>xwiki-commons-pom</artifactId>
-    <version>7.4</version>
+    <groupId>org.xwiki.contrib</groupId>
+    <artifactId>application-nestedpagesmigrator</artifactId>
+    <version>1.0-SNAPSHOT</version>
   </parent>
-  <groupId>org.xwiki.contrib</groupId>
-  <artifactId>application-nestedpagesmigrator</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <description>Nested Pages Migrator - Parent POM</description>
+  <artifactId>application-nestedpagesmigrator-ui</artifactId>
+  <packaging>xar</packaging>
+  <description>Nested Pages Migrator - UI</description>
   <properties>
-    <platform.version>${commons.version}</platform.version>
+    <!-- Name to display by the Extension Manager -->
+    <xwiki.extension.name>Nested Pages Migrator Application</xwiki.extension.name>
   </properties>
-  <developers>
-    <developer>
-      <id>gdelhumeau</id>
-      <name>Guillaume Delhumeau</name>
-    </developer>
-  </developers>
-  <distributionManagement>
-    <repository>
-      <id>xwiki-staging</id>
-      <name>XWiki Staging Repository</name>
-      <url>http://nexus.xwiki.org/nexus/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
-  <modules>
-    <!-- Sorted Alphabetically -->
-    <module>application-nestedpagesmigrator-api</module>
-    <module>application-nestedpagesmigrator-ui</module>
-  </modules>
+  <build>
+    <!-- Needed to add support for the XAR packaging -->
+    <extensions>
+      <extension>
+        <groupId>org.xwiki.commons</groupId>
+        <artifactId>xwiki-commons-tool-xar-handlers</artifactId>
+        <version>${commons.version}</version>
+      </extension>
+    </extensions>
+    <plugins>
+      <!-- The XAR packaging uses the XAR plugin and thus we need to define what version to use -->
+      <plugin>
+        <groupId>org.xwiki.commons</groupId>
+        <artifactId>xwiki-commons-tool-xar-plugin</artifactId>
+        <version>${commons.version}</version>
+      </plugin>
+    </plugins>
+  </build>
 </project>

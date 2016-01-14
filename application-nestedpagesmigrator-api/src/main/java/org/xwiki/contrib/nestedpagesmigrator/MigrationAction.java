@@ -19,6 +19,9 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.xwiki.model.reference.DocumentReference;
 
 /**
@@ -29,11 +32,13 @@ public class MigrationAction
     private DocumentReference sourceDocument;
     
     private DocumentReference targetDocument;
+    
+    private Collection<MigrationAction> children = new ArrayList<>();
 
-    public MigrationAction(DocumentReference sourceDocument, DocumentReference targetDocument) throws MigrationException
+    public MigrationAction(DocumentReference sourceDocument, DocumentReference targetDocument)
     {
-        setSourceDocument(sourceDocument);
-        setTargetDocument(targetDocument);
+        this.sourceDocument = sourceDocument;
+        this.targetDocument = targetDocument;
     }
 
     public DocumentReference getSourceDocument()
@@ -41,27 +46,11 @@ public class MigrationAction
         return sourceDocument;
     }
 
-    public void setSourceDocument(DocumentReference sourceDocument) throws MigrationException
-    {
-        if (sourceDocument == null) {
-            throw new MigrationException("Source document cannot be null.");
-        }
-        this.sourceDocument = sourceDocument;
-    }
-
     public DocumentReference getTargetDocument()
     {
         return targetDocument;
     }
 
-    public void setTargetDocument(DocumentReference targetDocument) throws MigrationException
-    {
-        if (sourceDocument == null) {
-            throw new MigrationException("Target document cannot be null.");
-        }
-        this.targetDocument = targetDocument;
-    }
-    
     public int getLevelOfNesting()
     {
         return targetDocument.getSpaceReferences().size();
@@ -77,5 +66,15 @@ public class MigrationAction
         }
         
         return false;
+    }
+    
+    public void addChild(MigrationAction action)
+    {
+        children.add(action);
+    }
+    
+    public Collection<MigrationAction> getChildren()
+    {
+        return children;
     }
 }

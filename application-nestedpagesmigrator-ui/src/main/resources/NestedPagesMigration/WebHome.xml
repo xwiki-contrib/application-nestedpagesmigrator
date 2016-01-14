@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.2" reference="NestedPagesMigration.WebHome" locale="">
+  <web>NestedPagesMigration</web>
+  <name>WebHome</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <creationDate>1252454400000</creationDate>
+  <parent>Main.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <date>1452784366000</date>
+  <contentUpdateDate>1452783789000</contentUpdateDate>
+  <version>1.1</version>
+  <title>NestedPagesMigration</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>false</hidden>
+  <content>(% class="migration-plan" %)
+(((
+{{box}}
+{{groovy}}
+// TODO: replace this by velocity using a script service
+import org.xwiki.model.reference.*;
+import org.xwiki.contrib.nestedpagesmigrator.*;
+import org.xwiki.contrib.nestedpagesmigrator.internal.*;
+
+def conf = new MigrationConfiguration(new WikiReference("xwiki"));
+conf.addExcludedObjectClass(new DocumentReference('xwiki', 'XWiki', 'XWikiUsers'));
+//conf.addExcludedSpace(new SpaceReference('Proposal', new WikiReference("xwiki")));
+//conf.addExcludedSpace(new SpaceReference('Design', new WikiReference("xwiki")));
+
+def component = (TerminalPagesGetter) services.component.getInstance(TerminalPagesGetter.class);
+def list = component.getTerminalPages(conf);
+println list.size();
+
+component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class)
+def plan = component.computeMigrationPlan(conf);
+
+void displayActions(action, level) {
+  if (level &gt; 0) {
+    for (int i=0; i&lt;level; ++i) {
+      print '*';
+    }
+    def modified = action.getTargetDocument().equals(action.getSourceDocument()) ? ' (unchanged)' : '';
+    println " **${action.getTargetDocument()}**${modified} ... from [[${action.getSourceDocument()}&gt;&gt;${action.getSourceDocument()}]]";
+  }
+  for (def child : action.getChildren()) {
+    displayActions(child, level + 1);
+  }
+}
+
+displayActions(plan.getTopLevelAction(), 0);
+
+{{/groovy}}
+{{/box}}
+)))</content>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>790ee115-e2d5-409e-9ded-43109461f391</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>// We create a mini-tree system because jsTree don't handle complex HTML
+require(['jquery'], function($) {
+  'use strict';
+  $(document).ready(function() {
+    $('.migration-plan ul &gt; li').has('ul').find('&gt; strong').css('cursor', 'pointer');
+
+    $('.migration-plan ul &gt; li &gt; ul').hide().prop('hidden', true);
+
+    $('.migration-plan ul &gt; li &gt; strong').click(function() {
+      var item = $(this).parent();
+      var children = item.find('&gt; ul');
+      if (children.prop('hidden')) {
+        children.show().prop('hidden', false);
+      } else {
+        children.hide().prop('hidden', true);
+      }
+    });
+
+  });
+});</code>
+    </property>
+    <property>
+      <name>Mini Tree</name>
+    </property>
+    <property>
+      <parse/>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+</xwikidoc>

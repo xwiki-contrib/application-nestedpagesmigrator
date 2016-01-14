@@ -59,11 +59,13 @@ public class TerminalPagesGetterTest
         queryManager = mocker.getInstance(QueryManager.class);
         documentReferenceResolver = mocker.getInstance(DocumentReferenceResolver.TYPE_STRING);
         contextProvider = mocker.registerMockComponent(XWikiContext.TYPE_PROVIDER);
+        referenceSerializer = mocker.getInstance(EntityReferenceSerializer.TYPE_STRING);
         context = mock(XWikiContext.class);
         when(contextProvider.get()).thenReturn(context);
         xwiki = mock(XWiki.class);
         when(context.getWiki()).thenReturn(xwiki);
         query = mock(Query.class);
         when(queryManager.createQuery(anyString(), anyString())).thenReturn(query);
+        
     }
 }

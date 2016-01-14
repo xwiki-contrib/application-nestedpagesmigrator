@@ -19,16 +19,26 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.internal;
 
+import java.util.List;
+
 import javax.inject.Inject;
-import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlan;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
-import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.SpaceReference;
+
+import com.xpn.xwiki.XWiki;
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
  * @version $Id: $
@@ -37,15 +47,105 @@ import org.xwiki.model.reference.EntityReferenceSerializer;
 @Singleton
 public class DefaultNestedPagesMigrator implements NestedPagesMigrator
 {
-    
     @Inject
-    @Named("local")
-    private EntityReferenceSerializer<String> referenceSerializer;
+    private TerminalPagesGetter terminalPagesGetter;
+
+    @Inject
+    private Provider<XWikiContext> contextProvider;
+
+    @Inject
+    private Logger logger;
 
     @Override
     public MigrationPlan computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException
     {
-        return new MigrationPlan();
+        List<DocumentReference> terminalDocs = terminalPagesGetter.getTerminalPages(configuration);
+        MigrationPlan plan = new MigrationPlan();
+
+        XWikiContext context = contextProvider.get();
+        XWiki xwiki = context.getWiki();
+
+        if (configuration.isDontMoveChildren()) {
+            for (DocumentReference terminalDoc : terminalDocs) {
+                convertDocumentWithoutMove(terminalDoc, plan);
+            }
+        } else {
+            for (DocumentReference terminalDoc : terminalDocs) {
+                convertDocumentAndParents(terminalDoc, plan, context, xwiki);
+            }
+        }
+
+        return plan;
+    }
+
+    private MigrationAction convertDocumentWithoutMove(DocumentReference terminalDoc, MigrationPlan plan)
+    {
+        SpaceReference parentSpace = new SpaceReference(terminalDoc.getName(), terminalDoc.getLastSpaceReference());
+        DocumentReference targetDoc = new DocumentReference("WebHome", parentSpace);
+        MigrationAction action = new MigrationAction(terminalDoc, targetDoc);
+        plan.addAction(action);
+        return action;
+    }
+
+    /**
+     * @return the migration of the document
+     */
+    private MigrationAction convertDocumentAndParents(DocumentReference documentReference, MigrationPlan plan,
+            XWikiContext context,
+            XWiki xwiki) throws MigrationException
+    {
+        if (documentReference == null) {
+            return plan.getTopLevelAction();
+        }
+
+        MigrationAction existingAction = plan.getActionAbout(documentReference);
+        if (existingAction != null) {
+            return existingAction;
+        }
+
+        // Get the document to know the parent
+        XWikiDocument document;
+        try {
+            document = xwiki.getDocument(documentReference, context);
+        } catch (XWikiException e) {
+            logger.error("Failed to open the document [{}].", documentReference, e);
+            return new MigrationAction(documentReference, documentReference);
+        }
+        
+        if (document.isNew()) {
+            // The document might not exists
+            return plan.getTopLevelAction();
+        }
+
+        MigrationAction parentAction = convertDocumentAndParents(document.getParentReference(), plan, context, xwiki);
+        MigrationAction action;
+
+        if (parentAction.getTargetDocument() != null) {
+            if ("WebHome".equals(documentReference.getName())) {
+                
+                SpaceReference spaceReference = new SpaceReference(documentReference.getLastSpaceReference().getName(),
+                    parentAction.getTargetDocument().getLastSpaceReference());
+                DocumentReference targetDocument = new DocumentReference("WebHome", spaceReference);
+                action = new MigrationAction(documentReference, targetDocument);
+                
+            } else {
+                SpaceReference parentSpace = new SpaceReference(documentReference.getName(),
+                        parentAction.getTargetDocument().getLastSpaceReference());
+                DocumentReference targetDocument = new DocumentReference("WebHome", parentSpace);
+                action = new MigrationAction(documentReference, targetDocument);
+            }
+        } else {
+            if ("WebHome".equals(documentReference.getName())) {
+                action = new MigrationAction(documentReference, documentReference);
+            } else {
+                action = convertDocumentWithoutMove(documentReference, plan);
+            }
+        }
+
+        plan.addAction(action);
+        parentAction.addChild(action);
+
+        return action;
     }
 
 }

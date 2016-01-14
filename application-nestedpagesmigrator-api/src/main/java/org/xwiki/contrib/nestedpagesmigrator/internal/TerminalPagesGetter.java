@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -33,6 +34,8 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.query.Query;
 import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryFilter;
@@ -62,17 +65,13 @@ public class TerminalPagesGetter
     @Inject
     private Provider<XWikiContext> contextProvider;
 
+    @Inject
+    @Named("local")
+    private EntityReferenceSerializer<String> referenceSerializer;
+
+
     public List<DocumentReference> getTerminalPages(MigrationConfiguration configuration) throws MigrationException
     {  
-        /*
-        if (configuration.hasIncludedSpaces()) {
-            List<SpaceReference> includedSpaces = configuration.getIncludedSpaces();
-            List<String> serializedIncludedSpaces = new ArrayList<>(includedSpaces.size());
-            for (SpaceReference spaceReference : includedSpaces) {
-                serializedIncludedSpaces.add(referenceSerializer.serialize(spaceReference));
-            }
-            query.bindValues("includedSpaceList", serializedIncludedSpaces);
-        }*/
         try {
             Query query = getQuery(configuration);
 
@@ -112,23 +111,41 @@ public class TerminalPagesGetter
 
     private Query getQuery(MigrationConfiguration configuration) throws ComponentLookupException, QueryException
     {
-        StringBuilder xwql =
-                new StringBuilder("where doc.name <> 'WebHome'");
+        StringBuilder xwql = new StringBuilder("where doc.name <> 'WebHome'");
 
         if (configuration.hasIncludedSpaces()) {
-            xwql.append(" and doc.space in :includedSpaceList");
+            xwql.append(" and doc.space in (:includedSpaceList)");
         }
         if (configuration.hasExcludedSpaces()) {
-            xwql.append(" and not (doc.space in :excludedSpaceList)");
+            xwql.append(" and doc.space not in (:excludedSpaceList)");
         }
         xwql.append(" order by doc.fullName");
 
         Query query = queryManager.createQuery(xwql.toString(), Query.XWQL);
         query.setWiki(configuration.getWikiReference().getName());
+        query.addFilter(componentManager.<QueryFilter>getInstance(QueryFilter.class, "unique"));
+
         if (configuration.isExcludeHiddenPages()) {
             query.addFilter(componentManager.<QueryFilter>getInstance(QueryFilter.class, "hidden"));
         }
-        query.addFilter(componentManager.<QueryFilter>getInstance(QueryFilter.class, "unique"));
+
+        if (configuration.hasIncludedSpaces()) {
+            List<SpaceReference> includedSpaces = configuration.getIncludedSpaces();
+            List<String> serializedIncludedSpaces = new ArrayList<>(includedSpaces.size());
+            for (SpaceReference spaceReference : includedSpaces) {
+                serializedIncludedSpaces.add(referenceSerializer.serialize(spaceReference));
+            }
+            query.bindValue("includedSpaceList", serializedIncludedSpaces);
+        }
+
+        if (configuration.hasExcludedSpaces()) {
+            List<SpaceReference> excludedSpaces = configuration.getExcludedSpaces();
+            List<String> serializedExcludedSpaces = new ArrayList<>(excludedSpaces.size());
+            for (SpaceReference spaceReference : excludedSpaces) {
+                serializedExcludedSpaces.add(referenceSerializer.serialize(spaceReference));
+            }
+            query.bindValue("excludedSpaceList", serializedExcludedSpaces);
+        }
 
         return query;
     }

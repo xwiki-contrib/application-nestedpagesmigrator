@@ -19,23 +19,47 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.xwiki.model.reference.DocumentReference;
 
 /**
  * @version $Id: $
  */
 public class MigrationPlan
 {
-    private List<MigrationAction> actions = new ArrayList<>();
+    private Map<DocumentReference, MigrationAction> actions = new HashMap<>();
     
-    public List<MigrationAction> getActions()
+    private MigrationAction topLevelAction = new MigrationAction(null, null);
+    
+    public Map<DocumentReference, MigrationAction> getActions()
     {
-        return new ArrayList<>(actions);
+        return actions;
     }
     
     public boolean isEmpty()
     {
         return actions.isEmpty();
+    }
+    
+    public boolean isAlreadyComputed(DocumentReference documentReference)
+    {
+        return actions.containsKey(documentReference);    
+    }
+    
+    public void addAction(MigrationAction action)
+    {
+        actions.put(action.getSourceDocument(), action);
+    }
+    
+    public MigrationAction getActionAbout(DocumentReference documentReference)
+    {
+        return actions.get(documentReference);
+    }
+
+    public MigrationAction getTopLevelAction()
+    {
+        return topLevelAction;
     }
 }

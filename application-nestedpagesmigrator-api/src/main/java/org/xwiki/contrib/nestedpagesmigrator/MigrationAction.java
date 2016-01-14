@@ -20,7 +20,7 @@
 package org.xwiki.contrib.nestedpagesmigrator;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
 
@@ -33,7 +33,7 @@ public class MigrationAction
     
     private DocumentReference targetDocument;
     
-    private Collection<MigrationAction> children = new ArrayList<>();
+    private List<MigrationAction> children = new ArrayList<>();
 
     public MigrationAction(DocumentReference sourceDocument, DocumentReference targetDocument)
     {
@@ -73,7 +73,7 @@ public class MigrationAction
         children.add(action);
     }
     
-    public Collection<MigrationAction> getChildren()
+    public List<MigrationAction> getChildren()
     {
         return children;
     }

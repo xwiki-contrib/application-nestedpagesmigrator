@@ -44,6 +44,8 @@ public class MigrationConfiguration
     private List<SpaceReference> includedSpaces = new ArrayList<>();
 
     private List<DocumentReference> excludedObjectClasses = new ArrayList<>();
+
+    private List<DocumentReference> excludedPages = new ArrayList<>();
     
     private WikiReference wikiReference;
     
@@ -69,6 +71,11 @@ public class MigrationConfiguration
     public boolean hasExcludedObjectClasses()
     {
         return !excludedObjectClasses.isEmpty();
+    }
+
+    public boolean hasExcludedPages()
+    {
+        return !excludedPages.isEmpty();
     }
 
     public boolean isExcludeHiddenPages()
@@ -116,6 +123,11 @@ public class MigrationConfiguration
         return new ArrayList<>(excludedObjectClasses);
     }
 
+    public List<DocumentReference> getExcludedPages()
+    {
+        return excludedPages;
+    }
+
     public void addExcludedSpace(SpaceReference spaceReference)
     {
         excludedSpaces.add(spaceReference);
@@ -129,6 +141,11 @@ public class MigrationConfiguration
     public void addExcludedObjectClass(DocumentReference classReference)
     {
         excludedObjectClasses.add(classReference);
+    }
+
+    public void addExcludedPage(DocumentReference classReference)
+    {
+        excludedPages.add(classReference);
     }
 
     public WikiReference getWikiReference()

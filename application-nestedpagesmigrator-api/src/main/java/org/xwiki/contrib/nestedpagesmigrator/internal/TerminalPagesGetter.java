@@ -119,7 +119,9 @@ public class TerminalPagesGetter
         if (configuration.hasExcludedSpaces()) {
             xwql.append(" and doc.space not in (:excludedSpaceList)");
         }
-        xwql.append(" order by doc.fullName");
+        if (configuration.hasExcludedPages()) {
+            xwql.append(" and doc.fullName not in (:excludedDocList)");   
+        }
 
         Query query = queryManager.createQuery(xwql.toString(), Query.XWQL);
         query.setWiki(configuration.getWikiReference().getName());
@@ -145,6 +147,15 @@ public class TerminalPagesGetter
                 serializedExcludedSpaces.add(referenceSerializer.serialize(spaceReference));
             }
             query.bindValue("excludedSpaceList", serializedExcludedSpaces);
+        }
+
+        if (configuration.hasExcludedPages()) {
+            List<DocumentReference> excludedPages = configuration.getExcludedPages();
+            List<String> serializedExcludedPages = new ArrayList<>(excludedPages.size());
+            for (DocumentReference documentReference : excludedPages) {
+                serializedExcludedPages.add(referenceSerializer.serialize(documentReference));
+            }
+            query.bindValue("excludedDocList", serializedExcludedPages);
         }
 
         return query;

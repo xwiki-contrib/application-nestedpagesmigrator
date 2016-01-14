@@ -71,10 +71,11 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
             }
         } else {
             for (DocumentReference terminalDoc : terminalDocs) {
-                convertDocumentAndParents(terminalDoc, plan, context, xwiki);
+                convertDocumentAndParents(terminalDoc, plan, terminalDocs, context, xwiki);
             }
         }
 
+        plan.sort();
         return plan;
     }
 
@@ -90,7 +91,8 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     /**
      * @return the migration of the document
      */
-    private MigrationAction convertDocumentAndParents(DocumentReference documentReference, MigrationPlan plan,
+    private MigrationAction convertDocumentAndParents(DocumentReference documentReference, MigrationPlan plan, 
+            List<DocumentReference> concernedDocuments,
             XWikiContext context,
             XWiki xwiki) throws MigrationException
     {
@@ -102,6 +104,13 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
         if (existingAction != null) {
             return existingAction;
         }
+        
+        if (!concernedDocuments.contains(documentReference)) {
+            MigrationAction action = new MigrationAction(documentReference, documentReference);
+            plan.getTopLevelAction().addChild(action);
+            plan.addAction(action);
+            return action;
+        }
 
         // Get the document to know the parent
         XWikiDocument document;
@@ -112,12 +121,26 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
             return new MigrationAction(documentReference, documentReference);
         }
         
+        // Not sure here:
+        DocumentReference parentReference = document.getParentReference();
+        if (parentReference == null) {
+            parentReference = new DocumentReference("WebHome", documentReference.getLastSpaceReference());
+            if (parentReference.equals(documentReference)) {
+                parentReference = null;
+            }
+        }
+        
+        /*
         if (document.isNew()) {
             // The document might not exists
-            return plan.getTopLevelAction();
-        }
+            // 2 strategies are possible: 
+            // - just convert them to the top location
+            // - create an empty parent
+            return new MigrationAction(documentReference, documentReference);
+        }*/
 
-        MigrationAction parentAction = convertDocumentAndParents(document.getParentReference(), plan, context, xwiki);
+        MigrationAction parentAction = convertDocumentAndParents(parentReference, plan, concernedDocuments, 
+                context, xwiki);
         MigrationAction action;
 
         if (parentAction.getTargetDocument() != null) {

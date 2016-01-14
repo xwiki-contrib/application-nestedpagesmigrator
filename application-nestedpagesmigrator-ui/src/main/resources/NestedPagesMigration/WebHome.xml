@@ -50,15 +50,19 @@ import org.xwiki.contrib.nestedpagesmigrator.internal.*;
 
 def conf = new MigrationConfiguration(new WikiReference("xwiki"));
 conf.addExcludedObjectClass(new DocumentReference('xwiki', 'XWiki', 'XWikiUsers'));
-//conf.addExcludedSpace(new SpaceReference('Proposal', new WikiReference("xwiki")));
-//conf.addExcludedSpace(new SpaceReference('Design', new WikiReference("xwiki")));
+conf.addExcludedSpace(new SpaceReference('XWiki', new WikiReference("xwiki")));
+conf.addExcludedPage(new DocumentReference('xwiki', 'Improvements', 'WebHome'));
 
-def component = (TerminalPagesGetter) services.component.getInstance(TerminalPagesGetter.class);
-def list = component.getTerminalPages(conf);
-println list.size();
-
-component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class)
+def component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class)
 def plan = component.computeMigrationPlan(conf);
+
+int getNumberOfChildren(action) {
+  int numberOfChildren = action.getChildren().size();
+  for (def child : action.getChildren()) {
+    numberOfChildren += getNumberOfChildren(child);
+  }
+  return numberOfChildren;
+}
 
 void displayActions(action, level) {
   if (level &gt; 0) {
@@ -66,7 +70,8 @@ void displayActions(action, level) {
       print '*';
     }
     def modified = action.getTargetDocument().equals(action.getSourceDocument()) ? ' (unchanged)' : '';
-    println " **${action.getTargetDocument()}**${modified} ... from [[${action.getSourceDocument()}&gt;&gt;${action.getSourceDocument()}]]";
+    def numberOfChildren = getNumberOfChildren(action);
+    println " **${action.getTargetDocument()}**${modified} (${numberOfChildren} children) ... from [[${action.getSourceDocument()}&gt;&gt;${action.getSourceDocument()}]]";
   }
   for (def child : action.getChildren()) {
     displayActions(child, level + 1);

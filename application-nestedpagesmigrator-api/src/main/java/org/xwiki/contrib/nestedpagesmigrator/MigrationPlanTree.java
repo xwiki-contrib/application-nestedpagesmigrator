@@ -79,4 +79,9 @@ public class MigrationPlanTree
         }
         
     }
+    
+    public int size()
+    {
+        return actions.size();
+    }
 }

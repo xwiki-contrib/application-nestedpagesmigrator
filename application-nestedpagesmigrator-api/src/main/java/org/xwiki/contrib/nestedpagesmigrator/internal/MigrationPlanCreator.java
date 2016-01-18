@@ -81,6 +81,13 @@ public class MigrationPlanCreator
                 convertDocumentAndParents(terminalDoc, plan, terminalDocs, context);
             }
         }
+        
+        // Ensure there is an action for each document
+        if (plan.size() <= terminalDocs.size()) {
+            throw new MigrationException(
+                    String.format("Plan is incomplete. It contains %d actions meanwhile %d documents were identified.",
+                            plan.size(), terminalDocs.size()));
+        }
 
         // A sorted migration plan tree is more user-friendly.
         plan.sort();
@@ -124,8 +131,9 @@ public class MigrationPlanCreator
         }
 
         // Since the user might have configured some exclusions, we verify that this document is contained in the list
-        // of documents to convert.
-        if (!concernedDocuments.contains(documentReference)) {
+        // of documents to convert. Note: the document might not exist. In that case, it is good to compute a plan
+        // for it (even not applied) to compute a good path for its children.
+        if (!concernedDocuments.contains(documentReference) && context.getWiki().exists(documentReference, context)) {
             // Otherwise, we create an "identity" action: it does nothing but it will added to the plan so that action
             // won't be recomputed afterwards.
             // Note that this action is added as child of the top-level action, because we want to have it in the plan 
@@ -183,8 +191,10 @@ public class MigrationPlanCreator
                 if (parentSpaces.size() > 1) {
                     parentReference = new DocumentReference(SPACE_HOME_PAGE, parentSpaces.get(parentSpaces.size() - 2));
                 }
+                // Otherwise, we let the document orphan
             } else {
-                parentReference = new DocumentReference(SPACE_HOME_PAGE, parentReference.getLastSpaceReference());
+                // We decide to set the space home page as parent of this document
+                parentReference = new DocumentReference(SPACE_HOME_PAGE, documentReference.getLastSpaceReference());
             }
         }
 

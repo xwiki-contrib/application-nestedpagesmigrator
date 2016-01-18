@@ -43,7 +43,7 @@
 (((
 {{box}}
 {{groovy}}
-// TODO: replace this by velocity using a script service
+// TODO: replace this by velocity using a script service (or maybe not)
 import org.xwiki.model.reference.*;
 import org.xwiki.contrib.nestedpagesmigrator.*;
 import org.xwiki.contrib.nestedpagesmigrator.internal.*;
@@ -53,7 +53,7 @@ conf.addExcludedObjectClass(new DocumentReference('xwiki', 'XWiki', 'XWikiUsers'
 conf.addExcludedSpace(new SpaceReference('XWiki', new WikiReference("xwiki")));
 conf.addExcludedPage(new DocumentReference('xwiki', 'Improvements', 'WebHome'));
 
-def component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class)
+def component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class);
 def plan = component.computeMigrationPlan(conf);
 
 int getNumberOfChildren(action) {
@@ -69,9 +69,13 @@ void displayActions(action, level) {
     for (int i=0; i&lt;level; ++i) {
       print '*';
     }
-    def modified = action.getTargetDocument().equals(action.getSourceDocument()) ? ' (unchanged)' : '';
+    def modified = action.getTargetDocument().equals(action.getSourceDocument()) ? ' //(unchanged)//' : '';
     def numberOfChildren = getNumberOfChildren(action);
-    println " **${action.getTargetDocument()}**${modified} (${numberOfChildren} children) ... from [[${action.getSourceDocument()}&gt;&gt;${action.getSourceDocument()}]]";
+    def targetDocument = action.getTargetDocument();
+    def nameToPrint = targetDocument.getName() == 'WebHome' ? targetDocument.getLastSpaceReference().getName() : targetDocument.getName();
+    def serializedSourceDocument = services.model.serialize(action.getSourceDocument(), 'local');
+    def serializedTargetDocument = services.model.serialize(targetDocument, 'local');
+    println " **${nameToPrint}** [##${serializedTargetDocument}##] ${modified} (${numberOfChildren} children) ... from [[${serializedSourceDocument}&gt;&gt;${serializedSourceDocument}]]";
   }
   for (def child : action.getChildren()) {
     displayActions(child, level + 1);

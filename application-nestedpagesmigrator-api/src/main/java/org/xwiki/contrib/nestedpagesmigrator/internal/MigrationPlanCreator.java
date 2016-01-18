@@ -83,7 +83,7 @@ public class MigrationPlanCreator
         }
         
         // Ensure there is an action for each document
-        if (plan.size() <= terminalDocs.size()) {
+        if (plan.size() < terminalDocs.size()) {
             throw new MigrationException(
                     String.format("Plan is incomplete. It contains %d actions meanwhile %d documents were identified.",
                             plan.size(), terminalDocs.size()));

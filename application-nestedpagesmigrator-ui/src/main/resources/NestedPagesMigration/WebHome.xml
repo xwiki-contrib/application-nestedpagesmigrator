@@ -39,54 +39,99 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
-  <content>(% class="migration-plan" %)
-(((
-{{box}}
-{{groovy}}
-// TODO: replace this by velocity using a script service (or maybe not)
-import org.xwiki.model.reference.*;
-import org.xwiki.contrib.nestedpagesmigrator.*;
-import org.xwiki.contrib.nestedpagesmigrator.internal.*;
+  <content>{{html clean="false"}}
+&lt;!------------------------------------------
+  Migration Action Template 
+  -------------------------------------------&gt;
+&lt;script id="MigrationActionTemplate" type="text/html"&gt;
+  &lt;li&gt;
+    &lt;strong data-bind="text: getTargetName()" /&gt; [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;] &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt; &lt;span data-bind="text: getNumberOfChildren()" /&gt; children) from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
+    &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
+  &lt;/li&gt;
+&lt;/script&gt;
+&lt;!------------------------------------------
+  Display plan
+  -------------------------------------------&gt;
+&lt;script id="DisplayPlan" type="text/html"&gt;
+  &lt;h2&gt;Plan&lt;/h2&gt;
+  &lt;div class="migration-plan box"&gt;
+    &lt;div data-bind="if: isComputing()" class="loading"&gt;
+      &lt;p&gt;The plan is being computed and it could take some time. Please wait...&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()"&gt;
+      &lt;!-- ko template: {name: 'MigrationActionTemplate', foreach: actions } --&gt;
+      &lt;!-- /ko --&gt;
+    &lt;/ul&gt;
+    &lt;!-- ko if: !isComputing() &amp;&amp; isPlanEmpty() --&gt;
+    &lt;div class="box infomessage"&gt;
+      &lt;p&gt;There is nothing to do!&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;!-- /ko --&gt;
+  &lt;/div&gt;
+&lt;/Script&gt;
+&lt;!------------------------------------------
+  Display configuration
+  -------------------------------------------&gt;
+&lt;h2&gt;Configuration&lt;/h2&gt;
+&lt;form class="xform row"&gt;
+  &lt;div class="col-xs-12 col-md-6"&gt;
+    &lt;dl&gt;
+      &lt;!-- Exclude hidden pages --&gt;
+      &lt;dt&gt;&lt;input type="checkbox" id="excludeHiddenPages" data-bind="checked: configuration.excludeHiddenPages"&gt; &lt;label for="excludeHiddenPages"&gt;Exclude hidden pages&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Most of the hidden pages are techinal content. Moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
+      &lt;!-- Exclude class pages --&gt;
+      &lt;dt&gt;&lt;input type="checkbox" id="excludeClassPages" data-bind="checked: configuration.excludeClassPages"&gt; &lt;label for="excludeClassPages"&gt;Exclude pages having a class&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;The pages are technical and moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
+      &lt;!-- Don't move children --&gt;
+      &lt;dt&gt;&lt;input type="checkbox" id="dontMoveChildren" data-bind="checked: configuration.dontMoveChildren"&gt; &lt;label for="dontMoveChildren"&gt;Do not move children&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Only convert terminal pages to nested pages, without moving them under their parent.&lt;/span&gt;&lt;/dd&gt;
+      &lt;!-- Add redirection --&gt;
+      &lt;dt&gt;&lt;input type="checkbox" id="addRedirection" data-bind="checked: configuration.addRedirection"&gt; &lt;label for="addRedirection"&gt;Add redirection&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Add a redirection in the old location.&lt;/span&gt;&lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/div&gt;
+  &lt;div class="col-xs-12 col-md-6"&gt;
+    &lt;dl&gt;
+      &lt;!-- Excluded Object Classes --&gt;
+      &lt;dt&gt;&lt;label for="excludedObjectClasses"&gt;Exclude classes&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;p class="xHint"&gt;Exclude pages holding an object of one of the specified classes (separated by a coma ',').&lt;/p&gt;
+        &lt;p&gt;&lt;input type="text" id="excludedObjectClasses" data-bind="value: configuration.excludedObjectClasses"&gt; &lt;/p&gt;
+      &lt;/dd&gt;
+      &lt;!-- Excluded pages --&gt;
+      &lt;dt&gt;&lt;label for="excludedPages"&gt;Excluded pages&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;p class="xHint"&gt;Pages reference separated by commas (',')&lt;/p&gt;
+        &lt;p&gt;&lt;input type="text" id="excludedPages" data-bind="value: configuration.excludedPages"&gt;&lt;/p&gt;
+      &lt;/dd&gt;
+      &lt;!-- Excluded spaces --&gt;
+      &lt;dt&gt;&lt;label for="excludedSpaces"&gt;Excluded spaces&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;p class="xHint"&gt;Spaces reference separated by commas (',')&lt;/p&gt;
+        &lt;p&gt;&lt;input type="text" id="excludedSpaces" data-bind="value: configuration.excludedSpaces"&gt; &lt;/p&gt;
+      &lt;/dd&gt;
+      &lt;!-- Included spaces --&gt;
+      &lt;dt&gt;&lt;label for="includedSpaces"&gt;Included spaces&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;p class="xHint"&gt;Spaces reference separated by commas (',')&lt;/p&gt;
+        &lt;p&gt;&lt;input type="text" id="includedSpaces" data-bind="value: configuration.includedSpaces"&gt; &lt;/p&gt;
+      &lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/div&gt;
+  &lt;div class="clearfix"&gt;
+    &lt;button class="btn btn-primary" data-bind="click: computePlan"&gt;Compute plan&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+&lt;!------------------------------------------
+  Display plan
+  -------------------------------------------&gt;
+&lt;div data-bind="if: isPlanRequested()"&gt;
+  &lt;!-- ko template: {name: 'DisplayPlan', data: $root} --&gt;
+  &lt;!-- /ko --&gt;
+&lt;/div&gt;
+{{/html}}
 
-def conf = new MigrationConfiguration(new WikiReference("xwiki"));
-conf.addExcludedObjectClass(new DocumentReference('xwiki', 'XWiki', 'XWikiUsers'));
-conf.addExcludedSpace(new SpaceReference('XWiki', new WikiReference("xwiki")));
-conf.addExcludedPage(new DocumentReference('xwiki', 'Improvements', 'WebHome'));
-
-def component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class);
-def plan = component.computeMigrationPlan(conf);
-
-int getNumberOfChildren(action) {
-  int numberOfChildren = action.getChildren().size();
-  for (def child : action.getChildren()) {
-    numberOfChildren += getNumberOfChildren(child);
-  }
-  return numberOfChildren;
-}
-
-void displayActions(action, level) {
-  if (level &gt; 0) {
-    for (int i=0; i&lt;level; ++i) {
-      print '*';
-    }
-    def modified = action.getTargetDocument().equals(action.getSourceDocument()) ? ' //(unchanged)//' : '';
-    def numberOfChildren = getNumberOfChildren(action);
-    def targetDocument = action.getTargetDocument();
-    def nameToPrint = targetDocument.getName() == 'WebHome' ? targetDocument.getLastSpaceReference().getName() : targetDocument.getName();
-    def serializedSourceDocument = services.model.serialize(action.getSourceDocument(), 'local');
-    def serializedTargetDocument = services.model.serialize(targetDocument, 'local');
-    println " **${nameToPrint}** [##${serializedTargetDocument}##] ${modified} (${numberOfChildren} children) ... from [[${serializedSourceDocument}&gt;&gt;${serializedSourceDocument}]]";
-  }
-  for (def child : action.getChildren()) {
-    displayActions(child, level + 1);
-  }
-}
-
-displayActions(plan.getTopLevelAction(), 0);
-
-{{/groovy}}
-{{/box}}
-)))</content>
+</content>
   <object>
     <name>NestedPagesMigration.WebHome</name>
     <number>0</number>
@@ -170,7 +215,11 @@ displayActions(plan.getTopLevelAction(), 0);
       <code>// We create a mini-tree system because jsTree don't handle complex HTML
 require(['jquery'], function($) {
   'use strict';
-  $(document).ready(function() {
+  
+  /**
+   * Mini Tree behaviour
+   */
+  var initTree = function() {
     $('.migration-plan ul &gt; li').has('ul').find('&gt; strong').css('cursor', 'pointer');
 
     $('.migration-plan ul &gt; li &gt; ul').hide().prop('hidden', true);
@@ -184,15 +233,319 @@ require(['jquery'], function($) {
         children.hide().prop('hidden', true);
       }
     });
+  };
+  
 
-  });
-});</code>
+  /**
+   * Events
+   */
+  $(document).ready(initTree);
+  $(document).on('xwiki:dom:updated', initTree);
+});
+</code>
     </property>
     <property>
       <name>Mini Tree</name>
     </property>
     <property>
       <parse/>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>1</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>565cd161-a494-4916-bcd8-4e6252f6862f</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require.config({
+  paths: {
+    'knockout': "$services.webjars.url('knockout', 'knockout.js')"
+  }
+});</code>
+    </property>
+    <property>
+      <name>Live view configuration</name>
+    </property>
+    <property>
+      <parse>1</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>2</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>dbfa6b73-0016-47ab-8bcf-7e3a67863b54</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery', 'xwiki-meta', 'knockout'], function ($, xm, ko) {
+
+  function localSerializer(document) {
+    var documentReference = XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
+    return XWiki.Model.serialize(documentReference);
+  }
+  
+  function resolveLocally(document) {
+    return XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
+  }
+  
+  /**
+   * Class representing a migration action
+   */
+   
+  function MigrationAction(source, target) {
+    var self = this;
+    
+    self.sourceDocument = resolveLocally(source);
+    self.targetDocument = resolveLocally(target);
+    self.children = [];
+    
+    self.serializedSourceDocument = function() {
+      return XWiki.Model.serialize(self.sourceDocument);
+    };
+    
+    self.serializedTargetDocument = function () {
+      return XWiki.Model.serialize(self.targetDocument);
+    };
+    
+    self.getNumberOfChildren = function () {
+      var number = self.children.length;
+      for (var i = 0; i &lt; self.children.length; ++i) {
+        number += self.children[i].getNumberOfChildren();
+      }
+      return number;
+    };
+    
+    self.getTargetName = function () {
+      return self.targetDocument.getName() == 'WebHome' ? self.targetDocument.parent.getName() : self.targetDocument.getName();
+    }
+    
+    self.getSourceLink = function() {
+      return new XWiki.Document(self.sourceDocument).getURL();
+    }
+    
+  }
+  
+  function AppConfiguration() {
+    this.excludeHiddenPages    = ko.observable(true);
+    this.excludeClassPages     = ko.observable(true);
+    this.dontMoveChildren      = ko.observable(false);
+    this.addRedirection        = ko.observable(true);
+    this.excludedPages         = ko.observable();
+    this.excludedSpaces        = ko.observable('XWiki');
+    this.includedSpaces        = ko.observable();
+    this.excludedObjectClasses = ko.observable('XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass');
+  }
+  
+  function AppViewModel() {
+    var self = this;
+    
+    // Fields
+    self.actions         = ko.observableArray();
+    self.configuration   = new AppConfiguration();
+    self.isPlanRequested = ko.observable(false);
+    self.isComputing     = ko.observable(false);
+    
+    self.isPlanEmpty = ko.computed(function () {
+      return self.actions().length == 0;
+    }).extend({ notify: 'always' });
+    
+    self.computePlan = function() {
+      self.isPlanRequested(true);
+      self.isComputing(true);
+      self.actions.removeAll();
+      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+          'excludeHiddenPages'   : self.configuration.excludeHiddenPages(),
+          'excludeClassPages'    : self.configuration.excludeClassPages(),
+          'dontMoveChildren'     : self.configuration.dontMoveChildren(),
+          'addRedirection'       : self.configuration.addRedirection(),
+          'excludedPages'        : self.configuration.excludedPages(),
+          'excludedSpaces'       : self.configuration.excludedSpaces(),
+          'includedSpaces'       : self.configuration.includedSpaces(),
+          'excludedObjectClasses': self.configuration.excludedObjectClasses()
+        }).done(function (data) {
+        var parseAction = function (data) {
+          var action = new MigrationAction(data.sourceDocument, data.targetDocument);
+          for (var i = 0; i &lt; data.children.length; ++i) {
+            action.children[action.children.length] = parseAction(data.children[i]);
+          }
+          return action;
+        };
+        
+        for (var i = 0; i &lt; data.length; ++i) {
+          self.actions.push(parseAction(data[i]));
+        }
+        
+        // Plan is loaded
+        $(document).trigger('xwiki:dom:updated', {'elements': $('.migration-plan').toArray()});
+        self.isComputing(false);
+      });
+    };
+    
+  };
+
+  // Activates knockout.js
+  ko.applyBindings(new AppViewModel());
+});
+</code>
+    </property>
+    <property>
+      <name>Live view</name>
+    </property>
+    <property>
+      <parse>0</parse>
     </property>
     <property>
       <use>currentPage</use>

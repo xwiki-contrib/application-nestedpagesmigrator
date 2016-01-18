@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.2" reference="NestedPagesMigration.Service" locale="">
+  <web>NestedPagesMigration</web>
+  <name>Service</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <creationDate>1453133159000</creationDate>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <date>1453143924000</date>
+  <contentUpdateDate>1453143924000</contentUpdateDate>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{groovy}}
+// -------------------------------------------
+// Import
+// -------------------------------------------
+import org.xwiki.model.reference.*;
+import org.xwiki.contrib.nestedpagesmigrator.*;
+import org.xwiki.contrib.nestedpagesmigrator.internal.*;
+import com.google.gson.*;
+import com.google.gson.stream.*;
+import java.lang.reflect.Type;
+import org.apache.commons.lang.StringUtils;
+
+// -------------------------------------------
+// Configuration
+// -------------------------------------------
+def conf = new MigrationConfiguration(new WikiReference(services.wiki.getCurrentWikiId()));
+conf.setExcludeHiddenPages(request.getParameter('excludeHiddenPages') == 'true');
+conf.setExcludeClassPages(request.getParameter('excludeClassPages') == 'true');
+conf.setDontMoveChildren(request.getParameter('dontMoveChildren') == 'true');
+conf.setAddAutoRedirect(request.getParameter('addRedirection') == 'true');
+
+def getDocumentReferencesFromString(value) {
+  def references = [];
+  if (StringUtils.isNotBlank(value)) {
+    def values = value.split(',');
+    for (int i = 0; i &lt; values.length; ++i) {
+      if (StringUtils.isNotBlank(values[i])) {
+        references.add(services.model.resolveDocument(values[i]));
+      }
+    }
+  }
+  return references;
+}
+def getSpaceReferencesFromString(value) {
+  def references = [];
+  if (StringUtils.isNotBlank(value)) {
+    def values = value.split(',');
+    for (int i = 0; i &lt; values.length; ++i) {
+      if (StringUtils.isNotBlank(values[i])) {
+        references.add(services.model.resolveSpace(values[i]));
+      }
+    }
+  }
+  return references;
+}
+// Excluded object classes
+def excludedObjectClasses = getDocumentReferencesFromString(request.getParameter('excludedObjectClasses'));
+for (def ref : excludedObjectClasses) {
+  conf.addExcludedObjectClass(ref);
+}
+// Excluded pages
+def excludedPages = getDocumentReferencesFromString(request.getParameter('excludedPages'));
+for (def ref : excludedPages) {
+  conf.addExcludedPage(ref);
+}
+// Excluded spaces
+def excludedSpaces = getSpaceReferencesFromString(request.getParameter('excludedSpaces'));
+for (def ref : excludedSpaces) {
+  conf.addExcludedSpace(ref);
+}
+// Included spaces
+def includedSpaces = getSpaceReferencesFromString(request.getParameter('includedSpaces'));
+for (def ref : includedSpaces) {
+  conf.addIncludedSpace(ref);
+}
+
+// -------------------------------------------
+// Work
+// -------------------------------------------
+def component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class);
+
+// -------------------------------------------
+// Serialization
+// -------------------------------------------
+class DocumentReferenceSerializer implements JsonSerializer&lt;DocumentReference&gt; {
+  @Override
+  public JsonElement serialize(DocumentReference src, Type typeOfSrc, JsonSerializationContext context) {
+    return new JsonPrimitive(src.toString());
+  }
+}
+String serialize(plan) {
+  Gson gson = new GsonBuilder().registerTypeAdapter(DocumentReference.class, new DocumentReferenceSerializer()).create();
+  return gson.toJson(plan.getTopLevelAction().getChildren());
+}
+
+// -------------------------------------------
+// Printing
+// -------------------------------------------
+if (xcontext.getAction() == 'get') {
+  response.setContentType('application/json');
+  plan = component.computeMigrationPlan(conf);
+  println serialize(plan);
+}
+
+{{/groovy}}
+</content>
+</xwikidoc>

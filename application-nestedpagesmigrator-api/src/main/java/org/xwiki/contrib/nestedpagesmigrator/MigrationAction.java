@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +30,7 @@ import org.xwiki.model.reference.DocumentReference;
  *  
  * @version $Id: $
  */
-public class MigrationAction
+public class MigrationAction implements Serializable
 {
     private DocumentReference sourceDocument;
     

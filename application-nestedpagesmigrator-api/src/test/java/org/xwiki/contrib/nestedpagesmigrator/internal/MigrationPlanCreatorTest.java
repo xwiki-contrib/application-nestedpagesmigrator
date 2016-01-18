@@ -24,7 +24,7 @@ import java.util.Iterator;
 import org.junit.Rule;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationPlan;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
@@ -33,16 +33,16 @@ import static org.junit.Assert.assertNotEquals;
 /**
  * @version $Id: $
  */
-public class DefaultNestedPagesMigratorTest
+public class MigrationPlanCreatorTest
 {
     @Rule
-    public MockitoComponentMockingRule<DefaultNestedPagesMigrator> mocker =
-            new MockitoComponentMockingRule<>(DefaultNestedPagesMigrator.class);
+    public MockitoComponentMockingRule<MigrationPlanCreator> mocker =
+            new MockitoComponentMockingRule<>(MigrationPlanCreator.class);
 
     //@Test
     public void verifyTerminalPagesAreConverted() throws Exception
     {
-        MigrationPlan plan = mocker.getComponentUnderTest().computeMigrationPlan(
+        MigrationPlanTree plan = mocker.getComponentUnderTest().computeMigrationPlan(
                 new MigrationConfiguration(new WikiReference("wiki")));
 
     }
@@ -50,12 +50,12 @@ public class DefaultNestedPagesMigratorTest
     //@Test
     public void verifyMigrationActionsSorted() throws Exception
     {
-        MigrationPlan plan = mocker.getComponentUnderTest().computeMigrationPlan(
+        MigrationPlanTree plan = mocker.getComponentUnderTest().computeMigrationPlan(
                 new MigrationConfiguration(new WikiReference("wiki")));
         verifyMigrationActionsAreSorted(plan);
     }
     
-    private void verifyMigrationActionsAreSorted(MigrationPlan plan) throws Exception
+    private void verifyMigrationActionsAreSorted(MigrationPlanTree plan) throws Exception
     {
         if (plan.isEmpty()) {
             return;
@@ -71,7 +71,7 @@ public class DefaultNestedPagesMigratorTest
         }
     }
     
-    private void verifyMigrationsActionsAreUnique(MigrationPlan plan) throws Exception
+    private void verifyMigrationsActionsAreUnique(MigrationPlanTree plan) throws Exception
     {
         MigrationAction[] actions = (MigrationAction[]) plan.getActions().values().toArray();
         for (int i = 1; i < actions.length; ++i) {

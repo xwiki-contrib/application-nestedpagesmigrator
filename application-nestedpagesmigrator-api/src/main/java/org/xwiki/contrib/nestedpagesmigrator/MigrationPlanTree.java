@@ -29,7 +29,7 @@ import org.xwiki.model.reference.DocumentReference;
 /**
  * @version $Id: $
  */
-public class MigrationPlan
+public class MigrationPlanTree
 {
     private Map<DocumentReference, MigrationAction> actions = new HashMap<>();
     

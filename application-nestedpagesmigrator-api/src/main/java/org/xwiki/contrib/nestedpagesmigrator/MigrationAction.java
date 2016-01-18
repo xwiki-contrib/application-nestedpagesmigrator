@@ -25,6 +25,8 @@ import java.util.List;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
+ * An atomic operation of a {@link MigrationPlanTree}.
+ *  
  * @version $Id: $
  */
 public class MigrationAction
@@ -35,6 +37,47 @@ public class MigrationAction
     
     private List<MigrationAction> children = new ArrayList<>();
 
+    /**
+     * Helper to create an instance and record it in its plan.
+     *
+     * @param sourceDocument the source document
+     * @param targetDocument the target location
+     * @param plan the plan
+     *
+     * @return the created instance
+     */
+    public static MigrationAction createInstance(DocumentReference sourceDocument, DocumentReference targetDocument,
+            MigrationPlanTree plan)
+    {
+        MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
+        plan.addAction(action);
+        return action;
+    }
+
+    /**
+     * Helper to create an instance and record it in its parent and its plan.
+     *
+     * @param sourceDocument the source document
+     * @param targetDocument the target location
+     * @param parentAction the parent action
+     * @param plan the plan
+     *
+     * @return the created instance
+     */
+    public static MigrationAction createInstance(DocumentReference sourceDocument, DocumentReference targetDocument,
+            MigrationAction parentAction, MigrationPlanTree plan)
+    {
+        MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
+        parentAction.addChild(action);
+        plan.addAction(action);
+        return action;
+    }
+
+    /**
+     * Construct a new MigrationAction.
+     * @param sourceDocument the source document
+     * @param targetDocument the target location
+     */
     public MigrationAction(DocumentReference sourceDocument, DocumentReference targetDocument)
     {
         this.sourceDocument = sourceDocument;

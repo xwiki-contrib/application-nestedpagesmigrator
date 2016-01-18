@@ -27,5 +27,5 @@ import org.xwiki.component.annotation.Role;
 @Role
 public interface NestedPagesMigrator
 {
-    MigrationPlan computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException;
+    MigrationPlanTree computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException;
 }

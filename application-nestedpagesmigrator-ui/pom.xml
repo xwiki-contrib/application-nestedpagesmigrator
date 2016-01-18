@@ -34,6 +34,14 @@
     <!-- Name to display by the Extension Manager -->
     <xwiki.extension.name>Nested Pages Migrator Application</xwiki.extension.name>
   </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>application-nestedpagesmigrator-api</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
   <build>
     <!-- Needed to add support for the XAR packaging -->
     <extensions>

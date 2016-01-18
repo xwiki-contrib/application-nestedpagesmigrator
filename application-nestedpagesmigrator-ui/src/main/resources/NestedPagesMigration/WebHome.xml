@@ -529,8 +529,8 @@ require(['jquery'], function($) {
         }
         
         // Plan is loaded
-        $(document).trigger('xwiki:dom:updated', {'elements': $('.migration-plan').toArray()});
         self.isComputing(false);
+        $(document).trigger('xwiki:dom:updated', {'elements': $('.migration-plan').toArray()});
       });
     };
     

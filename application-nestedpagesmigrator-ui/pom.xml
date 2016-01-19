@@ -29,7 +29,8 @@
   </parent>
   <artifactId>application-nestedpagesmigrator-ui</artifactId>
   <packaging>xar</packaging>
-  <description>Nested Pages Migrator - UI</description>
+  <name>Nested Pages Migrator - UI</name>
+  <description>Helper to convert terminal pages into Nested Pages.</description>
   <properties>
     <!-- Name to display by the Extension Manager -->
     <xwiki.extension.name>Nested Pages Migrator Application</xwiki.extension.name>

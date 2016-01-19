@@ -74,7 +74,9 @@ public class MigrationPlanCreator
 
         if (configuration.isDontMoveChildren()) {
             for (DocumentReference terminalDoc : terminalDocs) {
-                convertDocumentWithoutMove(terminalDoc, plan);
+                MigrationAction action = convertDocumentWithoutMove(terminalDoc, plan);
+                MigrationAction parentAction = convertParentWithoutMove(terminalDoc, plan);
+                parentAction.addChild(action);
             }
         } else {
             for (DocumentReference terminalDoc : terminalDocs) {
@@ -92,6 +94,18 @@ public class MigrationPlanCreator
         // A sorted migration plan tree is more user-friendly.
         plan.sort();
         return plan;
+    }
+    
+    private MigrationAction convertParentWithoutMove(DocumentReference originalDocument, MigrationPlanTree plan)
+    {
+        DocumentReference spaceHomeReference = new DocumentReference(SPACE_HOME_PAGE,
+                originalDocument.getLastSpaceReference());
+        
+        MigrationAction parentAction = plan.getActionAbout(spaceHomeReference);
+        if (parentAction == null) {
+            parentAction = IdentityMigrationAction.createInstance(spaceHomeReference, plan.getTopLevelAction(), plan);
+        }
+        return parentAction;
     }
 
     /**

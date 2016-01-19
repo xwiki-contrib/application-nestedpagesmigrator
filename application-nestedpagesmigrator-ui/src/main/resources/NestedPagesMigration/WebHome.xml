@@ -46,7 +46,9 @@
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;li&gt;
-    &lt;strong data-bind="text: getTargetName()" /&gt; [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;] &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt; &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt; (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children) from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
+    &lt;strong data-bind="text: getTargetName()" /&gt; [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;] &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt; &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt; 
+    (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
+    from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
     &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
   &lt;/li&gt;
 &lt;/script&gt;
@@ -128,7 +130,7 @@
     &lt;/dl&gt;
   &lt;/div&gt;
   &lt;div class="clearfix"&gt;
-    &lt;button class="btn btn-primary" data-bind="click: computePlan"&gt;Compute plan&lt;/button&gt;
+    &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing"&gt;Compute plan&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
 &lt;!------------------------------------------
@@ -646,7 +648,7 @@ require(['jquery'], function($) {
           }
           return action;
         };
-        
+
         for (var i = 0; i &lt; data.length; ++i) {
           self.actions.push(parseAction(data[i]));
         }
@@ -661,8 +663,15 @@ require(['jquery'], function($) {
     self.excludePage = function() {
       if (confirm('Are you sure to exclude this page from the migration?')) {
         self.configuration.excludedPages(appendToString(self.configuration.excludedPages(), this.serializedSourceDocument()));
-        // Adding an exclusion can seriously change the plan, so we re-compute it
-        self.computePlan();
+        // Adding an exclusion can seriously change the plan (if children are moved), so we re-compute it
+        if (!self.configuration.dontMoveChildren()) {
+          self.computePlan();
+        } else {
+          var sourceDoc = this.sourceDocument;
+          self.actions.remove(function (action) {
+            return action.sourceDocument.equals(sourceDoc);
+          });
+        }
       }
     }
     

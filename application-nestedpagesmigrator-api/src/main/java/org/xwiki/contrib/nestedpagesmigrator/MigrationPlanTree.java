@@ -20,7 +20,6 @@
 package org.xwiki.contrib.nestedpagesmigrator;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,16 +67,9 @@ public class MigrationPlanTree
     public void sort()
     {
         for (MigrationAction action : actions.values()) {
-            Collections.sort(action.getChildren(), new Comparator<MigrationAction>()
-            {
-                @Override
-                public int compare(MigrationAction a1, MigrationAction a2)
-                {
-                    return a1.getTargetDocument().toString().compareTo(a2.getTargetDocument().toString());
-                }
-            });
+            Collections.sort(action.getChildren());
         }
-        
+        Collections.sort(topLevelAction.getChildren());
     }
     
     public int size()

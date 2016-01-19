@@ -30,7 +30,7 @@ import org.xwiki.model.reference.DocumentReference;
  *  
  * @version $Id: $
  */
-public class MigrationAction implements Serializable
+public class MigrationAction implements Serializable, Comparable
 {
     private DocumentReference sourceDocument;
     
@@ -120,5 +120,17 @@ public class MigrationAction implements Serializable
     public List<MigrationAction> getChildren()
     {
         return children;
+    }
+
+    @Override
+    public int compareTo(Object o)
+    {
+        if (o instanceof MigrationAction) {
+            MigrationAction otherAction = (MigrationAction) o;
+            return this.getTargetDocument().getLastSpaceReference().getName().compareTo(
+                    otherAction.getTargetDocument().getLastSpaceReference().getName());
+        }
+        
+        return 0;
     }
 }

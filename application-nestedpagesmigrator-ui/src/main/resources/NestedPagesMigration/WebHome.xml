@@ -45,7 +45,7 @@
   Migration Action Template 
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
-  &lt;li&gt;
+  &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0"&gt;
     &lt;strong data-bind="text: getTargetName()" /&gt; [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;] &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt; &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt; 
     (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
     from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
@@ -463,12 +463,13 @@ require(['jquery'], function($) {
    * Class representing a migration action
    */
    
-  function MigrationAction(source, target) {
+  function MigrationAction(source, target, parent) {
     var self = this;
     
+    self.parent = parent;
     self.sourceDocument = resolveLocally(source);
     self.targetDocument = resolveLocally(target);
-    self.children = [];
+    self.children = ko.observableArray();
     
     self.serializedSourceDocument = function() {
       return XWiki.Model.serialize(self.sourceDocument);
@@ -479,9 +480,9 @@ require(['jquery'], function($) {
     };
     
     self.getNumberOfChildren = function () {
-      var number = self.children.length;
-      for (var i = 0; i &lt; self.children.length; ++i) {
-        number += self.children[i].getNumberOfChildren();
+      var number = self.children().length;
+      for (var i = 0; i &lt; self.children().length; ++i) {
+        number += self.children()[i].getNumberOfChildren();
       }
       return number;
     };
@@ -641,18 +642,17 @@ require(['jquery'], function($) {
           'includedSpaces'       : self.configuration.includedSpaces(),
           'excludedObjectClasses': self.configuration.excludedObjectClasses()
         }).done(function (data) {
-        var parseAction = function (data) {
-          var action = new MigrationAction(data.sourceDocument, data.targetDocument);
+        var parseAction = function (data, parent) {
+          var action = new MigrationAction(data.sourceDocument, data.targetDocument, parent);
           for (var i = 0; i &lt; data.children.length; ++i) {
-            action.children[action.children.length] = parseAction(data.children[i]);
+            action.children.push(parseAction(data.children[i], action));
           }
           return action;
         };
 
         for (var i = 0; i &lt; data.length; ++i) {
-          self.actions.push(parseAction(data[i]));
+          self.actions.push(parseAction(data[i], false));
         }
-        
         // Plan is loaded
         self.isComputing(false);
         // Trigger an event for the mini-tree JS
@@ -668,9 +668,14 @@ require(['jquery'], function($) {
           self.computePlan();
         } else {
           var sourceDoc = this.sourceDocument;
-          self.actions.remove(function (action) {
+          var detectAction = function (action) {
             return action.sourceDocument.equals(sourceDoc);
-          });
+          };
+          if (this.parent) {
+            this.parent.children.remove(detectAction);
+          } else {
+            self.actions.remove(detectAction);
+          }
         }
       }
     }

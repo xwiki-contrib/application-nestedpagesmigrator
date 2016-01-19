@@ -39,13 +39,14 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
-  <content>{{html clean="false"}}
+  <content>{{velocity}}
+{{html clean="false"}}
 &lt;!------------------------------------------
   Migration Action Template 
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;li&gt;
-    &lt;strong data-bind="text: getTargetName()" /&gt; [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;] &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt; &lt;span data-bind="text: getNumberOfChildren()" /&gt; children) from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
+    &lt;strong data-bind="text: getTargetName()" /&gt; [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;] &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt; &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt; (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children) from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
     &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
   &lt;/li&gt;
 &lt;/script&gt;
@@ -93,27 +94,35 @@
   &lt;div class="col-xs-12 col-md-6"&gt;
     &lt;dl&gt;
       &lt;!-- Excluded Object Classes --&gt;
-      &lt;dt&gt;&lt;label for="excludedObjectClasses"&gt;Exclude classes&lt;/label&gt;&lt;/dt&gt;
+      &lt;dt&gt;&lt;label for="excludedObjectClasses" data-bind="click: toggleXClassList"&gt;Exclude classes&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;
-        &lt;p class="xHint"&gt;Exclude pages holding an object of one of the specified classes (separated by a coma ',').&lt;/p&gt;
-        &lt;p&gt;&lt;input type="text" id="excludedObjectClasses" data-bind="value: configuration.excludedObjectClasses"&gt; &lt;/p&gt;
+        &lt;p class="xHint" data-bind="click: toggleXClassList"&gt;Exclude pages holding an object of one of the specified classes (separated by a coma ',').&lt;/p&gt;
+        &lt;p&gt;&lt;textarea id="excludedObjectClasses" data-bind="textInput: configuration.excludedObjectClasses, click: showXClassList" data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/textarea&gt;&lt;/p&gt;
+        &lt;div data-bind="visible: xclassListVisible"&gt;
+          &lt;a data-bind="click: hideXClassList" href="#"&gt;$services.icon.renderHTML('remove') Hide&lt;/a&gt;
+          &lt;ul data-bind="foreach: {data: xclasses, as: 'xclass'}" style="list-style-type: none; padding: 0;"&gt;
+            &lt;li&gt;&lt;label&gt;&lt;input type="checkbox" data-bind="checked: xclass.selected"/&gt; &lt;span data-bind="text: xclass.name" /&gt;&lt;/label&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
       &lt;/dd&gt;
+    &lt;/dl&gt;
+    &lt;dl&gt;
       &lt;!-- Excluded pages --&gt;
       &lt;dt&gt;&lt;label for="excludedPages"&gt;Excluded pages&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;
-        &lt;p class="xHint"&gt;Pages reference separated by commas (',')&lt;/p&gt;
+        &lt;p class="xHint"&gt;Page references separated by commas (',')&lt;/p&gt;
         &lt;p&gt;&lt;input type="text" id="excludedPages" data-bind="value: configuration.excludedPages"&gt;&lt;/p&gt;
       &lt;/dd&gt;
       &lt;!-- Excluded spaces --&gt;
       &lt;dt&gt;&lt;label for="excludedSpaces"&gt;Excluded spaces&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;
-        &lt;p class="xHint"&gt;Spaces reference separated by commas (',')&lt;/p&gt;
+        &lt;p class="xHint"&gt;Space references separated by commas (',')&lt;/p&gt;
         &lt;p&gt;&lt;input type="text" id="excludedSpaces" data-bind="value: configuration.excludedSpaces"&gt; &lt;/p&gt;
       &lt;/dd&gt;
       &lt;!-- Included spaces --&gt;
       &lt;dt&gt;&lt;label for="includedSpaces"&gt;Included spaces&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;
-        &lt;p class="xHint"&gt;Spaces reference separated by commas (',')&lt;/p&gt;
+        &lt;p class="xHint"&gt;Space references separated by commas (',')&lt;/p&gt;
         &lt;p&gt;&lt;input type="text" id="includedSpaces" data-bind="value: configuration.includedSpaces"&gt; &lt;/p&gt;
       &lt;/dd&gt;
     &lt;/dl&gt;
@@ -126,11 +135,12 @@
   Display plan
   -------------------------------------------&gt;
 &lt;div data-bind="if: isPlanRequested()"&gt;
-  &lt;!-- ko template: {name: 'DisplayPlan', data: $root} --&gt;
+  ## We escape the dollar of the knockout variable '$root' because $root also exists in velocity
+  &lt;!-- ko template: {name: 'DisplayPlan', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
 &lt;/div&gt;
 {{/html}}
-
+{{/velocity}}
 </content>
   <object>
     <name>NestedPagesMigration.WebHome</name>
@@ -213,6 +223,7 @@
     </property>
     <property>
       <code>// We create a mini-tree system because jsTree don't handle complex HTML
+// TODO: rewrite this with knockoutjs like the rest of the application
 require(['jquery'], function($) {
   'use strict';
   
@@ -336,7 +347,11 @@ require(['jquery'], function($) {
     <property>
       <code>require.config({
   paths: {
-    'knockout': "$services.webjars.url('knockout', 'knockout.js')"
+    #if ("$!request.minify" == false)
+      'knockout': "$services.webjars.url('knockout', 'knockout.debug.js')"
+    #else
+      'knockout': "$services.webjars.url('knockout', 'knockout.js')"
+    #end
   }
 });</code>
     </property>
@@ -431,6 +446,7 @@ require(['jquery'], function($) {
     </property>
     <property>
       <code>require(['jquery', 'xwiki-meta', 'knockout'], function ($, xm, ko) {
+  'use strict';
 
   function localSerializer(document) {
     var documentReference = XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
@@ -483,24 +499,131 @@ require(['jquery'], function($) {
     this.excludeClassPages     = ko.observable(true);
     this.dontMoveChildren      = ko.observable(false);
     this.addRedirection        = ko.observable(true);
-    this.excludedPages         = ko.observable();
+    this.excludedPages         = ko.observable('');
     this.excludedSpaces        = ko.observable('XWiki');
-    this.includedSpaces        = ko.observable();
+    this.includedSpaces        = ko.observable('');
     this.excludedObjectClasses = ko.observable('XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass');
+    this.excludedObjectClasses.extend({ notify: 'always' });
+  }
+      
+  function getExcludedClassesArray(model) {
+    return model.configuration.excludedObjectClasses().split(',');
+  }
+  
+  function inExcludedClassesArray(name, model) {
+    return $.inArray(name, getExcludedClassesArray(model)) &gt;= 0;
+  }
+  
+  function appendToString(string, toAppend) {
+    var result = string;
+    if (result.length &gt; 0) {
+      result += ',';
+    }
+    result += toAppend;
+    return result;
+  }
+  
+  function computeNewExcludedClassesList(name, value, model) {
+    var newList = '';
+    var oldList = getExcludedClassesArray(model);
+    // We walk through the old list to respect the order written in it to avoid a WTF effect
+    for (var i = 0; i &lt; oldList.length; ++i) {
+      if (oldList[i] != name) {
+        newList = appendToString(newList, oldList[i]);
+      }
+    }
+    if (value) {
+      newList = appendToString(newList, name);
+    }
+    model.configuration.excludedObjectClasses(newList);
+  }
+  
+  function initXClassCheckbox(name, model) {
+    var selected = ko.computed({
+      read: function () {
+        return inExcludedClassesArray(name, model);
+      },
+      write: function (value) {
+        computeNewExcludedClassesList(name, value, model);
+      }
+    });
+    return {'name': name, 'selected': selected};
   }
   
   function AppViewModel() {
     var self = this;
     
     // Fields
-    self.actions         = ko.observableArray();
     self.configuration   = new AppConfiguration();
+    self.actions         = ko.observableArray();
     self.isPlanRequested = ko.observable(false);
     self.isComputing     = ko.observable(false);
+    self.xclasses        = ko.observableArray();
+    self.xclassListVisible = ko.observable(false);
+    
+    self.toggleXClassList = function () {
+      self.xclassListVisible(!self.xclassListVisible());
+    }
+    
+    self.showXClassList = function () {
+      self.xclassListVisible(true);
+    }
+    
+    self.hideXClassList = function () {
+      self.xclassListVisible(false);
+    }
+    
+    self.getExcludedClassesArray = function () {
+      return self.configuration.excludedObjectClasses().split(',');
+    }
+    
+    self.inExcludedClassesArray = function() {
+      return $.inArray(name, self.getExcludedClassesArray()) &gt;= 0;
+    }
+    
+    self.computeNewExcludedClassesList = function (name, value) {
+      var newList = '';
+      var oldList = self.getExcludedClassesArray();
+      // We walk through the old list to respect the order written in it to avoid a WTF effect
+      for (var i = 0; i &lt; oldList.length; ++i) {
+        if (oldList[i] != name) {
+          if (newList.length &gt; 0) {
+            newList += ',';
+          }
+          newList += oldList[i];
+        }
+      }
+      if (value) {
+        if (newList.length &gt; 0) {
+          newList += ',';
+        }
+        newList += name;;
+      }
+      self.configuration.excludedObjectClasses(newList);
+    }
+    
+    self.initXClassCheckbox = function (name) {
+      var selected = ko.computed({
+        read: function () {
+          return inExcludedClassesArray(name, self);
+        },
+        write: function (value) {
+          computeNewExcludedClassesList(name, value, self);
+        }
+      });
+      return {'name': name, 'selected': selected};
+    }
+    
+    self.initXClasses = function() {
+      var xclasses = $('#excludedObjectClasses').attr('data-xclasses').split(',');
+      for (var i = 0; i &lt; xclasses.length; ++i) {
+        self.xclasses.push(initXClassCheckbox(xclasses[i], self));
+      }
+    }
     
     self.isPlanEmpty = ko.computed(function () {
       return self.actions().length == 0;
-    }).extend({ notify: 'always' });
+    });
     
     self.computePlan = function() {
       self.isPlanRequested(true);
@@ -530,9 +653,20 @@ require(['jquery'], function($) {
         
         // Plan is loaded
         self.isComputing(false);
+        // Trigger an event for the mini-tree JS
         $(document).trigger('xwiki:dom:updated', {'elements': $('.migration-plan').toArray()});
       });
     };
+    
+    self.excludePage = function() {
+      if (confirm('Are you sure to exclude this page from the migration?')) {
+        self.configuration.excludedPages(appendToString(self.configuration.excludedPages(), this.serializedSourceDocument()));
+        // Adding an exclusion can seriously change the plan, so we re-compute it
+        self.computePlan();
+      }
+    }
+    
+    self.initXClasses();
     
   };
 

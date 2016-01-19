@@ -51,7 +51,7 @@
   <scm>
     <connection>scm:git:git://github.com/xwiki-contrib/application-nestedpagesmigrator.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/application-nestedpagesmigrator.git</developerConnection>
-    <url>https://github.com/xwiki-contrib/application-nestedpagesmigrator.git</url>
+    <url>https://github.com/xwiki-contrib/application-nestedpagesmigrator</url>
     <tag>HEAD</tag>
   </scm>
   <modules>

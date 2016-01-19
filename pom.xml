@@ -48,6 +48,12 @@
       <url>http://nexus.xwiki.org/nexus/service/local/staging/deploy/maven2/</url>
     </repository>
   </distributionManagement>
+  <scm>
+    <connection>scm:git:git://github.com/xwiki-contrib/application-nestedpagesmigrator.git</connection>
+    <developerConnection>scm:git:git@github.com:xwiki-contrib/application-nestedpagesmigrator.git</developerConnection>
+    <url>https://github.com/xwiki-contrib/application-nestedpagesmigrator.git</url>
+    <tag>HEAD</tag>
+  </scm>
   <modules>
     <!-- Sorted Alphabetically -->
     <module>application-nestedpagesmigrator-api</module>

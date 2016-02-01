@@ -235,16 +235,10 @@ require(['jquery'], function($) {
   var initTree = function() {
     $('.migration-plan ul &gt; li').has('ul').find('&gt; strong').css('cursor', 'pointer');
 
-    $('.migration-plan ul &gt; li &gt; ul').hide().prop('hidden', true);
+    $('.migration-plan ul &gt; li &gt; ul').hide();
 
     $('.migration-plan ul &gt; li &gt; strong').click(function() {
-      var item = $(this).parent();
-      var children = item.find('&gt; ul');
-      if (children.prop('hidden')) {
-        children.show().prop('hidden', false);
-      } else {
-        children.hide().prop('hidden', true);
-      }
+      $(this).parent().find('&gt; ul').slideToggle({duration:200});
     });
   };
   

@@ -111,7 +111,7 @@ public class TerminalPagesGetter
 
     private Query getQuery(MigrationConfiguration configuration) throws ComponentLookupException, QueryException
     {
-        StringBuilder xwql = new StringBuilder("where doc.name <> 'WebHome'");
+        StringBuilder xwql = new StringBuilder("where doc.name not in ('WebHome', 'WebPreferences')");
 
         if (configuration.hasIncludedSpaces()) {
             xwql.append(" and doc.space in (:includedSpaceList)");

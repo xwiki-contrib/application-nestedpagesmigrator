@@ -25,7 +25,7 @@
       <fullName>Western.List</fullName>
       <parent>Movies.WebHome</parent>
     </page>
-    <!-- New problem: a page holding the name that conflict with a migrated page -->
+    <!-- New problem: a page holding the name that conflicts with a migrated page -->
     <page>
       <fullName>Main.Movies.Western.List.WebHome</fullName>
       <parent>Main.Movies.Western.WebHome</parent>

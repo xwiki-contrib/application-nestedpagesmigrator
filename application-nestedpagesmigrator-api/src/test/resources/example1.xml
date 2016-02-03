@@ -1,0 +1,70 @@
+<!--
+  Basic example.
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Movies.StarTrek</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Movies.DanceWithWolves</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <from>Main.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.WebHome</fullName>
+      <from>Movies.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.StarTrek.WebHome</fullName>
+      <from>Movies.StarTrek</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.DanceWithWolves.WebHome</fullName>
+      <from>Movies.DanceWithWolves</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Movies.WebHome",
+        "targetDocument": "xwiki:Main.Movies.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:Movies.DanceWithWolves",
+            "targetDocument": "xwiki:Main.Movies.DanceWithWolves.WebHome",
+            "children": []
+          },
+          {
+            "sourceDocument": "xwiki:Movies.StarTrek",
+            "targetDocument": "xwiki:Main.Movies.StarTrek.WebHome",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

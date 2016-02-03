@@ -50,6 +50,12 @@
       <artifactId>xwiki-platform-query-manager</artifactId>
       <version>${platform.version}</version>
     </dependency>
+    <!-- Used for the JSON serialization of the plan -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.2.4</version>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>javax.servlet</groupId>

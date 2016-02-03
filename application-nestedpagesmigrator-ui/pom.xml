@@ -48,13 +48,6 @@
       <version>3.4.0</version>
       <scope>runtime</scope>
     </dependency>
-    <!-- Used for the JSON serialization of the plan -->
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.2.4</version>
-      <scope>runtime</scope>
-    </dependency>
   </dependencies>
   <build>
     <!-- Needed to add support for the XAR packaging -->

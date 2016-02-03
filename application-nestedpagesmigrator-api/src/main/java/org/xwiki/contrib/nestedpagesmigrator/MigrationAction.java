@@ -114,9 +114,7 @@ public class MigrationAction implements Serializable, Comparable
     
     public void addChild(MigrationAction action)
     {
-        if (!children.contains(action)) {
-            children.add(action);
-        }
+        children.add(action);
     }
     
     public List<MigrationAction> getChildren()

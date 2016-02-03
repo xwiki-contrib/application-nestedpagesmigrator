@@ -111,7 +111,13 @@ public class TerminalPagesGetter
 
     private Query getQuery(MigrationConfiguration configuration) throws ComponentLookupException, QueryException
     {
-        StringBuilder xwql = new StringBuilder("where doc.name not in ('WebHome', 'WebPreferences')");
+        StringBuilder xwql = new StringBuilder();
+
+        if (configuration.isDontMoveChildren()) {
+            xwql.append("where doc.fullName not in ('WebHome', 'WebPreferences')");
+        } else {
+            xwql.append("where doc.parent <> concat(doc.space, '.WebHome')");
+        }
 
         if (configuration.hasIncludedSpaces()) {
             xwql.append(" and doc.space in (:includedSpaceList)");
@@ -122,6 +128,9 @@ public class TerminalPagesGetter
         if (configuration.hasExcludedPages()) {
             xwql.append(" and doc.fullName not in (:excludedDocList)");   
         }
+        
+        // It's important since the results could change because of the order (@see MigrationPlanCreator#createAction).
+        xwql.append(" order by doc.fullName");
 
         Query query = queryManager.createQuery(xwql.toString(), Query.XWQL);
         query.setWiki(configuration.getWikiReference().getName());

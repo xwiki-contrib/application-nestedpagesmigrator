@@ -48,7 +48,7 @@ public class MigrationAction implements Serializable, Comparable
      * @return the created instance
      */
     public static MigrationAction createInstance(DocumentReference sourceDocument, DocumentReference targetDocument,
-            MigrationPlanTree plan)
+            MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
         plan.addAction(action);
@@ -66,7 +66,7 @@ public class MigrationAction implements Serializable, Comparable
      * @return the created instance
      */
     public static MigrationAction createInstance(DocumentReference sourceDocument, DocumentReference targetDocument,
-            MigrationAction parentAction, MigrationPlanTree plan)
+            MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
         parentAction.addChild(action);
@@ -114,7 +114,9 @@ public class MigrationAction implements Serializable, Comparable
     
     public void addChild(MigrationAction action)
     {
-        children.add(action);
+        if (!children.contains(action)) {
+            children.add(action);
+        }
     }
     
     public List<MigrationAction> getChildren()

@@ -1,0 +1,110 @@
+<!--
+  Example where 2 different pages can have the same target.
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+    </page>
+    <!-- Create a conflict: 3 pages having the same name and the same parent -->
+    <page>
+      <fullName>SciFi.List</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Dramas.List</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Western.List</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <!-- New problem: a page holding the name that conflict with a migrated page -->
+    <page>
+      <fullName>Main.Movies.Western.List.WebHome</fullName>
+      <parent>Main.Movies.Western.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <from>Main.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.WebHome</fullName>
+      <from>Movies.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.List.WebHome</fullName>
+      <from>SciFi.List</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.Dramas.List.WebHome</fullName>
+      <from>Dramas.List</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.Western.List_2.WebHome</fullName>
+      <from>Western.List</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.Western.List.WebHome</fullName>
+      <from>Main.Movies.Western.List.WebHome</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Movies.WebHome",
+        "targetDocument": "xwiki:Main.Movies.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:Main.Movies.Dramas.WebHome",
+            "targetDocument": "xwiki:Main.Movies.Dramas.WebHome",
+            "children": [
+              {
+                "sourceDocument": "xwiki:Dramas.List",
+                "targetDocument": "xwiki:Main.Movies.Dramas.List.WebHome",
+                "children": []
+              }
+            ]
+          },
+          {
+            "sourceDocument": "xwiki:SciFi.List",
+            "targetDocument": "xwiki:Main.Movies.List.WebHome",
+            "children": []
+          },
+          {
+            "sourceDocument": "xwiki:Main.Movies.Western.WebHome",
+            "targetDocument": "xwiki:Main.Movies.Western.WebHome",
+            "children": [
+              {
+                "sourceDocument": "xwiki:Main.Movies.Western.List.WebHome",
+                "targetDocument": "xwiki:Main.Movies.Western.List.WebHome",
+                "children": []
+              },
+              {
+                "sourceDocument": "xwiki:Western.List",
+                "targetDocument": "xwiki:Main.Movies.Western.List_2.WebHome",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

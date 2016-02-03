@@ -31,6 +31,7 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Example;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
@@ -83,6 +84,9 @@ public class MigrationPlanCreatorTest
         xwiki = mock(XWiki.class);
         when(context.getWiki()).thenReturn(xwiki);
         terminalPagesGetter = mocker.getInstance(TerminalPagesGetter.class);
+        
+        XWikiDocument document = mock(XWikiDocument.class);
+        when(xwiki.getDocument(any(DocumentReference.class), eq(context))).thenReturn(document);
     }
     
     private void setUpExample(Example example) throws Exception
@@ -91,6 +95,7 @@ public class MigrationPlanCreatorTest
             XWikiDocument document = mock(XWikiDocument.class);
             when(xwiki.getDocument(eq(page.getDocumentReference()), eq(context))).thenReturn(document);
             when(document.getParentReference()).thenReturn(page.getParent());
+            when(xwiki.exists(eq(page.getDocumentReference()), eq(context))).thenReturn(true);
         }
     }
     
@@ -102,7 +107,7 @@ public class MigrationPlanCreatorTest
             assertEquals(page.getFrom(), action.getSourceDocument());
             assertEquals(page.getDocumentReference(), action.getTargetDocument());
         }
-        
+
         MigrationPlanSerializer serializer = new MigrationPlanSerializer();
         assertEquals(example.getPlan(), serializer.serialize(plan));
     }
@@ -112,12 +117,16 @@ public class MigrationPlanCreatorTest
         Example example = new Example(exampleName);
         setUpExample(example);
 
-        when(terminalPagesGetter.getTerminalPages(any(MigrationConfiguration.class)))
-                .thenReturn(example.getTerminalPages());
-
         MigrationConfiguration migrationConfiguration = new MigrationConfiguration(new WikiReference("xwiki"));
         migrationConfiguration.setDontMoveChildren(example.isDontMoveChildrenEnabled());
+
+        when(terminalPagesGetter.getTerminalPages(any(MigrationConfiguration.class)))
+                .thenReturn(example.getConcernedPages(migrationConfiguration));
+        
         MigrationPlanTree plan = mocker.getComponentUnderTest().computeMigrationPlan(migrationConfiguration);
+
+        //MigrationPlanSerializer serializer = new MigrationPlanSerializer();
+        //System.out.println(serializer.serialize(plan));
 
         verifyMigrationsActionsAreUnique(plan);
         verifyPlan(plan, example);
@@ -133,5 +142,11 @@ public class MigrationPlanCreatorTest
     public void testBasicExampleWithoutChildrenMove() throws Exception
     {
         testExample("/example2.xml");
+    }
+
+    @Test
+    public void testWithConflicts() throws Exception
+    {
+        testExample("/example3.xml");
     }
 }

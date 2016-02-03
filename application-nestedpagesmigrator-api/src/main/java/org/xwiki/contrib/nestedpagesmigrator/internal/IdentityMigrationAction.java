@@ -20,6 +20,7 @@
 package org.xwiki.contrib.nestedpagesmigrator.internal;
 
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.model.reference.DocumentReference;
 
@@ -41,10 +42,26 @@ public class IdentityMigrationAction extends MigrationAction
      * @return the created instance
      */
     public static IdentityMigrationAction createInstance(DocumentReference documentReference, MigrationAction parentAction,
-            MigrationPlanTree plan)
+            MigrationPlanTree plan) throws MigrationException
     {
         IdentityMigrationAction action = new IdentityMigrationAction(documentReference);
         parentAction.addChild(action);
+        plan.addAction(action);
+        return action;
+    }
+
+    /**
+     * Helper to create an instance and record it in its parent and its plan.
+     *
+     * @param documentReference the concerned document
+     * @param plan the plan
+     *
+     * @return the created instance
+     */
+    public static IdentityMigrationAction createInstance(DocumentReference documentReference, MigrationPlanTree plan)
+            throws MigrationException
+    {
+        IdentityMigrationAction action = new IdentityMigrationAction(documentReference);
         plan.addAction(action);
         return action;
     }

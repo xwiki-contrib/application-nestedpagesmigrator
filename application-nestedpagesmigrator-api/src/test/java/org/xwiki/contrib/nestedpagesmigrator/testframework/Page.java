@@ -60,4 +60,14 @@ public class Page
     {
         return from;
     }
+    
+    public boolean isTerminal()
+    {
+        return "WebHome".equals(documentReference.getName());
+    }
+    
+    public boolean isFromTerminal()
+    {
+        return "WebHome".equals(from.getName());
+    }
 }

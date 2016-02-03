@@ -28,6 +28,7 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
@@ -78,13 +79,21 @@ public class Example
         return new DocumentReference("xwiki", spaceList, page);
     }
     
-    public List<DocumentReference> getTerminalPages()
+    public List<DocumentReference> getConcernedPages(MigrationConfiguration configuration)
     {
         List<DocumentReference> results = new ArrayList<>();
-        for (Element element : getBeforePages()) {
-            DocumentReference reference = resolveDocument(element.getChild("fullName").getText());
-            if (!"WebHome".equals(reference.getName()) && !"WebPreferences".equals(reference.getName())) {
-                results.add(reference);
+        for (Page page : getAllPages()) {
+            if (configuration.isDontMoveChildren()) {
+                if (!"WebHome".equals(page.getDocumentReference().getName()) 
+                    || "WebPreferences".equals(page.getDocumentReference().getName())) {
+                    results.add(page.getDocumentReference());
+                }
+            } else {
+                if (page.getParent() == null ||
+                        !page.getDocumentReference().toString().equals(page.getParent().toString() + ".WebHome"))
+                {
+                    results.add(page.getDocumentReference());
+                }
             }
         }
         return results;

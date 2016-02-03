@@ -75,8 +75,15 @@ public class MigrationPlanCreator
         if (configuration.isDontMoveChildren()) {
             for (DocumentReference terminalDoc : terminalDocs) {
                 MigrationAction action = convertDocumentWithoutMove(terminalDoc, plan);
-                MigrationAction parentAction = convertParentWithoutMove(terminalDoc, plan);
+                DocumentReference parent = new DocumentReference(SPACE_HOME_PAGE, terminalDoc.getLastSpaceReference());
+                MigrationAction parentAction;
+                if (!parent.equals(terminalDoc)) {
+                    parentAction = convertDocumentWithoutMove(parent, plan);
+                } else {
+                    parentAction = plan.getTopLevelAction();
+                }
                 parentAction.addChild(action);
+                plan.getTopLevelAction().addChild(parentAction);
             }
         } else {
             for (DocumentReference terminalDoc : terminalDocs) {
@@ -97,6 +104,7 @@ public class MigrationPlanCreator
     }
     
     private MigrationAction convertParentWithoutMove(DocumentReference originalDocument, MigrationPlanTree plan)
+            throws MigrationException
     {
         DocumentReference spaceHomeReference = new DocumentReference(SPACE_HOME_PAGE,
                 originalDocument.getLastSpaceReference());
@@ -116,10 +124,21 @@ public class MigrationPlanCreator
      *  
      * @return the action concerning this document
      */
-    private MigrationAction convertDocumentWithoutMove(DocumentReference terminalDoc, MigrationPlanTree plan)
+    private MigrationAction convertDocumentWithoutMove(DocumentReference terminalDoc, MigrationPlanTree plan) 
+            throws MigrationException
     {
+        MigrationAction existingAction = plan.getActionAbout(terminalDoc);
+        if (existingAction != null) {
+            return existingAction;
+        }
+        
+        if (terminalDoc.getName().equals(SPACE_HOME_PAGE)) {
+            return IdentityMigrationAction.createInstance(terminalDoc, plan);
+        }
+
         SpaceReference parentSpace = new SpaceReference(terminalDoc.getName(), terminalDoc.getLastSpaceReference());
         DocumentReference targetDoc = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
+        
         return MigrationAction.createInstance(terminalDoc, targetDoc, plan);
     }
 
@@ -175,7 +194,7 @@ public class MigrationPlanCreator
                 : plan.getTopLevelAction();
 
         // Now, create the action for the current document
-        return createAction(documentReference, parentAction, plan);
+        return createAction(documentReference, parentAction, plan, context, concernedDocuments);
     }
 
     /**
@@ -225,7 +244,8 @@ public class MigrationPlanCreator
      * @return the action concerning this document only.
      */
     private MigrationAction createAction(DocumentReference documentReference, MigrationAction parentAction, 
-            MigrationPlanTree plan)
+            MigrationPlanTree plan, XWikiContext context, List<DocumentReference> concernedDocuments)
+            throws MigrationException
     {
         MigrationAction action;
 
@@ -239,6 +259,49 @@ public class MigrationPlanCreator
                 SpaceReference parentSpace = new SpaceReference(documentReference.getName(),
                         parentAction.getTargetDocument().getLastSpaceReference());
                 DocumentReference targetDocument = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
+                
+                // Maybe the target already exists!
+                MigrationAction conflictingAction = plan.getActionWithTarget(targetDocument);
+                int iteration = 0;
+                while (conflictingAction != null || (!documentReference.equals(targetDocument)
+                            && context.getWiki().exists(targetDocument, context))) {
+                    // Normally the space holds the name of the old document.
+                    SpaceReference newParentSpace = parentSpace;
+                    
+                    // However, we could add an interesting information by adding the name of the space of the old
+                    // document in front of the document name.
+                    // ie: [Dramas.List, Movies.WebHome] -> [Movies.Dramas_List] instead of [Movies.List_2].
+                    // But it make sense only if the space name is not the same than the target parent. 
+                    if (!documentReference.getLastSpaceReference().getName().equals(
+                            parentAction.getTargetDocument().getLastSpaceReference().getName())) {
+                        newParentSpace = new SpaceReference(documentReference.getName(),
+                                new SpaceReference(documentReference.getLastSpaceReference().getName(),
+                                        parentAction.getTargetDocument().getLastSpaceReference()));
+                    }
+                    
+                    // This new name could be used already, so we add a number prefix
+                    if (iteration++ > 0) {
+                        String spaceName = newParentSpace.getName() + "_" + iteration;
+                        newParentSpace = new SpaceReference(spaceName, newParentSpace.getParent());
+                    }
+                    
+                    // Create the new reference
+                    targetDocument = targetDocument.replaceParent(targetDocument.getLastSpaceReference(),
+                            newParentSpace);
+                    
+                    // Look if there is a conflicting action for the next loop iteration
+                    conflictingAction = plan.getActionWithTarget(targetDocument);
+                }
+                
+                // Note: the parent might have changed...
+                if (!targetDocument.getLastSpaceReference().getParent().equals(
+                        parentAction.getTargetDocument().getLastSpaceReference())) {
+                    // So we need to get the new the parent action!
+                    parentAction = convertDocumentAndParents(new DocumentReference(SPACE_HOME_PAGE, 
+                            (SpaceReference) targetDocument.getLastSpaceReference().getParent()), plan,
+                            concernedDocuments, context);
+                }
+                
                 action = MigrationAction.createInstance(documentReference, targetDocument, parentAction, plan);
             } else {
                 // The document is already a WebHome, so we use the current space name under the space of the parent 

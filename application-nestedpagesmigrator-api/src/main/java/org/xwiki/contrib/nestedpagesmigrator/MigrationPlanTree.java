@@ -31,6 +31,8 @@ import org.xwiki.model.reference.DocumentReference;
 public class MigrationPlanTree
 {
     private Map<DocumentReference, MigrationAction> actions = new HashMap<>();
+
+    private Map<DocumentReference, MigrationAction> actionsByTarget = new HashMap<>();
     
     private MigrationAction topLevelAction = new MigrationAction(null, null);
     
@@ -49,14 +51,30 @@ public class MigrationPlanTree
         return actions.containsKey(documentReference);    
     }
     
-    public void addAction(MigrationAction action)
+    public void addAction(MigrationAction action) throws MigrationException
     {
+        // TODO: simplify this
+        if (actions.containsKey(action.getSourceDocument())) {
+            throw new MigrationException(String.format("An action concerning [%s] already exists.",
+                    action.getSourceDocument()));
+        }
+        if (actionsByTarget.containsKey(action.getTargetDocument())) {
+            throw new MigrationException(String.format("An action with target [%s] already exists.",
+                    action.getTargetDocument()));
+        }
         actions.put(action.getSourceDocument(), action);
+        actionsByTarget.put(action.getTargetDocument(), action);
     }
     
     public MigrationAction getActionAbout(DocumentReference documentReference)
     {
-        return actions.get(documentReference);
+        MigrationAction action = actions.get(documentReference);
+        return action != null ? action : getActionWithTarget(documentReference);
+    }
+
+    public MigrationAction getActionWithTarget(DocumentReference documentReference)
+    {
+        return actionsByTarget.get(documentReference);
     }
 
     public MigrationAction getTopLevelAction()

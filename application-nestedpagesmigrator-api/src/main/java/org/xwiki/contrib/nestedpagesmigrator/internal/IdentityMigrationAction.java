@@ -51,22 +51,6 @@ public class IdentityMigrationAction extends MigrationAction
     }
 
     /**
-     * Helper to create an instance and record it in its parent and its plan.
-     *
-     * @param documentReference the concerned document
-     * @param plan the plan
-     *
-     * @return the created instance
-     */
-    public static IdentityMigrationAction createInstance(DocumentReference documentReference, MigrationPlanTree plan)
-            throws MigrationException
-    {
-        IdentityMigrationAction action = new IdentityMigrationAction(documentReference);
-        plan.addAction(action);
-        return action;
-    }
-
-    /**
      * Create a new IdentityMigrationAction.
      * @param documentReference the concerned document
      */

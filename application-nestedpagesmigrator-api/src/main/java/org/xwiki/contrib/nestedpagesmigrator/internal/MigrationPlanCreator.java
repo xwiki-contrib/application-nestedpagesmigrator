@@ -75,15 +75,8 @@ public class MigrationPlanCreator
         if (configuration.isDontMoveChildren()) {
             for (DocumentReference terminalDoc : terminalDocs) {
                 MigrationAction action = convertDocumentWithoutMove(terminalDoc, plan);
-                DocumentReference parent = new DocumentReference(SPACE_HOME_PAGE, terminalDoc.getLastSpaceReference());
-                MigrationAction parentAction;
-                if (!parent.equals(terminalDoc)) {
-                    parentAction = convertDocumentWithoutMove(parent, plan);
-                } else {
-                    parentAction = plan.getTopLevelAction();
-                }
+                MigrationAction parentAction = convertParentWithoutMove(terminalDoc, plan);
                 parentAction.addChild(action);
-                plan.getTopLevelAction().addChild(parentAction);
             }
         } else {
             for (DocumentReference terminalDoc : terminalDocs) {
@@ -127,15 +120,6 @@ public class MigrationPlanCreator
     private MigrationAction convertDocumentWithoutMove(DocumentReference terminalDoc, MigrationPlanTree plan) 
             throws MigrationException
     {
-        MigrationAction existingAction = plan.getActionAbout(terminalDoc);
-        if (existingAction != null) {
-            return existingAction;
-        }
-        
-        if (terminalDoc.getName().equals(SPACE_HOME_PAGE)) {
-            return IdentityMigrationAction.createInstance(terminalDoc, plan);
-        }
-
         SpaceReference parentSpace = new SpaceReference(terminalDoc.getName(), terminalDoc.getLastSpaceReference());
         DocumentReference targetDoc = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
         

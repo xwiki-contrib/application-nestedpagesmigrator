@@ -1,0 +1,49 @@
+<!--
+  Basic example, without moving children and with a collision.
+-->
+<example dontMoveChildren="true">
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Movies.DanceWithWolves</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <!-- Creates a collision with existing document -->
+    <page>
+      <fullName>Movies.DanceWithWolves.WebHome</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <!-- The terminal page has been converted but with a number suffix -->
+      <fullName>Movies.DanceWithWolves_2.WebHome</fullName>
+      <from>Movies.DanceWithWolves</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Movies.WebHome",
+    "targetDocument": "xwiki:Movies.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Movies.DanceWithWolves",
+        "targetDocument": "xwiki:Movies.DanceWithWolves_2.WebHome",
+        "children": []
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

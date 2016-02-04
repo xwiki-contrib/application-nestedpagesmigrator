@@ -91,13 +91,11 @@ public class MigrationPlanCreator implements Initializable
 
         if (configuration.isDontMoveChildren()) {
             for (DocumentReference terminalDoc : concernedDocuments) {
-                MigrationAction action = convertDocumentWithoutMove(terminalDoc);
-                MigrationAction parentAction = convertParentWithoutMove(terminalDoc);
-                parentAction.addChild(action);
+                convertDocumentAndItsParentWithoutMove(terminalDoc);
             }
         } else {
-            for (DocumentReference terminalDoc : concernedDocuments) {
-                convertDocumentAndParents(terminalDoc);
+            for (DocumentReference documentReference : concernedDocuments) {
+                convertDocumentAndParents(documentReference);
             }
         }
         
@@ -112,7 +110,15 @@ public class MigrationPlanCreator implements Initializable
         plan.sort();
         return plan;
     }
-    
+
+    private void convertDocumentAndItsParentWithoutMove(DocumentReference terminalDoc) throws MigrationException
+    {
+        MigrationAction action = convertDocumentWithoutMove(terminalDoc);
+        // Create an identity action for the the parent to have a nice tree at the end.
+        MigrationAction parentAction = convertParentWithoutMove(terminalDoc);
+        parentAction.addChild(action);
+    }
+
     private MigrationAction convertParentWithoutMove(DocumentReference originalDocument) throws MigrationException
     {
         DocumentReference spaceHomeReference = new DocumentReference(SPACE_HOME_PAGE,
@@ -136,7 +142,7 @@ public class MigrationPlanCreator implements Initializable
             throws MigrationException
     {
         SpaceReference parentSpace = new SpaceReference(terminalDoc.getName(), terminalDoc.getLastSpaceReference());
-        DocumentReference targetDoc = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
+        DocumentReference targetDoc = computeFreeTarget(terminalDoc, parentSpace, null);
         
         return MigrationAction.createInstance(terminalDoc, targetDoc, plan);
     }
@@ -248,21 +254,15 @@ public class MigrationPlanCreator implements Initializable
                 // [Space.WebHome, Path.To.Parent.WebHome] => [Path.To.Parent.Space.WebHome].
                 SpaceReference spaceReference = new SpaceReference(documentReference.getLastSpaceReference().getName(),
                         parentAction.getTargetDocument().getLastSpaceReference());
-                DocumentReference targetDocument = new DocumentReference(SPACE_HOME_PAGE, spaceReference);
+                DocumentReference targetDocument = computeFreeTarget(documentReference, spaceReference, null);
+                
                 action = MigrationAction.createInstance(documentReference, targetDocument, parentAction, plan);
             }
         } else {
-            // The parent is the top level action, ie. the document is orphan
-            if (isTerminal(documentReference)) {
-                // We only need to convert the document to nested
-                // [Space.Page] => [Space.Page.WebHome].
-                action = convertDocumentWithoutMove(documentReference);
-                parentAction.addChild(action);
-            } else {
-                // We have nothing to do!
-                // [Space.WebHome] => [Space.WebHome].
-                action = IdentityMigrationAction.createInstance(documentReference, parentAction, plan);
-            }
+            // The document must be non terminal because otherwise it would have a parent action (see getParent()).
+            // So, we have nothing to do!
+            // [Space.WebHome] => [Space.WebHome].
+            action = IdentityMigrationAction.createInstance(documentReference, parentAction, plan);
         }
 
         return action;
@@ -286,10 +286,7 @@ public class MigrationPlanCreator implements Initializable
         // Not that the original space name is lost in the process.
         SpaceReference parentSpace = new SpaceReference(documentReference.getName(),
                 parentAction.getTargetDocument().getLastSpaceReference());
-        DocumentReference targetDocument = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
-
-        // However, the target may already exists!
-        targetDocument = computeFreeTarget(documentReference, parentAction, parentSpace, targetDocument);
+        DocumentReference targetDocument = computeFreeTarget(documentReference, parentSpace, parentAction);
 
         // Because of computeFreeTarget(), the target document might have a different level of nesting. In that case,
         // the parent is a virtual document that must be present in the plan.
@@ -319,9 +316,10 @@ public class MigrationPlanCreator implements Initializable
     /**
      * Generate a target document that is not already used by a previous action or already existing in the wiki.
      */
-    private DocumentReference computeFreeTarget(DocumentReference documentReference, MigrationAction parentAction,
-            SpaceReference parentSpace, DocumentReference targetDocument)
+    private DocumentReference computeFreeTarget(DocumentReference documentReference,
+            SpaceReference parentSpace, MigrationAction parentAction)
     {
+        DocumentReference targetDocument = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
         int iteration = 0;
         while (!isTargetFree(documentReference, targetDocument)) {
             SpaceReference newParentSpace = parentSpace;
@@ -331,7 +329,7 @@ public class MigrationPlanCreator implements Initializable
             // ie: [Dramas.List, Movies.WebHome] -> [Movies.Dramas.List] instead of [Movies.List_2].
             // But it make sense only if the space name is not the same than the target parent.
             // ie: we avoid having [Movies.Dramas.Dramas.List] as target.
-            if (!documentReference.getLastSpaceReference().getName().equals(
+            if (parentAction != null && !documentReference.getLastSpaceReference().getName().equals(
                     parentAction.getTargetDocument().getLastSpaceReference().getName())) {
                 newParentSpace = new SpaceReference(documentReference.getName(),
                         new SpaceReference(documentReference.getLastSpaceReference().getName(),
@@ -345,8 +343,7 @@ public class MigrationPlanCreator implements Initializable
             }
             
             // Create the new reference
-            targetDocument = targetDocument.replaceParent(targetDocument.getLastSpaceReference(),
-                    newParentSpace);
+            targetDocument = new DocumentReference(SPACE_HOME_PAGE, newParentSpace);
         }
         return targetDocument;
     }

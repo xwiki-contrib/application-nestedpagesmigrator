@@ -1,0 +1,43 @@
+<!--
+  Example with orphans
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Main.Orphan</fullName>
+      <parent/>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <from>Main.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Orphan.WebHome</fullName>
+      <from>Main.Orphan</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Main.Orphan",
+        "targetDocument": "xwiki:Main.Orphan.WebHome",
+        "children": []
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

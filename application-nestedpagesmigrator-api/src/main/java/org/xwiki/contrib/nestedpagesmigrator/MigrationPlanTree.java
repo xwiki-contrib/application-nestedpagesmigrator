@@ -44,16 +44,6 @@ public class MigrationPlanTree
         return actions;
     }
     
-    public boolean isEmpty()
-    {
-        return actions.isEmpty();
-    }
-    
-    public boolean isAlreadyComputed(DocumentReference documentReference)
-    {
-        return actions.containsKey(documentReference);    
-    }
-    
     public void addAction(MigrationAction action) throws MigrationException
     {
         if (actions.containsKey(action.getSourceDocument())) {

@@ -172,4 +172,16 @@ public class MigrationPlanCreatorTest
     {
         testExample("/example3.xml");
     }
+
+    @Test
+    public void testWithoutChildrenMoveButWithConflicts() throws Exception
+    {
+        testExample("/example4.xml");
+    }
+
+    @Test
+    public void testWithOrphan() throws Exception
+    {
+        testExample("/example5.xml");
+    }
 }

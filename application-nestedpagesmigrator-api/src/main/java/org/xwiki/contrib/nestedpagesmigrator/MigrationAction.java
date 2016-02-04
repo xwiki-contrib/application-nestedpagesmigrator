@@ -94,11 +94,6 @@ public class MigrationAction implements Serializable, Comparable
     {
         return targetDocument;
     }
-
-    public int getLevelOfNesting()
-    {
-        return targetDocument.getSpaceReferences().size();
-    }
     
     public boolean equals(Object o)
     {
@@ -132,5 +127,11 @@ public class MigrationAction implements Serializable, Comparable
         }
         
         return 0;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return String.format("[%s] -> [%s]", sourceDocument, targetDocument);
     }
 }

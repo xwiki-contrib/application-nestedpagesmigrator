@@ -42,8 +42,8 @@ import static org.mockito.Mockito.when;
 public class TerminalPagesGetterTest
 {
     @Rule
-    public MockitoComponentMockingRule<TerminalPagesGetter> mocker =
-            new MockitoComponentMockingRule<>(TerminalPagesGetter.class);
+    public MockitoComponentMockingRule<PagesToTransformGetter> mocker =
+            new MockitoComponentMockingRule<>(PagesToTransformGetter.class);
 
     private QueryManager queryManager;
     private DocumentReferenceResolver<String> documentReferenceResolver;

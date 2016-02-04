@@ -49,9 +49,9 @@ import com.xpn.xwiki.doc.XWikiDocument;
 /**
  * @version $Id: $
  */
-@Component(roles = TerminalPagesGetter.class)
+@Component(roles = PagesToTransformGetter.class)
 @Singleton
-public class TerminalPagesGetter
+public class PagesToTransformGetter
 {
     @Inject
     private QueryManager queryManager;

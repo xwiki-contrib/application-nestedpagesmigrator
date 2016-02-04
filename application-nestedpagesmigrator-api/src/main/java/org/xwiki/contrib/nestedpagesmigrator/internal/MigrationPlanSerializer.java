@@ -39,7 +39,7 @@ import com.google.gson.JsonSerializer;
  */
 public class MigrationPlanSerializer
 {
-    private class DocumentReferenceSerializer implements JsonSerializer<DocumentReference>
+    private static class DocumentReferenceSerializer implements JsonSerializer<DocumentReference>
     {
         @Override
         public JsonElement serialize(DocumentReference src, Type typeOfSrc, JsonSerializationContext context)
@@ -53,7 +53,7 @@ public class MigrationPlanSerializer
      * @param planTree plan to serialize
      * @return the JSON tree as string
      */
-    public String serialize(MigrationPlanTree planTree)
+    public static String serialize(MigrationPlanTree planTree)
     {
         Gson gson = new GsonBuilder().registerTypeAdapter(DocumentReference.class,
                 new DocumentReferenceSerializer()).setPrettyPrinting().create();

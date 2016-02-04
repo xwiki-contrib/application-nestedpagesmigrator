@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import javax.inject.Provider;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +41,6 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -59,7 +59,13 @@ public class MigrationPlanCreatorTest
     private Provider<XWikiContext> contextProvider;
     private XWikiContext context;
     private XWiki xwiki;
-    private TerminalPagesGetter terminalPagesGetter;
+    private PagesToTransformGetter pagesToTransformGetter;
+    
+    private void assertNotEquals(MigrationPlanTree plan, Object o1, Object o2) throws Exception
+    {
+        Assert.assertNotEquals(String.format("The same value is present twice in the plan: [%s].\n%s",
+                o1, MigrationPlanSerializer.serialize(plan)), o1, o2);
+    }
 
     private void verifyMigrationsActionsAreUnique(MigrationPlanTree plan) throws Exception
     {
@@ -68,9 +74,9 @@ public class MigrationPlanCreatorTest
             MigrationAction action = actions.get(i);
             for (int j = 0; j < i; ++j) {
                 MigrationAction otherAction = actions.get(j);
-                assertNotEquals(action, otherAction);
-                assertNotEquals(action.getSourceDocument(), otherAction.getSourceDocument());
-                assertNotEquals(action.getTargetDocument(), otherAction.getTargetDocument());
+                assertNotEquals(plan, action, otherAction);
+                assertNotEquals(plan, action.getSourceDocument(), otherAction.getSourceDocument());
+                assertNotEquals(plan, action.getTargetDocument(), otherAction.getTargetDocument());
             }
         }
     }
@@ -83,7 +89,7 @@ public class MigrationPlanCreatorTest
         when(contextProvider.get()).thenReturn(context);
         xwiki = mock(XWiki.class);
         when(context.getWiki()).thenReturn(xwiki);
-        terminalPagesGetter = mocker.getInstance(TerminalPagesGetter.class);
+        pagesToTransformGetter = mocker.getInstance(PagesToTransformGetter.class);
         
         XWikiDocument document = mock(XWikiDocument.class);
         when(xwiki.getDocument(any(DocumentReference.class), eq(context))).thenReturn(document);
@@ -103,13 +109,30 @@ public class MigrationPlanCreatorTest
     {
         for (Page page : example.getAllPagesAfter()) {
             MigrationAction action = plan.getActionAbout(page.getFrom());
-            assertNotNull(action);
-            assertEquals(page.getFrom(), action.getSourceDocument());
-            assertEquals(page.getDocumentReference(), action.getTargetDocument());
+            // The action must exist
+            assertNotNull(
+                    String.format("An action concerning [%s] was expected in the plan.\n%s",
+                            page.getFrom(), MigrationPlanSerializer.serialize(plan)),
+                    action);
+            
+            // The action has the expected source
+            assertEquals(
+                    String.format("The action [%s] should have the source [%s].\n", action, page.getFrom(),
+                            MigrationPlanSerializer.serialize(plan)),
+                    page.getFrom(), action.getSourceDocument());
+            
+            // The action has the expected target (from the example) 
+            assertEquals(
+                    String.format("The action [%s] should have the target [%s].\n", action, page.getDocumentReference(),
+                            MigrationPlanSerializer.serialize(plan)),
+                    page.getDocumentReference(), action.getTargetDocument());
         }
 
-        MigrationPlanSerializer serializer = new MigrationPlanSerializer();
-        assertEquals(example.getPlan(), serializer.serialize(plan));
+        // The plan should be the exact same
+        assertEquals(
+                String.format("The serialized plan is different.\n %s", MigrationPlanSerializer.serialize(plan)),
+                example.getPlan(),
+                MigrationPlanSerializer.serialize(plan));
     }
     
     private void testExample(String exampleName) throws Exception
@@ -120,7 +143,7 @@ public class MigrationPlanCreatorTest
         MigrationConfiguration migrationConfiguration = new MigrationConfiguration(new WikiReference("xwiki"));
         migrationConfiguration.setDontMoveChildren(example.isDontMoveChildrenEnabled());
 
-        when(terminalPagesGetter.getTerminalPages(any(MigrationConfiguration.class)))
+        when(pagesToTransformGetter.getTerminalPages(any(MigrationConfiguration.class)))
                 .thenReturn(example.getConcernedPages(migrationConfiguration));
         
         MigrationPlanTree plan = mocker.getComponentUnderTest().computeMigrationPlan(migrationConfiguration);

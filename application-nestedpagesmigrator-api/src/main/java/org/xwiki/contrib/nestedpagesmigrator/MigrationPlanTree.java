@@ -34,6 +34,9 @@ public class MigrationPlanTree
 
     private Map<DocumentReference, MigrationAction> actionsByTarget = new HashMap<>();
     
+    /**
+     * Top level action: the root of the tree, but do not represent a real action.
+     */ 
     private MigrationAction topLevelAction = new MigrationAction(null, null);
     
     public Map<DocumentReference, MigrationAction> getActions()
@@ -53,7 +56,6 @@ public class MigrationPlanTree
     
     public void addAction(MigrationAction action) throws MigrationException
     {
-        // TODO: simplify this
         if (actions.containsKey(action.getSourceDocument())) {
             throw new MigrationException(String.format("An action concerning [%s] already exists.",
                     action.getSourceDocument()));

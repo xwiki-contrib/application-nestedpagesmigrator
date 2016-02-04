@@ -23,6 +23,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
@@ -36,11 +38,16 @@ import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
 public class DefaultNestedPagesMigrator implements NestedPagesMigrator
 {
     @Inject
-    MigrationPlanCreator migrationPlanCreator;
+    ComponentManager componentManager;
     
     @Override
     public MigrationPlanTree computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException
     {
-        return migrationPlanCreator.computeMigrationPlan(configuration);
+        try {
+            MigrationPlanCreator migrationPlanCreator = componentManager.getInstance(MigrationPlanCreator.class);
+            return migrationPlanCreator.computeMigrationPlan(configuration);
+        } catch (ComponentLookupException e) {
+            throw new MigrationException("Unexpected error.", e);
+        }
     }
 }

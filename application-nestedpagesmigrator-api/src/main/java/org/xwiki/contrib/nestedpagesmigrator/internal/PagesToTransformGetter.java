@@ -32,6 +32,7 @@ import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
+import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
@@ -66,11 +67,13 @@ public class PagesToTransformGetter
     private Provider<XWikiContext> contextProvider;
 
     @Inject
+    private JobProgressManager progressManager;
+
+    @Inject
     @Named("local")
     private EntityReferenceSerializer<String> referenceSerializer;
 
-
-    public List<DocumentReference> getTerminalPages(MigrationConfiguration configuration) throws MigrationException
+    public List<DocumentReference> getPagesToConvert(MigrationConfiguration configuration) throws MigrationException
     {  
         try {
             Query query = getQuery(configuration);
@@ -81,7 +84,20 @@ public class PagesToTransformGetter
             List<DocumentReference> results = new ArrayList<>();
             List<DocumentReference> excludedObjectClasses = configuration.getExcludedObjectClasses();
 
-            for (String docName : query.<String>execute()) {
+            progressManager.pushLevelProgress(2, this);
+            
+            // First: perform the query
+            progressManager.startStep(this);
+            List<String> docNames = query.execute();
+            
+            // Then load each document to see if they match the criteria
+            progressManager.startStep(this);
+            
+            // Send how many document are going to be read
+            progressManager.pushLevelProgress(docNames.size());
+            for (String docName : docNames) {
+                progressManager.startStep(this);
+                
                 DocumentReference documentReference =
                         documentReferenceResolver.resolve(docName, configuration.getWikiReference());
 
@@ -96,12 +112,18 @@ public class PagesToTransformGetter
                     }
 
                 } catch (XWikiException e) {
+                    // TODO: maybe continue without this document but add something in the logs?
                     throw new MigrationException(
                             String.format("Failed to get the document [%s]", documentReference), e);
                 }
 
                 results.add(documentReference);
             }
+            // All documents have been loaded
+            progressManager.popLevelProgress(this);
+            
+            // This method is ended
+            progressManager.popLevelProgress(this);
 
             return results;
         } catch (QueryException | ComponentLookupException e) {

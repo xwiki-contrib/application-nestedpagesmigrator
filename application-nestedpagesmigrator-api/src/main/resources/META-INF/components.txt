@@ -1,4 +1,5 @@
 org.xwiki.contrib.nestedpagesmigrator.internal.DefaultNestedPagesMigrator
 org.xwiki.contrib.nestedpagesmigrator.internal.MigrationPlanCreator
+org.xwiki.contrib.nestedpagesmigrator.internal.MigrationPlanCreatorJob
 org.xwiki.contrib.nestedpagesmigrator.internal.PagesToTransformGetter
 org.xwiki.contrib.nestedpagesmigrator.script.NestedPagesMigratorScriptService

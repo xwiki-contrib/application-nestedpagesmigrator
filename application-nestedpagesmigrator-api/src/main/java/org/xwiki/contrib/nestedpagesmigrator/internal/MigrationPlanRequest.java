@@ -17,18 +17,27 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.nestedpagesmigrator;
+package org.xwiki.contrib.nestedpagesmigrator.internal;
 
-import org.xwiki.component.annotation.Role;
-import org.xwiki.job.Job;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
+import org.xwiki.job.AbstractRequest;
 
 /**
  * @version $Id: $
  */
-@Role
-public interface NestedPagesMigrator
+public class MigrationPlanRequest extends AbstractRequest
 {
-    Job startMigrationPlanCreation(MigrationConfiguration configuration) throws MigrationException;
+    private static final String PROPERTY_PREFIX = "npmig.migrationplan.";
 
-    MigrationPlanTree getPlan(String wikiId);
+    private static final String PROPERTY_CONF = PROPERTY_PREFIX + "configuration";
+    
+    public void setConfiguration(MigrationConfiguration configuration)
+    {
+          setProperty(PROPERTY_CONF, configuration);
+    }
+    
+    public MigrationConfiguration getConfiguration()
+    {
+        return (MigrationConfiguration) getProperty(PROPERTY_CONF);
+    }
 }

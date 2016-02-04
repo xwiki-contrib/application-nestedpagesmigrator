@@ -19,14 +19,67 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.script;
 
+import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
+import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
+import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
+import org.xwiki.contrib.nestedpagesmigrator.internal.MigrationPlanSerializer;
+import org.xwiki.job.Job;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
+import org.xwiki.security.authorization.AccessDeniedException;
+import org.xwiki.security.authorization.AuthorizationManager;
+import org.xwiki.security.authorization.Right;
+
+import com.xpn.xwiki.XWikiContext;
 
 /**
  * @version $Id: $
  */
 @Named("nestedpagesmigrator")
+@Singleton
+@Component
 public class NestedPagesMigratorScriptService implements ScriptService
 {
+    @Inject
+    private NestedPagesMigrator nestedPagesMigrator;
+
+    @Inject
+    private AuthorizationManager authorizationManager;
+
+    @Inject
+    private Provider<XWikiContext> xcontextProvider;
+    
+    private void checkAdminAccess(WikiReference wikiReference) throws AccessDeniedException
+    {
+        // User need to be admin to run this application
+        XWikiContext xcontext = xcontextProvider.get();
+        authorizationManager.checkAccess(Right.ADMIN, xcontext.getUserReference(), wikiReference);
+    }
+    
+    public Job startMigrationPlanCreation(MigrationConfiguration configuration)
+            throws MigrationException, AccessDeniedException
+    {
+        checkAdminAccess(configuration.getWikiReference());
+        
+        return nestedPagesMigrator.startMigrationPlanCreation(configuration);
+    }
+    
+    public MigrationConfiguration newMigrationConfiguration(String wikiId)
+    {
+        return new MigrationConfiguration(new WikiReference(wikiId));
+    }
+    
+    public String getSerializedPlan(String wikiId) throws AccessDeniedException
+    {
+        checkAdminAccess(new WikiReference(wikiId));
+        
+        return MigrationPlanSerializer.serialize(nestedPagesMigrator.getPlan(wikiId));
+    }
+    
 }

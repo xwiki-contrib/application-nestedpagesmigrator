@@ -19,8 +19,10 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.xwiki.model.reference.DocumentReference;
@@ -33,6 +35,8 @@ public class MigrationPlanTree
     private Map<DocumentReference, MigrationAction> actions = new HashMap<>();
 
     private Map<DocumentReference, MigrationAction> actionsByTarget = new HashMap<>();
+    
+    private List<MigrationPlanTreeListener> listeners = new ArrayList<>();
     
     /**
      * Top level action: the root of the tree, but do not represent a real action.
@@ -56,6 +60,10 @@ public class MigrationPlanTree
         }
         actions.put(action.getSourceDocument(), action);
         actionsByTarget.put(action.getTargetDocument(), action);
+        
+        for (MigrationPlanTreeListener listener : listeners) {
+            listener.actionAdded(this, action);
+        }
     }
     
     public MigrationAction getActionAbout(DocumentReference documentReference)
@@ -80,5 +88,10 @@ public class MigrationPlanTree
             Collections.sort(action.getChildren());
         }
         Collections.sort(topLevelAction.getChildren());
+    }
+    
+    public void addListener(MigrationPlanTreeListener listener)
+    {
+        listeners.add(listener);
     }
 }

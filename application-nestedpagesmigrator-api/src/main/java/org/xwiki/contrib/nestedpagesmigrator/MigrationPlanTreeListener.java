@@ -19,16 +19,11 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator;
 
-import org.xwiki.component.annotation.Role;
-import org.xwiki.job.Job;
-
 /**
  * @version $Id: $
+ * @since 0.2
  */
-@Role
-public interface NestedPagesMigrator
+public interface MigrationPlanTreeListener
 {
-    Job startMigrationPlanCreation(MigrationConfiguration configuration) throws MigrationException;
-
-    MigrationPlanTree getPlan(String wikiId);
+    void actionAdded(MigrationPlanTree plan, MigrationAction action);
 }

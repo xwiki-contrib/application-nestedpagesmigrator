@@ -40,6 +40,7 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
+#set ($discard = $xwiki.ssfx.use('uicomponents/job/job.css', true))
 {{html clean="false"}}
 &lt;!------------------------------------------
   Migration Action Template 
@@ -58,8 +59,11 @@
 &lt;script id="DisplayPlan" type="text/html"&gt;
   &lt;h2&gt;Plan&lt;/h2&gt;
   &lt;div class="migration-plan box"&gt;
-    &lt;div data-bind="if: isComputing()" class="loading"&gt;
+    &lt;div data-bind="if: isComputing()"&gt;
       &lt;p&gt;The plan is being computed and it could take some time. Please wait...&lt;/p&gt;
+      &lt;div class="ui-progress-background"&gt;
+        &lt;div class="ui-progress-bar green" data-bind="style: {width: planProgress() + '%'}" /&gt;
+      &lt;/div&gt;
     &lt;/div&gt;
     &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()"&gt;
       &lt;!-- ko template: {name: 'MigrationActionTemplate', foreach: actions } --&gt;
@@ -557,6 +561,8 @@ require(['jquery'], function($) {
     self.isComputing     = ko.observable(false);
     self.xclasses        = ko.observableArray();
     self.xclassListVisible = ko.observable(false);
+    self.jobId           = false;
+    self.planProgress    = ko.observable(0);
     
     self.toggleXClassList = function () {
       self.xclassListVisible(!self.xclassListVisible());
@@ -623,10 +629,12 @@ require(['jquery'], function($) {
     });
     
     self.computePlan = function() {
+      self.planProgress(0);
       self.isPlanRequested(true);
       self.isComputing(true);
       self.actions.removeAll();
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+          'action'               : 'createPlan',
           'excludeHiddenPages'   : self.configuration.excludeHiddenPages(),
           'excludeClassPages'    : self.configuration.excludeClassPages(),
           'dontMoveChildren'     : self.configuration.dontMoveChildren(),
@@ -636,6 +644,30 @@ require(['jquery'], function($) {
           'includedSpaces'       : self.configuration.includedSpaces(),
           'excludedObjectClasses': self.configuration.excludedObjectClasses()
         }).done(function (data) {
+          self.jobId = data.jobId;
+          self.getJobStatus()
+        });
+    };
+    
+    self.getJobStatus = function () {
+      var restURLPrefix = xm.restURL.substring(0, xm.restURL.indexOf('rest/') + 5);
+      var jobURL = restURLPrefix + 'jobstatus/' + self.jobId + '?media=json';
+      $.getJSON(jobURL).done(function (data) {
+        var state = data.state;
+        if (state == 'FINISHED') {
+          self.getMigrationPlan();
+        } else if (state == 'RUNNING' || state == 'NONE') {
+          self.planProgress(data.progress.offset * 100);
+          // retry in 1 second
+          setTimeout(self.getJobStatus, 1000);
+        }
+      });
+    };
+    
+    self.getMigrationPlan = function () {
+      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+        'action': 'printPlan'
+      }).done(function (data) {
         var parseAction = function (data, parent) {
           var action = new MigrationAction(data.sourceDocument, data.targetDocument, parent);
           for (var i = 0; i &lt; data.children.length; ++i) {

@@ -39,100 +39,73 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{groovy}}
-// -------------------------------------------
-// Import
-// -------------------------------------------
-import org.xwiki.model.reference.*;
-import org.xwiki.contrib.nestedpagesmigrator.*;
-import org.xwiki.contrib.nestedpagesmigrator.internal.*;
-import com.google.gson.*;
-import com.google.gson.stream.*;
-import java.lang.reflect.Type;
-import org.apache.commons.lang.StringUtils;
-
-// -------------------------------------------
-// Configuration
-// -------------------------------------------
-def conf = new MigrationConfiguration(new WikiReference(services.wiki.getCurrentWikiId()));
-conf.setExcludeHiddenPages(request.getParameter('excludeHiddenPages') == 'true');
-conf.setExcludeClassPages(request.getParameter('excludeClassPages') == 'true');
-conf.setDontMoveChildren(request.getParameter('dontMoveChildren') == 'true');
-conf.setAddAutoRedirect(request.getParameter('addRedirection') == 'true');
-
-def getDocumentReferencesFromString(value) {
-  def references = [];
-  if (StringUtils.isNotBlank(value)) {
-    def values = value.split(',');
-    for (int i = 0; i &lt; values.length; ++i) {
-      if (StringUtils.isNotBlank(values[i])) {
-        references.add(services.model.resolveDocument(values[i]));
-      }
-    }
-  }
-  return references;
-}
-def getSpaceReferencesFromString(value) {
-  def references = [];
-  if (StringUtils.isNotBlank(value)) {
-    def values = value.split(',');
-    for (int i = 0; i &lt; values.length; ++i) {
-      if (StringUtils.isNotBlank(values[i])) {
-        references.add(services.model.resolveSpace(values[i]));
-      }
-    }
-  }
-  return references;
-}
-// Excluded object classes
-def excludedObjectClasses = getDocumentReferencesFromString(request.getParameter('excludedObjectClasses'));
-for (def ref : excludedObjectClasses) {
-  conf.addExcludedObjectClass(ref);
-}
-// Excluded pages
-def excludedPages = getDocumentReferencesFromString(request.getParameter('excludedPages'));
-for (def ref : excludedPages) {
-  conf.addExcludedPage(ref);
-}
-// Excluded spaces
-def excludedSpaces = getSpaceReferencesFromString(request.getParameter('excludedSpaces'));
-for (def ref : excludedSpaces) {
-  conf.addExcludedSpace(ref);
-}
-// Included spaces
-def includedSpaces = getSpaceReferencesFromString(request.getParameter('includedSpaces'));
-for (def ref : includedSpaces) {
-  conf.addIncludedSpace(ref);
-}
-
-// -------------------------------------------
-// Work
-// -------------------------------------------
-def component = (NestedPagesMigrator) services.component.getInstance(NestedPagesMigrator.class);
-
-// -------------------------------------------
-// Serialization
-// -------------------------------------------
-class DocumentReferenceSerializer implements JsonSerializer&lt;DocumentReference&gt; {
-  @Override
-  public JsonElement serialize(DocumentReference src, Type typeOfSrc, JsonSerializationContext context) {
-    return new JsonPrimitive(src.toString());
-  }
-}
-String serialize(plan) {
-  Gson gson = new GsonBuilder().registerTypeAdapter(DocumentReference.class, new DocumentReferenceSerializer()).create();
-  return gson.toJson(plan.getTopLevelAction().getChildren());
-}
-
-// -------------------------------------------
-// Printing
-// -------------------------------------------
-if (xcontext.getAction() == 'get') {
-  response.setContentType('application/json');
-  plan = component.computeMigrationPlan(conf);
-  println serialize(plan);
-}
-
-{{/groovy}}
+  <content>{{velocity}}
+#if ("$!request.action" == 'createPlan')
+  #**
+   * Transform the string parameter to a list of document references
+   *#
+  #macro(getDocumentReferencesFromString $value $result)
+    #set ($references = [])
+    #if ($stringtool.isNotBlank($value))
+      #set ($values = $value.split(','))
+      #foreach ($part in $values)
+        #if ($stringtool.isNotBlank($part))
+          #set ($reference = $services.model.resolveDocument($part))
+          #set ($discard = $references.add($reference))
+        #end
+      #end
+    #end
+    #setVariable("$result", $references)
+  #end
+  #**
+   * Transform the string parameter to a list of space references
+   *#
+  #macro(getSpaceReferencesFromString $value $result)
+    #set ($references = [])
+    #if ($stringtool.isNotBlank($value))
+      #set ($values = $value.split(','))
+      #foreach ($part in $values)
+        #if ($stringtool.isNotBlank($part))
+          #set ($reference = $services.model.resolveSpace($part))
+          #set ($discard = $references.add($reference))
+        #end
+      #end
+    #end
+    #setVariable("$result" $references)
+  #end
+  ###
+  ### Create the configuration
+  ###
+  #set ($configuration = $services.nestedpagesmigrator.newMigrationConfiguration($services.wiki.currentWikiId))
+  #set ($excludeHiddenPages = "$!request.excludeHiddenPages" == 'true')
+  #set ($excludeClassPages  = "$!request.excludeClassPages" == 'true')
+  #set ($dontMoveChildren   = "$!request.dontMoveChildren" == 'true')
+  #set ($addRedirection     = "$!request.addRedirection" == 'true')
+  #getDocumentReferencesFromString("$request.excludedObjectClasses", $excludedObjectClasses)
+  #getDocumentReferencesFromString("$request.excludedPages", $excludedPages)
+  #getSpaceReferencesFromString("$request.excludedSpaces", $excludedSpaces)
+  #getSpaceReferencesFromString("$request.includedSpaces", $includedSpaces)
+  #set ($discard = $configuration.setExcludeHiddenPages($excludeHiddenPages))
+  #set ($discard = $configuration.setExcludeClassPages($excludeClassPages))
+  #set ($discard = $configuration.setDontMoveChildren($dontMoveChildren))
+  #set ($discard = $configuration.setAddAutoRedirect($addRedirection))
+  #set ($discard = $configuration.addExcludedObjectClasses($excludedObjectClasses))
+  #set ($discard = $configuration.addExcludedPages($excludedPages))
+  #set ($discard = $configuration.addExcludedSpaces($excludedSpaces))
+  #set ($discard = $configuration.addIncludedSpaces($includedSpaces))
+  ###
+  ### Start the job
+  ###
+  #set ($job = $services.nestedpagesmigrator.startMigrationPlanCreation($configuration))
+  ###
+  ### Print the job id
+  ###
+  #set ($map = {'jobId': $stringtool.join($job.request.id, '/')})
+  #set ($discard = $response.setContentType('application/json'))
+  $jsontool.serialize($map)
+#elseif ("$!request.action" == 'printPlan')
+  $services.nestedpagesmigrator.getSerializedPlan('xwiki')
+#end
+{{/velocity}}
 </content>
 </xwikidoc>

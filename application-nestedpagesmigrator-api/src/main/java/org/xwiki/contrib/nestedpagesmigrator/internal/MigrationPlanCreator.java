@@ -34,6 +34,9 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTreeListener;
+import org.xwiki.job.event.status.JobProgressManager;
+import org.xwiki.logging.Message;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 
@@ -49,7 +52,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
  */
 @Component(roles = MigrationPlanCreator.class)
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
-public class MigrationPlanCreator implements Initializable
+public class MigrationPlanCreator implements Initializable, MigrationPlanTreeListener
 {
     private static final String SPACE_HOME_PAGE = "WebHome";
     
@@ -58,6 +61,9 @@ public class MigrationPlanCreator implements Initializable
 
     @Inject
     private Provider<XWikiContext> contextProvider;
+
+    @Inject
+    private JobProgressManager progressManager;
 
     @Inject
     private Logger logger;
@@ -86,9 +92,20 @@ public class MigrationPlanCreator implements Initializable
      */
     public MigrationPlanTree computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException
     {
-        concernedDocuments = pagesToTransformGetter.getTerminalPages(configuration);
-        plan = new MigrationPlanTree();
+        // Start
+        progressManager.pushLevelProgress(3, this);
 
+        // Get the pages to convert
+        progressManager.startStep(this, new Message("Get the pages to convert"));
+        concernedDocuments = pagesToTransformGetter.getPagesToConvert(configuration);
+        
+        // Compute the plan
+        progressManager.startStep(this, new Message("Compute the migration plan"));
+        plan = new MigrationPlanTree();
+        plan.addListener(this);
+        
+        progressManager.pushLevelProgress(concernedDocuments.size());
+        progressManager.startStep(this);
         if (configuration.isDontMoveChildren()) {
             for (DocumentReference terminalDoc : concernedDocuments) {
                 convertDocumentAndItsParentWithoutMove(terminalDoc);
@@ -98,10 +115,14 @@ public class MigrationPlanCreator implements Initializable
                 convertDocumentAndParents(documentReference);
             }
         }
+        progressManager.popLevelProgress(this);
 
         // A sorted migration plan tree is more user-friendly.
+        progressManager.startStep(this, new Message("Sort the plan"));
         plan.sort();
 
+        // End
+        this.progressManager.popLevelProgress(this);
         return plan;
     }
 
@@ -349,5 +370,13 @@ public class MigrationPlanCreator implements Initializable
     private boolean isTerminal(DocumentReference documentReference)
     {
         return !SPACE_HOME_PAGE.equals(documentReference.getName());
+    }
+
+    @Override
+    public void actionAdded(MigrationPlanTree plan, MigrationAction action)
+    {   
+        if (concernedDocuments.contains(action.getSourceDocument())) {
+            progressManager.startStep(this);
+        }
     }
 }

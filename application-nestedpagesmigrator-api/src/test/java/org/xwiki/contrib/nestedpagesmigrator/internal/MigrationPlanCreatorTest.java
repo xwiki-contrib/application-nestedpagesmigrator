@@ -150,7 +150,7 @@ public class MigrationPlanCreatorTest
         MigrationConfiguration migrationConfiguration = new MigrationConfiguration(new WikiReference("xwiki"));
         migrationConfiguration.setDontMoveChildren(example.isDontMoveChildrenEnabled());
 
-        when(pagesToTransformGetter.getTerminalPages(any(MigrationConfiguration.class)))
+        when(pagesToTransformGetter.getPagesToConvert(any(MigrationConfiguration.class)))
                 .thenReturn(example.getConcernedPages(migrationConfiguration));
         
         MigrationPlanTree plan = mocker.getComponentUnderTest().computeMigrationPlan(migrationConfiguration);

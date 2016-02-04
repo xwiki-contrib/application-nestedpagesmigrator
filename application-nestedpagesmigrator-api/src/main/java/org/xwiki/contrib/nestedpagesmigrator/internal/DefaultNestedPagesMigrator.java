@@ -19,16 +19,21 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.internal;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.manager.ComponentLookupException;
-import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
+import org.xwiki.job.Job;
+import org.xwiki.job.JobException;
+import org.xwiki.job.JobExecutor;
+import org.xwiki.job.JobStatusStore;
 
 /**
  * @version $Id: $
@@ -38,16 +43,41 @@ import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
 public class DefaultNestedPagesMigrator implements NestedPagesMigrator
 {
     @Inject
-    private ComponentManager componentManager;
-    
+    private JobExecutor jobExecutor;
+
+    @Inject
+    private JobStatusStore jobStatusStore;
+
     @Override
-    public MigrationPlanTree computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException
+    public Job startMigrationPlanCreation(MigrationConfiguration configuration) throws MigrationException
     {
         try {
-            MigrationPlanCreator migrationPlanCreator = componentManager.getInstance(MigrationPlanCreator.class);
-            return migrationPlanCreator.computeMigrationPlan(configuration);
-        } catch (ComponentLookupException e) {
-            throw new MigrationException("Unexpected error.", e);
+            MigrationPlanRequest migrationPlanRequest = new MigrationPlanRequest();
+            migrationPlanRequest.setId(getJobId(configuration.getWikiReference().getName()));
+            migrationPlanRequest.setConfiguration(configuration);
+            return jobExecutor.execute(MigrationPlanCreatorJob.JOB_TYPE, migrationPlanRequest);
+        } catch (JobException e) {
+            throw new MigrationException("Failed to create a migration pla,.", e);
         }
+    }
+
+    @Override
+    public MigrationPlanTree getPlan(String wikiId)
+    {
+        MigrationPlanCreatorJobStatus jobStatus;
+        List<String> jobId = getJobId(wikiId);
+        Job job = jobExecutor.getJob(jobId);
+        if (job != null) {
+            jobStatus = (MigrationPlanCreatorJobStatus) job.getStatus();
+        } else {
+            jobStatus = (MigrationPlanCreatorJobStatus) jobStatusStore.getJobStatus(jobId);
+        }
+        return jobStatus.getPlan();
+    }
+
+    private List<String> getJobId(String wikiId)
+    {
+        // One job per wiki
+        return Arrays.asList(MigrationPlanCreatorJob.JOB_TYPE, "createmigrationplan", wikiId);
     }
 }

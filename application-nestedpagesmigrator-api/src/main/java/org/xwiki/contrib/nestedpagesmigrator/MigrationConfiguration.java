@@ -19,7 +19,9 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
@@ -29,7 +31,7 @@ import org.xwiki.model.reference.WikiReference;
 /**
  * @version $Id: $
  */
-public class MigrationConfiguration
+public class MigrationConfiguration implements Serializable
 {
     private boolean excludeHiddenPages;
     
@@ -132,10 +134,20 @@ public class MigrationConfiguration
     {
         excludedSpaces.add(spaceReference);
     }
+
+    public void addExcludedSpaces(Collection<SpaceReference> spaceReferences)
+    {
+        excludedSpaces.addAll(spaceReferences);
+    }
     
     public void addIncludedSpace(SpaceReference spaceReference)
     {
         includedSpaces.add(spaceReference);
+    }
+
+    public void addIncludedSpaces(Collection<SpaceReference> spaceReferences)
+    {
+        includedSpaces.addAll(spaceReferences);
     }
 
     public void addExcludedObjectClass(DocumentReference classReference)
@@ -143,9 +155,19 @@ public class MigrationConfiguration
         excludedObjectClasses.add(classReference);
     }
 
+    public void addExcludedObjectClasses(Collection<DocumentReference> classReferences)
+    {
+        excludedObjectClasses.addAll(classReferences);
+    }
+
     public void addExcludedPage(DocumentReference classReference)
     {
         excludedPages.add(classReference);
+    }
+
+    public void addExcludedPages(Collection<DocumentReference> classReferences)
+    {
+        excludedPages.addAll(classReferences);
     }
 
     public WikiReference getWikiReference()

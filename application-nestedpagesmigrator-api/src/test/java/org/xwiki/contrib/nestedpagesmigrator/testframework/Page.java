@@ -31,12 +31,15 @@ public class Page
     private DocumentReference parent;
     
     private DocumentReference from;
+    
+    private boolean isFailedToLoad;
 
     public Page(DocumentReference documentReference, DocumentReference parent)
     {
         this.documentReference = documentReference;
         this.parent = parent;
         this.from = null;
+        this.isFailedToLoad = false;
     }
 
     public Page(DocumentReference documentReference, DocumentReference parent, DocumentReference from)
@@ -44,6 +47,23 @@ public class Page
         this.documentReference = documentReference;
         this.parent = parent;
         this.from = from;
+        this.isFailedToLoad = false;
+    }
+
+    public Page(DocumentReference documentReference, DocumentReference parent, boolean isFailedToLoad)
+    {
+        this.documentReference = documentReference;
+        this.parent = parent;
+        this.isFailedToLoad = isFailedToLoad;
+    }
+
+    public Page(DocumentReference documentReference, DocumentReference parent,
+            DocumentReference from, boolean isFailedToLoad)
+    {
+        this.documentReference = documentReference;
+        this.parent = parent;
+        this.from = from;
+        this.isFailedToLoad = isFailedToLoad;
     }
 
     public DocumentReference getDocumentReference()
@@ -60,14 +80,9 @@ public class Page
     {
         return from;
     }
-    
-    public boolean isTerminal()
+
+    public boolean isFailedToLoad()
     {
-        return "WebHome".equals(documentReference.getName());
-    }
-    
-    public boolean isFromTerminal()
-    {
-        return "WebHome".equals(from.getName());
+        return isFailedToLoad;
     }
 }

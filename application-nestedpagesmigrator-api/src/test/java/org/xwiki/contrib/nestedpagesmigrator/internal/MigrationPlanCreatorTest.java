@@ -38,6 +38,7 @@ import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -98,9 +100,14 @@ public class MigrationPlanCreatorTest
     private void setUpExample(Example example) throws Exception
     {
         for (Page page : example.getAllPages()) {
-            XWikiDocument document = mock(XWikiDocument.class);
-            when(xwiki.getDocument(eq(page.getDocumentReference()), eq(context))).thenReturn(document);
-            when(document.getParentReference()).thenReturn(page.getParent());
+            if (page.isFailedToLoad()) {
+                XWikiException exception = new XWikiException();
+                when(xwiki.getDocument(eq(page.getDocumentReference()), eq(context))).thenThrow(exception);   
+            } else {
+                XWikiDocument document = mock(XWikiDocument.class);
+                when(xwiki.getDocument(eq(page.getDocumentReference()), eq(context))).thenReturn(document);
+                when(document.getParentReference()).thenReturn(page.getParent());
+            }
             when(xwiki.exists(eq(page.getDocumentReference()), eq(context))).thenReturn(true);
         }
     }
@@ -117,13 +124,13 @@ public class MigrationPlanCreatorTest
             
             // The action has the expected source
             assertEquals(
-                    String.format("The action [%s] should have the source [%s].\n", action, page.getFrom(),
+                    String.format("The action [%s] should have the source [%s].\n%s", action, page.getFrom(),
                             MigrationPlanSerializer.serialize(plan)),
                     page.getFrom(), action.getSourceDocument());
             
             // The action has the expected target (from the example) 
             assertEquals(
-                    String.format("The action [%s] should have the target [%s].\n", action, page.getDocumentReference(),
+                    String.format("The action [%s] should have the target [%s].\n%s", action, page.getDocumentReference(),
                             MigrationPlanSerializer.serialize(plan)),
                     page.getDocumentReference(), action.getTargetDocument());
         }
@@ -148,11 +155,15 @@ public class MigrationPlanCreatorTest
         
         MigrationPlanTree plan = mocker.getComponentUnderTest().computeMigrationPlan(migrationConfiguration);
 
-        //MigrationPlanSerializer serializer = new MigrationPlanSerializer();
-        //System.out.println(serializer.serialize(plan));
-
         verifyMigrationsActionsAreUnique(plan);
         verifyPlan(plan, example);
+        
+        for (Page page : example.getAllPages()) {
+            if (page.isFailedToLoad()) {
+                verify(mocker.getMockedLogger()).error(eq("Failed to open the document [{}]."), 
+                        eq(page.getDocumentReference()), any(XWikiException.class));
+            }
+        }
     }
     
     @Test
@@ -183,5 +194,11 @@ public class MigrationPlanCreatorTest
     public void testWithOrphan() throws Exception
     {
         testExample("/example5.xml");
+    }
+
+    @Test
+    public void testWithDocumentImpossibleToLoad() throws Exception
+    {
+        testExample("/example6.xml");
     }
 }

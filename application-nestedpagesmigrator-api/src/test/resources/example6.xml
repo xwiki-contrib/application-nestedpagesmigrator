@@ -1,0 +1,70 @@
+<!--
+  Example when xwiki fails to load a document
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <parent/>
+    </page>
+    <page errorOnLoad="true">
+      <fullName>Movies.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Dramas.WebHome</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Dramas.DancesWithWolves</fullName>
+      <parent>Dramas.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <from>Main.WebHome</from>
+    </page>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <from>Movies.WebHome</from>
+    </page>
+    <page>
+      <fullName>Movies.Dramas.WebHome</fullName>
+      <from>Dramas.WebHome</from>
+    </page>
+    <page>
+      <fullName>Movies.Dramas.DancesWithWolves.WebHome</fullName>
+      <from>Dramas.DancesWithWolves</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": []
+  },
+  {
+    "sourceDocument": "xwiki:Movies.WebHome",
+    "targetDocument": "xwiki:Movies.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Dramas.WebHome",
+        "targetDocument": "xwiki:Movies.Dramas.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:Dramas.DancesWithWolves",
+            "targetDocument": "xwiki:Movies.Dramas.DancesWithWolves.WebHome",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

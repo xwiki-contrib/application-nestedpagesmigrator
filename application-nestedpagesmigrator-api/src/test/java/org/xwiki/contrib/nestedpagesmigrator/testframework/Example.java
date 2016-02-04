@@ -79,6 +79,18 @@ public class Example
         return new DocumentReference("xwiki", spaceList, page);
     }
     
+    private Page getPageFromElement(Element element) 
+    {
+        DocumentReference reference = resolveDocument(element.getChild("fullName").getText());
+        DocumentReference parent = 
+                element.getChild("parent") != null ? resolveDocument(element.getChild("parent").getText()) : null;
+        DocumentReference from = 
+                element.getChild("from") != null ? resolveDocument(element.getChild("from").getText()) : null;
+        boolean isFailedToLoad = "true".equals(element.getAttributeValue("errorOnLoad"));
+        
+        return new Page(reference, parent, from, isFailedToLoad);
+    }
+    
     public List<DocumentReference> getConcernedPages(MigrationConfiguration configuration)
     {
         List<DocumentReference> results = new ArrayList<>();
@@ -103,9 +115,7 @@ public class Example
     {
         List<Page> results = new ArrayList<>();
         for (Element element : getBeforePages()) {
-            DocumentReference reference = resolveDocument(element.getChild("fullName").getText());
-            DocumentReference parent = resolveDocument(element.getChild("parent").getText());
-            results.add(new Page(reference, parent));
+            results.add(getPageFromElement(element));
         }
         return results;
     }
@@ -114,9 +124,7 @@ public class Example
     {
         List<Page> results = new ArrayList<>();
         for (Element element : getAfterPages()) {
-            DocumentReference reference = resolveDocument(element.getChild("fullName").getText());
-            DocumentReference from = resolveDocument(element.getChild("from").getText());
-            results.add(new Page(reference, null, from));
+            results.add(getPageFromElement(element));
         }
         return results;
     }

@@ -23,10 +23,13 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.annotation.InstantiationStrategy;
+import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
+import org.xwiki.component.phase.Initializable;
+import org.xwiki.component.phase.InitializationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
@@ -34,18 +37,19 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 
+import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
- * A thread-safe migration plan creator which computes ALL required actions to convert a wiki to Nested Pages. 
+ * A migration plan creator which computes ALL required actions to convert a wiki to Nested Pages. Not thread-safe!
  *
  * @version $Id: $
  */
 @Component(roles = MigrationPlanCreator.class)
-@Singleton
-public class MigrationPlanCreator
+@InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
+public class MigrationPlanCreator implements Initializable
 {
     private static final String SPACE_HOME_PAGE = "WebHome";
     
@@ -57,6 +61,21 @@ public class MigrationPlanCreator
 
     @Inject
     private Logger logger;
+    
+    private XWikiContext context;
+    
+    private XWiki xwiki;
+    
+    private MigrationPlanTree plan;
+
+    private List<DocumentReference> concernedDocuments;
+
+    @Override
+    public void initialize() throws InitializationException
+    {
+        context = contextProvider.get();
+        xwiki = context.getWiki();
+    } 
 
     /**
      * Compute all migration actions needed to convert a wiki to Nested Pages.
@@ -67,28 +86,26 @@ public class MigrationPlanCreator
      */
     public MigrationPlanTree computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException
     {
-        List<DocumentReference> terminalDocs = pagesToTransformGetter.getTerminalPages(configuration);
-        MigrationPlanTree plan = new MigrationPlanTree();
-
-        XWikiContext context = contextProvider.get();
+        concernedDocuments = pagesToTransformGetter.getTerminalPages(configuration);
+        plan = new MigrationPlanTree();
 
         if (configuration.isDontMoveChildren()) {
-            for (DocumentReference terminalDoc : terminalDocs) {
-                MigrationAction action = convertDocumentWithoutMove(terminalDoc, plan);
-                MigrationAction parentAction = convertParentWithoutMove(terminalDoc, plan);
+            for (DocumentReference terminalDoc : concernedDocuments) {
+                MigrationAction action = convertDocumentWithoutMove(terminalDoc);
+                MigrationAction parentAction = convertParentWithoutMove(terminalDoc);
                 parentAction.addChild(action);
             }
         } else {
-            for (DocumentReference terminalDoc : terminalDocs) {
-                convertDocumentAndParents(terminalDoc, plan, terminalDocs, context);
+            for (DocumentReference terminalDoc : concernedDocuments) {
+                convertDocumentAndParents(terminalDoc);
             }
         }
         
         // Ensure there is an action for each document
-        if (plan.size() < terminalDocs.size()) {
+        if (plan.size() < concernedDocuments.size()) {
             throw new MigrationException(
                     String.format("Plan is incomplete. It contains %d actions meanwhile %d documents were identified.",
-                            plan.size(), terminalDocs.size()));
+                            plan.size(), concernedDocuments.size()));
         }
 
         // A sorted migration plan tree is more user-friendly.
@@ -96,8 +113,7 @@ public class MigrationPlanCreator
         return plan;
     }
     
-    private MigrationAction convertParentWithoutMove(DocumentReference originalDocument, MigrationPlanTree plan)
-            throws MigrationException
+    private MigrationAction convertParentWithoutMove(DocumentReference originalDocument) throws MigrationException
     {
         DocumentReference spaceHomeReference = new DocumentReference(SPACE_HOME_PAGE,
                 originalDocument.getLastSpaceReference());
@@ -113,11 +129,10 @@ public class MigrationPlanCreator
      * Convert a terminal document to nested pages without trying to move it under its parents.
      *  
      * @param terminalDoc the document to convert
-     * @param plan the migration plan
      *  
      * @return the action concerning this document
      */
-    private MigrationAction convertDocumentWithoutMove(DocumentReference terminalDoc, MigrationPlanTree plan) 
+    private MigrationAction convertDocumentWithoutMove(DocumentReference terminalDoc) 
             throws MigrationException
     {
         SpaceReference parentSpace = new SpaceReference(terminalDoc.getName(), terminalDoc.getLastSpaceReference());
@@ -130,15 +145,10 @@ public class MigrationPlanCreator
      * Convert a document and all its parents to Nested Pages.
      *  
      * @param documentReference the document to convert
-     * @param plan the migration plan to fill
-     * @param concernedDocuments the list of concerned documents. Only document from this list will be changed.
-     * @param context the XWiki context
      *  
      * @return the migration of the document
      */
-    private MigrationAction convertDocumentAndParents(DocumentReference documentReference, MigrationPlanTree plan,
-            List<DocumentReference> concernedDocuments,
-            XWikiContext context) throws MigrationException
+    private MigrationAction convertDocumentAndParents(DocumentReference documentReference) throws MigrationException
     {
         // A planned action concerning this document might have been created already. We avoid recomputing the 
         // conversion by returning the existing action, if there is any.
@@ -150,7 +160,7 @@ public class MigrationPlanCreator
         // Since the user might have configured some exclusions, we verify that this document is contained in the list
         // of documents to convert. Note: the document might not exist. In that case, it is good to compute a plan
         // for it (even not applied) to compute a good path for its children.
-        if (!concernedDocuments.contains(documentReference) && context.getWiki().exists(documentReference, context)) {
+        if (!concernedDocuments.contains(documentReference) && xwiki.exists(documentReference, context)) {
             // Otherwise, we create an "identity" action: it does nothing but it will added to the plan so that action
             // won't be recomputed afterwards.
             // Note that this action is added as child of the top-level action, because we want to have it in the plan 
@@ -164,7 +174,7 @@ public class MigrationPlanCreator
         // Get the parent reference
         DocumentReference parentReference;
         try {
-            parentReference = getParent(documentReference, context);
+            parentReference = getParent(documentReference);
         } catch (XWikiException e) {
             logger.error("Failed to open the document [{}].", documentReference, e);
             // Don't fail the migration just because of that, return an identity action instead.
@@ -174,27 +184,24 @@ public class MigrationPlanCreator
         // Get the action concerning the parent (or the top level action if the document is orphan). Because a plan 
         // concerning the parents must have been prepared before we compute the plan for the current document.
         MigrationAction parentAction = parentReference != null ?
-                convertDocumentAndParents(parentReference, plan, concernedDocuments, context)
-                : plan.getTopLevelAction();
+                convertDocumentAndParents(parentReference) : plan.getTopLevelAction();
 
         // Now, create the action for the current document
-        return createAction(documentReference, parentAction, plan, context, concernedDocuments);
+        return createAction(documentReference, parentAction);
     }
 
     /**
      * Get the parent of a document.
      *  
      * @param documentReference the document
-     * @param context the XWiki Context
-     *  
      * @return the parent document, or null if the document is and remains orphan
      *  
      * @throws XWikiException if the document cannot be loaded
      */
-    private DocumentReference getParent(DocumentReference documentReference, XWikiContext context) throws XWikiException
+    private DocumentReference getParent(DocumentReference documentReference) throws XWikiException
     {
         // To read the "parent" field of the document, we need to load the document
-        XWikiDocument document = context.getWiki().getDocument(documentReference, context);
+        XWikiDocument document = xwiki.getDocument(documentReference, context);
         DocumentReference parentReference = document.getParentReference();
 
         // The parent field might not be filled. In that case, the document is actually an orphan.
@@ -223,12 +230,10 @@ public class MigrationPlanCreator
      *  
      * @param documentReference the document to convert
      * @param parentAction the parent action
-     * @param plan the plan
      *  
      * @return the action concerning this document only.
      */
-    private MigrationAction createAction(DocumentReference documentReference, MigrationAction parentAction, 
-            MigrationPlanTree plan, XWikiContext context, List<DocumentReference> concernedDocuments)
+    private MigrationAction createAction(DocumentReference documentReference, MigrationAction parentAction)
             throws MigrationException
     {
         MigrationAction action;
@@ -236,8 +241,7 @@ public class MigrationPlanCreator
         // If the parent is not the top level action, ie: the parent exists.
         if (parentAction.getTargetDocument() != null) {
             if (isTerminal(documentReference)) {
-                action = createActionForTerminalDocument(documentReference, parentAction, plan, context,
-                        concernedDocuments);
+                action = createActionForTerminalDocument(documentReference, parentAction);
             } else {
                 // The document is already a WebHome, so we use the current space name under the space of the parent 
                 // document.
@@ -252,7 +256,7 @@ public class MigrationPlanCreator
             if (isTerminal(documentReference)) {
                 // We only need to convert the document to nested
                 // [Space.Page] => [Space.Page.WebHome].
-                action = convertDocumentWithoutMove(documentReference, plan);
+                action = convertDocumentWithoutMove(documentReference);
                 parentAction.addChild(action);
             } else {
                 // We have nothing to do!
@@ -269,14 +273,12 @@ public class MigrationPlanCreator
      *
      * @param documentReference the document to convert
      * @param parentAction the parent action
-     * @param plan the plan
      *
      * @return the action concerning this document only.
      * @throws MigrationException
      */
     private MigrationAction createActionForTerminalDocument(DocumentReference documentReference,
-            MigrationAction parentAction, MigrationPlanTree plan, XWikiContext context,
-            List<DocumentReference> concernedDocuments) throws MigrationException
+            MigrationAction parentAction) throws MigrationException
     {
         // The new parent space is created with the name of the original document, under the space of the parent
         // document.
@@ -287,10 +289,41 @@ public class MigrationPlanCreator
         DocumentReference targetDocument = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
 
         // However, the target may already exists!
+        targetDocument = computeFreeTarget(documentReference, parentAction, parentSpace, targetDocument);
+
+        // Because of computeFreeTarget(), the target document might have a different level of nesting. In that case,
+        // the parent is a virtual document that must be present in the plan.
+        // [Dramas.List, Movies.WebHome] -> [Movies.Dramas.List, Movies.Dramas.WebHome]
+        // --> Movies.Dramas.WebHome must be created!
+        if (!targetDocument.getLastSpaceReference().getParent().equals(
+                parentAction.getTargetDocument().getLastSpaceReference())) {
+            parentAction = convertDocumentAndParents(new DocumentReference(SPACE_HOME_PAGE, 
+                    (SpaceReference) targetDocument.getLastSpaceReference().getParent()));
+        }
+
+        return MigrationAction.createInstance(documentReference, targetDocument, parentAction, plan);
+    }
+
+    /**
+     * Verify that the target document is not already used by a previous action or already existing in the wiki.
+     */
+    private boolean isTargetFree(DocumentReference documentReference, DocumentReference targetDocument)
+    {
         MigrationAction conflictingAction = plan.getActionWithTarget(targetDocument);
+        // Note: it's ok to have a target document that exists if the target document is the source document too.
+        // ie: if the action do not move the document (identity action).
+        return conflictingAction == null
+                && (!xwiki.exists(targetDocument, context) || documentReference.equals(targetDocument));
+    }
+
+    /**
+     * Generate a target document that is not already used by a previous action or already existing in the wiki.
+     */
+    private DocumentReference computeFreeTarget(DocumentReference documentReference, MigrationAction parentAction,
+            SpaceReference parentSpace, DocumentReference targetDocument)
+    {
         int iteration = 0;
-        while (conflictingAction != null || (!documentReference.equals(targetDocument)
-                    && context.getWiki().exists(targetDocument, context))) {
+        while (!isTargetFree(documentReference, targetDocument)) {
             SpaceReference newParentSpace = parentSpace;
             
             // Best effort: we could add an interesting information by adding the name of the space of the old
@@ -314,24 +347,8 @@ public class MigrationPlanCreator
             // Create the new reference
             targetDocument = targetDocument.replaceParent(targetDocument.getLastSpaceReference(),
                     newParentSpace);
-            
-            // Look if there is a conflicting action for the next loop iteration
-            conflictingAction = plan.getActionWithTarget(targetDocument);
         }
-
-        // Because of the best effort above, the target document might have a different level of nesting. In that case,
-        // the parent is a virtual document that must be present in the plan.
-        // [Dramas.List, Movies.WebHome] -> [Movies.Dramas.List, Movies.Dramas.WebHome]
-        // --> Movies.Dramas.WebHome must be created!
-        if (!targetDocument.getLastSpaceReference().getParent().equals(
-                parentAction.getTargetDocument().getLastSpaceReference())) {
-            // So we need to convert the new the parent action!
-            parentAction = convertDocumentAndParents(new DocumentReference(SPACE_HOME_PAGE, 
-                    (SpaceReference) targetDocument.getLastSpaceReference().getParent()), plan,
-                    concernedDocuments, context);
-        }
-
-        return MigrationAction.createInstance(documentReference, targetDocument, parentAction, plan);
+        return targetDocument;
     }
 
     /** 

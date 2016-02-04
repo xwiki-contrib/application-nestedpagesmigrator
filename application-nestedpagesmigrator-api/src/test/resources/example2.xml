@@ -17,7 +17,7 @@
       <parent>Movies.WebHome</parent>
     </page>
     <page>
-      <fullName>Movies.DanceWithWolves</fullName>
+      <fullName>Movies.DancesWithWolves</fullName>
       <parent>Movies.WebHome</parent>
     </page>
   </before>
@@ -28,8 +28,8 @@
       <from>Movies.StarTrek</from>
     </page>
     <page>
-      <fullName>Movies.DanceWithWolves.WebHome</fullName>
-      <from>Movies.DanceWithWolves</from>
+      <fullName>Movies.DancesWithWolves.WebHome</fullName>
+      <from>Movies.DancesWithWolves</from>
     </page>
   </after>
   <!-- Plan as JSON -->
@@ -40,8 +40,8 @@
     "targetDocument": "xwiki:Movies.WebHome",
     "children": [
       {
-        "sourceDocument": "xwiki:Movies.DanceWithWolves",
-        "targetDocument": "xwiki:Movies.DanceWithWolves.WebHome",
+        "sourceDocument": "xwiki:Movies.DancesWithWolves",
+        "targetDocument": "xwiki:Movies.DancesWithWolves.WebHome",
         "children": []
       },
       {

@@ -13,12 +13,12 @@
       <parent>Main.WebHome</parent>
     </page>
     <page>
-      <fullName>Movies.DanceWithWolves</fullName>
+      <fullName>Movies.DancesWithWolves</fullName>
       <parent>Movies.WebHome</parent>
     </page>
     <!-- Creates a collision with existing document -->
     <page>
-      <fullName>Movies.DanceWithWolves.WebHome</fullName>
+      <fullName>Movies.DancesWithWolves.WebHome</fullName>
       <parent>Movies.WebHome</parent>
     </page>
   </before>
@@ -26,8 +26,8 @@
   <after>
     <page>
       <!-- The terminal page has been converted but with a number suffix -->
-      <fullName>Movies.DanceWithWolves_2.WebHome</fullName>
-      <from>Movies.DanceWithWolves</from>
+      <fullName>Movies.DancesWithWolves_2.WebHome</fullName>
+      <from>Movies.DancesWithWolves</from>
     </page>
   </after>
   <!-- Plan as JSON -->
@@ -38,8 +38,8 @@
     "targetDocument": "xwiki:Movies.WebHome",
     "children": [
       {
-        "sourceDocument": "xwiki:Movies.DanceWithWolves",
-        "targetDocument": "xwiki:Movies.DanceWithWolves_2.WebHome",
+        "sourceDocument": "xwiki:Movies.DancesWithWolves",
+        "targetDocument": "xwiki:Movies.DancesWithWolves_2.WebHome",
         "children": []
       }
     ]

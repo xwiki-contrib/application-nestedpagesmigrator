@@ -38,7 +38,7 @@ import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
 public class DefaultNestedPagesMigrator implements NestedPagesMigrator
 {
     @Inject
-    ComponentManager componentManager;
+    private ComponentManager componentManager;
     
     @Override
     public MigrationPlanTree computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException

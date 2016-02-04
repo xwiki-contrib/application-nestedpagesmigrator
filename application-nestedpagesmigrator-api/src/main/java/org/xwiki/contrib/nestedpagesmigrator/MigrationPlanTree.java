@@ -81,9 +81,4 @@ public class MigrationPlanTree
         }
         Collections.sort(topLevelAction.getChildren());
     }
-    
-    public int size()
-    {
-        return actions.size();
-    }
 }

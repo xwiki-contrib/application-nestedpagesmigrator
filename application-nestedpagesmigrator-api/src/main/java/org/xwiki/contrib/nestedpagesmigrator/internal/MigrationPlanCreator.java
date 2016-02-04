@@ -101,14 +101,6 @@ public class MigrationPlanCreator implements Initializable
 
         // A sorted migration plan tree is more user-friendly.
         plan.sort();
-        
-        // Ensure there is an action for each document
-        if (plan.size() < concernedDocuments.size()) {
-            throw new MigrationException(
-                    String.format(
-                            "Plan is incomplete. It contains %d actions meanwhile %d documents were identified.\n%s",
-                            plan.size(), concernedDocuments.size(), MigrationPlanSerializer.serialize(plan)));
-        }
 
         return plan;
     }
@@ -184,7 +176,7 @@ public class MigrationPlanCreator implements Initializable
         try {
             parentReference = getParent(documentReference);
         } catch (XWikiException e) {
-            logger.error("Failed to open the document [{}].", documentReference, e);
+            logger.warn("Failed to open the document [{}].", documentReference, e);
             // Don't fail the migration just because of that, return an identity action instead.
             return IdentityMigrationAction.createInstance(documentReference, plan.getTopLevelAction(), plan);
         }

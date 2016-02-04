@@ -160,7 +160,7 @@ public class MigrationPlanCreatorTest
         
         for (Page page : example.getAllPages()) {
             if (page.isFailedToLoad()) {
-                verify(mocker.getMockedLogger()).error(eq("Failed to open the document [{}]."), 
+                verify(mocker.getMockedLogger()).warn(eq("Failed to open the document [{}]."),
                         eq(page.getDocumentReference()), any(XWikiException.class));
             }
         }

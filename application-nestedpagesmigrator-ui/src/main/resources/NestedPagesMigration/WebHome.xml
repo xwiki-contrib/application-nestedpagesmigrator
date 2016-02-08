@@ -655,6 +655,7 @@ require(['jquery'], function($) {
       $.getJSON(jobURL).done(function (data) {
         var state = data.state;
         if (state == 'FINISHED') {
+          self.planProgress(100);
           self.getMigrationPlan();
         } else if (state == 'RUNNING' || state == 'NONE') {
           self.planProgress(data.progress.offset * 100);

@@ -104,7 +104,7 @@
   #set ($discard = $response.setContentType('application/json'))
   $jsontool.serialize($map)
 #elseif ("$!request.action" == 'printPlan')
-  $services.nestedpagesmigrator.getSerializedPlan('xwiki')
+  $services.nestedpagesmigrator.getSerializedPlan($services.wiki.currentWikiId)
 #end
 {{/velocity}}
 </content>

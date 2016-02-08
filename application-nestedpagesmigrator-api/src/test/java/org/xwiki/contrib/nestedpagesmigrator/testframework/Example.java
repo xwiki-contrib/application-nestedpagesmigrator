@@ -71,12 +71,22 @@ public class Example
         // This resolver is very limited, but I don't want to inject the real
         int index = fullName.lastIndexOf(".");
         String page = fullName.substring(index + 1);
-        String spaces[] = fullName.substring(0, index).split("\\.");
+        String spacePart = fullName.substring(0, index);
+
+        String wiki = "xwiki";
+
+        if (spacePart.contains(":")) {
+            int wikiPart = spacePart.indexOf(":");
+            wiki = spacePart.substring(0, wikiPart);
+            spacePart = spacePart.substring(wikiPart);
+        }
+
+        String spaces[] = spacePart.split("\\.");
         List<String> spaceList = new ArrayList<>();
         for (String space : spaces) {
             spaceList.add(space);
         }
-        return new DocumentReference("xwiki", spaceList, page);
+        return new DocumentReference(wiki, spaceList, page);
     }
     
     private Page getPageFromElement(Element element) 
@@ -93,6 +103,7 @@ public class Example
     
     public List<DocumentReference> getConcernedPages(MigrationConfiguration configuration)
     {
+        // Must be sync with PagesToTransformGetter
         List<DocumentReference> results = new ArrayList<>();
         for (Page page : getAllPages()) {
             if (configuration.isDontMoveChildren()) {
@@ -101,9 +112,10 @@ public class Example
                     results.add(page.getDocumentReference());
                 }
             } else {
-                if (page.getParent() == null ||
-                        !page.getDocumentReference().toString().equals(page.getParent().toString() + ".WebHome"))
-                {
+                if (page.getParent() == null
+                        || !page.getDocumentReference().toString().equals(page.getParent().toString() + ".WebHome")
+                        || !"WebHome".equals(page.getDocumentReference().getName())
+                        || !"WebPreferences".equals(page.getDocumentReference().getName())) {
                     results.add(page.getDocumentReference());
                 }
             }

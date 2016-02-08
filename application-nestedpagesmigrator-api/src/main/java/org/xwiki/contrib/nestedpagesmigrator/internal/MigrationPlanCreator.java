@@ -76,6 +76,8 @@ public class MigrationPlanCreator implements Initializable, MigrationPlanTreeLis
 
     private List<DocumentReference> concernedDocuments;
 
+    private MigrationConfiguration configuration;
+
     @Override
     public void initialize() throws InitializationException
     {
@@ -92,6 +94,8 @@ public class MigrationPlanCreator implements Initializable, MigrationPlanTreeLis
      */
     public MigrationPlanTree computeMigrationPlan(MigrationConfiguration configuration) throws MigrationException
     {
+        this.configuration = configuration;
+
         // Start
         progressManager.pushLevelProgress(3, this);
 
@@ -241,6 +245,9 @@ public class MigrationPlanCreator implements Initializable, MigrationPlanTreeLis
                 // Otherwise, we let the document orphan
                 // [Space.WebHome, no parent] => [Space.WebHome, no parent].
             }
+        } else if (!parentReference.getWikiReference().equals(configuration.getWikiReference())) {
+            // The parent is on an other wiki
+            parentReference = null;
         }
 
         return parentReference;
@@ -274,10 +281,17 @@ public class MigrationPlanCreator implements Initializable, MigrationPlanTreeLis
                 action = MigrationAction.createInstance(documentReference, targetDocument, parentAction, plan);
             }
         } else {
-            // The document must be non terminal because otherwise it would have a parent action (see getParent()).
-            // So, we have nothing to do!
-            // [Space.WebHome] => [Space.WebHome].
-            action = IdentityMigrationAction.createInstance(documentReference, parentAction, plan);
+            // The parent is the top level action, ie. the document is orphan
+            if (isTerminal(documentReference)) {
+                // We only need to convert the document to nested
+                // [Space.Page] => [Space.Page.WebHome].
+                action = convertDocumentWithoutMove(documentReference);
+                parentAction.addChild(action);
+            } else {
+                // We have nothing to do!
+                // [Space.WebHome] => [Space.WebHome].
+                action = IdentityMigrationAction.createInstance(documentReference, parentAction, plan);
+            }
         }
 
         return action;

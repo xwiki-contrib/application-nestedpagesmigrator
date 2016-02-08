@@ -201,4 +201,10 @@ public class MigrationPlanCreatorTest
     {
         testExample("/example6.xml");
     }
+
+    @Test
+    public void testWithParentInOtherWiki() throws Exception
+    {
+        testExample("/example7.xml");
+    }
 }

@@ -48,7 +48,11 @@
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0"&gt;
-    &lt;strong data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt; [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;] &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt; &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt; 
+    &lt;strong data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
+    [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
+    &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
+    &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
+    &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
     (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
     from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
     &lt;!-- ko if: displayChildren() --&gt;
@@ -632,6 +636,30 @@
         }
       }
     }
+    
+    self.setParent = function () {
+      // The reference needs to be complte in order to use XWiki.Document#getRestURL()
+      if (this.sourceDocument.getRoot().type != XWiki.EntityType.WIKI) {
+        this.sourceDocument.appendParent(xm.documentReference.extractReference(XWiki.EntityType.WIKI))
+      };
+      // First get the current parent
+      var restURL = new XWiki.Document(this.sourceDocument).getRestURL('', 'media=json');
+      $.getJSON(restURL).done(function (data) {
+        // Now ask the new parent to set
+        var parent = prompt("Enter the fullName of the parent that you want to set:", data.parent);
+        if (confirm('Are you sure to change the parent of the document? This operation cannot be undone.')) {
+          // Set the new parent using the REST API
+          $.ajax(restURL, {
+            dataType: 'json',
+            data:   {'parent': parent},
+            method: 'PUT'
+          }).done(function(data) {
+            // TODO: put something here, and handle error.
+            self.computePlan();
+          });
+        }
+      });
+    };
     
     self.initXClasses();
     

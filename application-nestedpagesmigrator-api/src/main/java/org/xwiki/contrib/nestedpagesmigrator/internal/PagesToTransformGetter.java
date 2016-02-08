@@ -137,7 +137,7 @@ public class PagesToTransformGetter
 
         if (configuration.isDontMoveChildren()) {
             // Only terminal documents are concerned, and WebPreferences should not be touched
-            xwql.append("where doc.fullName not in ('WebHome', 'WebPreferences')");
+            xwql.append("where doc.name not in ('WebHome', 'WebPreferences')");
         } else {
             // We need a different query here because in that case, we can move a non terminal page if we detect that it
             // is not under its parent.

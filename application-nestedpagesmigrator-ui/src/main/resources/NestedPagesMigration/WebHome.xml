@@ -602,6 +602,7 @@
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
         'action': 'printPlan'
       }).done(function (data) {
+        console.log('INFO: Plan computed');
         var parseAction = function (data, parent) {
           var action = new MigrationAction(data.sourceDocument, data.targetDocument, parent);
           for (var i = 0; i &lt; data.children.length; ++i) {
@@ -615,8 +616,9 @@
         }
         // Plan is loaded
         self.isComputing(false);
-        // Trigger an event for the mini-tree JS
-        $(document).trigger('xwiki:dom:updated', {'elements': $('.migration-plan').toArray()});
+        console.log('INFO: Plan have been parsed.');
+      }).fail(function () {
+        new XWiki.widgets.Notification('Failed to load the computed plan', 'error');
       });
     };
     

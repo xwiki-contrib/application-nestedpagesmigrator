@@ -644,20 +644,27 @@
       };
       // First get the current parent
       var restURL = new XWiki.Document(this.sourceDocument).getRestURL('', 'media=json');
+      var notification = new XWiki.widgets.Notification('Getting information', 'inprogress');
       $.getJSON(restURL).done(function (data) {
+        notification.hide();
         // Now ask the new parent to set
-        var parent = prompt("Enter the fullName of the parent that you want to set:", data.parent);
-        if (confirm('Are you sure to change the parent of the document? This operation cannot be undone.')) {
+        var parent = prompt("Enter the fullName of the parent that you want to set: (this will be applied immediatly)", data.parent);
+        if (parent) {
+          notification = new XWiki.widgets.Notification('Saving...', 'inprogress');
           // Set the new parent using the REST API
           $.ajax(restURL, {
             dataType: 'json',
             data:   {'parent': parent},
             method: 'PUT'
           }).done(function(data) {
-            // TODO: put something here, and handle error.
+            // TODO: put something here, and handle error;
             self.computePlan();
+          }).fail(function() {
+            notification.replace(new XWiki.widgets.Notification('Failed to save the page.', 'error'));
           });
         }
+      }).fail(function() {
+        notification.replace(new XWiki.widgets.Notification('Failed to get the current parent of the page. It may not exist.', 'error'));
       });
     };
     

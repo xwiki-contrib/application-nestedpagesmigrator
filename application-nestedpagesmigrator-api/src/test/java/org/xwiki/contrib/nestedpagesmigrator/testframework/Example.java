@@ -112,10 +112,10 @@ public class Example
                     results.add(page.getDocumentReference());
                 }
             } else {
-                if (page.getParent() == null
-                        || !page.getDocumentReference().toString().equals(page.getParent().toString() + ".WebHome")
-                        || !"WebHome".equals(page.getDocumentReference().getName())
-                        || !"WebPreferences".equals(page.getDocumentReference().getName())) {
+                if (!"WebPreferences".equals(page.getDocumentReference().getName())
+                        && (page.getParent() == null
+                            || !page.getDocumentReference().toString().equals(page.getParent().toString() + ".WebHome")
+                            || !"WebHome".equals(page.getDocumentReference().getName()))) {
                     results.add(page.getDocumentReference());
                 }
             }

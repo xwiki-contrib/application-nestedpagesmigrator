@@ -142,7 +142,8 @@ public class PagesToTransformGetter
             // We need a different query here because in that case, we can move a non terminal page if we detect that it
             // is not under its parent.
             xwql.append(
-                "where (doc.parent <> concat(doc.space, '.WebHome') or doc.name not in ('WebHome', 'WebPreferences'))");
+                "where (doc.parent <> concat(doc.space, '.WebHome') or doc.name <> 'WebHome') " +
+                        "and doc.name <> 'WebPreferences'");
         }
 
         if (configuration.hasIncludedSpaces()) {

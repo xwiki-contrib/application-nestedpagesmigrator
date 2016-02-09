@@ -40,7 +40,10 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
+## Both job.css and extension.css are needed because the ui-progress classes that we need to display
+## a progress bar are in one of these 2 files depending on the XWiki version
 #set ($discard = $xwiki.ssfx.use('uicomponents/job/job.css', true))
+#set ($discard = $xwiki.ssfx.use('uicomponents/extension/extension.css', true))
 #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
 {{html clean="false"}}
 &lt;!------------------------------------------

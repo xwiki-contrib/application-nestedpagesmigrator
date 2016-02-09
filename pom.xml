@@ -29,7 +29,7 @@
   </parent>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>application-nestedpagesmigrator</artifactId>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.2</version>
   <packaging>pom</packaging>
   <description>Nested Pages Migrator - Parent POM</description>
   <properties>
@@ -52,7 +52,7 @@
     <connection>scm:git:git://github.com/xwiki-contrib/application-nestedpagesmigrator.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/application-nestedpagesmigrator.git</developerConnection>
     <url>https://github.com/xwiki-contrib/application-nestedpagesmigrator/tree/master</url>
-    <tag>HEAD</tag>
+    <tag>application-nestedpagesmigrator-0.2</tag>
   </scm>
   <modules>
     <!-- Sorted Alphabetically -->

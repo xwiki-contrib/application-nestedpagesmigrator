@@ -57,7 +57,7 @@
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
     (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
-    from &lt;a data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
+    from &lt;a target="_blank" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
     &lt;!-- ko if: displayChildren() --&gt;
       &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
     &lt;!-- /ko --&gt;

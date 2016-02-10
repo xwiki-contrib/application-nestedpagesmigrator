@@ -1,9 +1,14 @@
 <!--
-  Basic example.
+  Basic example with space preferences.
 -->
 <example>
   <!-- State before the migration -->
   <before>
+    <preferences>
+      <skin>XWiki.DefaultSkin</skin>
+      <iconTheme>Font Awesome</iconTheme>
+      <showLeftPanels>true</showLeftPanels>
+    </preferences>
     <page>
       <fullName>Main.WebHome</fullName>
       <parent/>
@@ -11,13 +16,24 @@
     <page>
       <fullName>Movies.WebHome</fullName>
       <parent>Main.WebHome</parent>
+      <preferences>
+        <skin>XWiki.MoviesSkin</skin>
+        <showLeftPanels>true</showLeftPanels>
+      </preferences>
     </page>
     <page>
       <fullName>Movies.StarTrek</fullName>
       <parent>Movies.WebHome</parent>
     </page>
     <page>
-      <fullName>Movies.DancesWithWolves</fullName>
+      <fullName>Dramas.WebHome</fullName>
+      <preferences>
+        <showLeftPanels>false</showLeftPanels>
+      </preferences>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Dramas.DancesWithWolves</fullName>
       <parent>Movies.WebHome</parent>
     </page>
   </before>
@@ -30,19 +46,38 @@
     <page>
       <fullName>Main.Movies.WebHome</fullName>
       <from>Movies.WebHome</from>
+      <preferences>
+        <skin>XWiki.MoviesSkin</skin>
+        <showLeftPanels>true</showLeftPanels>
+      </preferences>
     </page>
     <page>
       <fullName>Main.Movies.StarTrek.WebHome</fullName>
       <from>Movies.StarTrek</from>
     </page>
     <page>
-      <fullName>Main.Movies.DancesWithWolves.WebHome</fullName>
-      <from>Movies.DancesWithWolves</from>
+      <fullName>Dramas.WebHome</fullName>
+      <from>Dramas.WebHome</from>
+      <preferences>
+        <showLeftPanels>false</showLeftPanels>
+      </preferences>
     </page>
+    <page>
+      <fullName>Main.Movies.DancesWithWolves.WebHome</fullName>
+      <from>Dramas.DancesWithWolves</from>
+      <preferences>
+        <showLeftPanels>false</showLeftPanels>
+      </preferences>
+    </page>
+
   </after>
   <!-- Plan as JSON -->
   <plan><![CDATA[
 [
+  {
+    "sourceDocument": "xwiki:Dramas.WebHome",
+    "targetDocument": "xwiki:Dramas.WebHome"
+  },
   {
     "sourceDocument": "xwiki:Main.WebHome",
     "targetDocument": "xwiki:Main.WebHome",
@@ -52,7 +87,7 @@
         "targetDocument": "xwiki:Main.Movies.WebHome",
         "children": [
           {
-            "sourceDocument": "xwiki:Movies.DancesWithWolves",
+            "sourceDocument": "xwiki:Dramas.DancesWithWolves",
             "targetDocument": "xwiki:Main.Movies.DancesWithWolves.WebHome"
           },
           {

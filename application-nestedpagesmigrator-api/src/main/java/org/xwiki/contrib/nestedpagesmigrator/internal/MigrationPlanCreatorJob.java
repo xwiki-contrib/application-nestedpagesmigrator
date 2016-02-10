@@ -50,8 +50,9 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
     @Override
     protected void runInternal() throws Exception
     {
-        MigrationPlanCreator migrationPlanCreator = componentManager.getInstance(MigrationPlanCreator.class);
-        MigrationPlanTree plan = migrationPlanCreator.computeMigrationPlan(request.getConfiguration());
+        PagesMigrationPlanCreator pagesMigrationPlanCreator
+                = componentManager.getInstance(PagesMigrationPlanCreator.class);
+        MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(request.getConfiguration());
         getStatus().setPlan(plan);
     }
 

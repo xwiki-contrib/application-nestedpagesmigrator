@@ -50,9 +50,9 @@ import com.xpn.xwiki.doc.XWikiDocument;
  *
  * @version $Id: $
  */
-@Component(roles = MigrationPlanCreator.class)
+@Component(roles = PagesMigrationPlanCreator.class)
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
-public class MigrationPlanCreator implements Initializable, MigrationPlanTreeListener
+public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTreeListener
 {
     private static final String SPACE_HOME_PAGE = "WebHome";
     

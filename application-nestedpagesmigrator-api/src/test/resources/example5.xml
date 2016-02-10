@@ -33,8 +33,7 @@
     "children": [
       {
         "sourceDocument": "xwiki:Main.Orphan",
-        "targetDocument": "xwiki:Main.Orphan.WebHome",
-        "children": []
+        "targetDocument": "xwiki:Main.Orphan.WebHome"
       }
     ]
   }

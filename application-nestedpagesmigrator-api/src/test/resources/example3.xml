@@ -84,13 +84,11 @@
         "children": [
           {
             "sourceDocument": "xwiki:Main.Movies.Comedy.WebHome",
-            "targetDocument": "xwiki:Main.Movies.Comedy.WebHome",
-            "children": []
+            "targetDocument": "xwiki:Main.Movies.Comedy.WebHome"
           },
           {
             "sourceDocument": "xwiki:Comedy.WebHome",
-            "targetDocument": "xwiki:Main.Movies.Comedy_2.WebHome",
-            "children": []
+            "targetDocument": "xwiki:Main.Movies.Comedy_2.WebHome"
           },
           {
             "sourceDocument": "xwiki:Main.Movies.Dramas.WebHome",
@@ -98,15 +96,13 @@
             "children": [
               {
                 "sourceDocument": "xwiki:Dramas.List",
-                "targetDocument": "xwiki:Main.Movies.Dramas.List.WebHome",
-                "children": []
+                "targetDocument": "xwiki:Main.Movies.Dramas.List.WebHome"
               }
             ]
           },
           {
             "sourceDocument": "xwiki:SciFi.List",
-            "targetDocument": "xwiki:Main.Movies.List.WebHome",
-            "children": []
+            "targetDocument": "xwiki:Main.Movies.List.WebHome"
           },
           {
             "sourceDocument": "xwiki:Main.Movies.Western.WebHome",
@@ -114,13 +110,11 @@
             "children": [
               {
                 "sourceDocument": "xwiki:Main.Movies.Western.List.WebHome",
-                "targetDocument": "xwiki:Main.Movies.Western.List.WebHome",
-                "children": []
+                "targetDocument": "xwiki:Main.Movies.Western.List.WebHome"
               },
               {
                 "sourceDocument": "xwiki:Western.List",
-                "targetDocument": "xwiki:Main.Movies.Western.List_2.WebHome",
-                "children": []
+                "targetDocument": "xwiki:Main.Movies.Western.List_2.WebHome"
               }
             ]
           }

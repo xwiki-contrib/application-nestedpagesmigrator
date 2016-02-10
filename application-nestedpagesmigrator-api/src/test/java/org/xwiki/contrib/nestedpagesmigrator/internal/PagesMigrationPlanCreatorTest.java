@@ -52,11 +52,11 @@ import static org.mockito.Mockito.when;
 /**
  * @version $Id: $
  */
-public class MigrationPlanCreatorTest
+public class PagesMigrationPlanCreatorTest
 {
     @Rule
-    public MockitoComponentMockingRule<MigrationPlanCreator> mocker =
-            new MockitoComponentMockingRule<>(MigrationPlanCreator.class);
+    public MockitoComponentMockingRule<PagesMigrationPlanCreator> mocker =
+            new MockitoComponentMockingRule<>(PagesMigrationPlanCreator.class);
 
     private Provider<XWikiContext> contextProvider;
     private XWikiContext context;
@@ -206,5 +206,11 @@ public class MigrationPlanCreatorTest
     public void testWithParentInOtherWiki() throws Exception
     {
         testExample("/example7.xml");
+    }
+
+    @Test
+    public void testWithPreferences() throws Exception
+    {
+        testExample("/example8.xml");
     }
 }

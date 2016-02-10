@@ -21,6 +21,7 @@ package org.xwiki.contrib.nestedpagesmigrator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
@@ -35,6 +36,8 @@ public class MigrationAction implements Serializable, Comparable
     private DocumentReference sourceDocument;
     
     private DocumentReference targetDocument;
+
+    private Collection<Preference> preferences = new ArrayList<>();
     
     private List<MigrationAction> children = new ArrayList<>();
 
@@ -133,5 +136,31 @@ public class MigrationAction implements Serializable, Comparable
     public String toString()
     {
         return String.format("[%s] -> [%s]", sourceDocument, targetDocument);
+    }
+
+    /**
+     * @return the collection of preferences to store in the WebPreferences page.
+     */
+    public Collection<Preference> getPreferences()
+    {
+        return preferences;
+    }
+
+    /**
+     * Add a preference to store in the WebPreferences after the page conversion.
+     * @param preference preference to add
+     */
+    public void addPreference(Preference preference)
+    {
+        preferences.add(preference);
+    }
+
+    /**
+     * @return the reference of the WebPreferences document that should store preferences concerning the target
+     * document.
+     */
+    public DocumentReference getWebPreferencesReference()
+    {
+        return new DocumentReference("WebPreferences", targetDocument.getLastSpaceReference());
     }
 }

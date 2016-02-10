@@ -19,6 +19,10 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.testframework;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
@@ -33,6 +37,8 @@ public class Page
     private DocumentReference from;
     
     private boolean isFailedToLoad;
+
+    private Collection<Preference> preferences = new ArrayList<>();
 
     public Page(DocumentReference documentReference, DocumentReference parent)
     {
@@ -84,5 +90,15 @@ public class Page
     public boolean isFailedToLoad()
     {
         return isFailedToLoad;
+    }
+
+    public Collection<Preference> getPreferences()
+    {
+        return preferences;
+    }
+
+    public void addPreference(Preference preference)
+    {
+        preferences.add(preference);
     }
 }

@@ -20,12 +20,14 @@
 package org.xwiki.contrib.nestedpagesmigrator.internal;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
@@ -48,6 +50,26 @@ public class MigrationPlanSerializer
         }
     }
 
+    private static class CollectionAdapter implements JsonSerializer<Collection<?>>
+    {
+        @Override
+        public JsonElement serialize(Collection<?> src, Type typeOfSrc, JsonSerializationContext context)
+        {
+            if (src == null || src.isEmpty()) {
+                return null;
+            }
+
+            JsonArray array = new JsonArray();
+
+            for (Object child : src) {
+                JsonElement element = context.serialize(child);
+                array.add(element);
+            }
+
+            return array;
+        }
+    }
+
     /**
      * Serialize the migration plan to a JSON tree (as string).
      * @param planTree plan to serialize
@@ -55,8 +77,11 @@ public class MigrationPlanSerializer
      */
     public static String serialize(MigrationPlanTree planTree)
     {
-        Gson gson = new GsonBuilder().registerTypeAdapter(DocumentReference.class,
-                new DocumentReferenceSerializer()).setPrettyPrinting().create();
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder = gsonBuilder.registerTypeAdapter(DocumentReference.class, new DocumentReferenceSerializer());
+        gsonBuilder = gsonBuilder.registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter());
+        gsonBuilder = gsonBuilder.setPrettyPrinting();
+        Gson gson = gsonBuilder.create();
         return gson.toJson(planTree.getTopLevelAction().getChildren());
     }
 

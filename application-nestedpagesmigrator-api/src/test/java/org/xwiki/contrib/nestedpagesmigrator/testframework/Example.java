@@ -29,6 +29,7 @@ import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
+import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
@@ -97,8 +98,17 @@ public class Example
         DocumentReference from = 
                 element.getChild("from") != null ? resolveDocument(element.getChild("from").getText()) : null;
         boolean isFailedToLoad = "true".equals(element.getAttributeValue("errorOnLoad"));
+
+        Page page = new Page(reference, parent, from, isFailedToLoad);
+
+        Element preferences = element.getChild("preferences");
+        if (preferences != null) {
+            for (Element preference : preferences.getChildren()) {
+                page.addPreference(new Preference(preference.getName(), preference.getText()));
+            }
+        }
         
-        return new Page(reference, parent, from, isFailedToLoad);
+        return page;
     }
     
     public List<DocumentReference> getConcernedPages(MigrationConfiguration configuration)

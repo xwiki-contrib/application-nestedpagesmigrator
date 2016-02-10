@@ -51,6 +51,8 @@
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0"&gt;
+    &lt;input type="checkbox" data-bind="attr: {name : serializedSourceDocument()}, checked: enabled" /&gt;
+    &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; getNumberOfChildren() &gt; 0, click: enableWithChildren" &gt;(all)&lt;/a&gt;
     &lt;strong data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
@@ -370,6 +372,7 @@
     self.targetDocument = resolveLocally(target);
     self.children = ko.observableArray();
     self.displayChildren = ko.observable(false);
+    self.enabled        = ko.observable(true);
     
     self.serializedSourceDocument = function () {
       return XWiki.Model.serialize(self.sourceDocument);
@@ -398,7 +401,25 @@
     self.toggleDisplayChildren = function() {
       self.displayChildren(!self.displayChildren());
     }
-
+    
+    self.disableChildren = function () {
+      for (var i = 0; i &lt; self.children().length; ++i) {
+        self.children()[i].enabled(false);
+      }
+    };
+    
+    self.enabled.subscribe(function (newValue) {
+      if (!newValue) {
+        self.disableChildren();
+      }
+    });
+    
+    self.enableWithChildren = function() {
+      self.enabled(true);
+      for (var i = 0; i &lt; self.children().length; ++i) {
+        self.children()[i].enableWithChildren();
+      }
+    }
   }
   
   function AppConfiguration() {

@@ -32,10 +32,12 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Preference;
+import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.text.StringUtils;
 
 /**
  * Not thread safe.
@@ -51,32 +53,44 @@ public class PreferencesMigrationPlanCreator
     @Inject
     private DocumentAccessBridge documentAccessBridge;
 
+    @Inject
+    private JobProgressManager progressManager;
+
     private Collection<String> properties;
 
     private DocumentReference classReference;
 
+    private MigrationPlanTree plan;
+
     public void convertPreferences(MigrationPlanTree plan, MigrationConfiguration configuration)
             throws MigrationException
     {
+        this.plan = plan;
         classReference = new DocumentReference(configuration.getWikiReference().getName(), "XWiki", "XWikiPreferences");
         properties = preferencesPropertiesGetter.getPreferences();
 
+        progressManager.pushLevelProgress(plan.getActions().size(), this);
         for (MigrationAction action : plan.getTopLevelAction().getChildren()) {
             convertPreferences(action);
         }
+        progressManager.popLevelProgress(this);
     }
 
     private void convertPreferences(MigrationAction action)
     {
-        for (MigrationAction child : action.getChildren()) {
-            for (String property : properties) {
-                Object valueBefore = getPreferenceValue(action.getSourceDocument(), property);
-                Object valueAfter = null;
-                if (valueBefore != null && !valueBefore.equals(valueAfter)) {
-                    // Do something here
-                    action.addPreference(new Preference(property, valueBefore));
-                }
+        progressManager.startStep(this);
+
+        for (String property : properties) {
+            Object valueBefore = getPreferenceValue(action.getSourceDocument(), property);
+            Object valueAfter = getPreferenceValueAfter(action, property);
+            if (valueBefore != null && !valueBefore.equals(valueAfter)) {
+                // Do something here
+                action.addPreference(new Preference(property, valueBefore));
             }
+        }
+
+        for (MigrationAction child : action.getChildren()) {
+            convertPreferences(child);
         }
     }
 
@@ -95,6 +109,36 @@ public class PreferencesMigrationPlanCreator
             EntityReference spaceParent = webPreferences.getLastSpaceReference().getParent();
             if (spaceParent.getType() == EntityType.SPACE) {
                 value = getPreferenceValue(new SpaceReference(spaceParent), propertyName);
+            } else if (spaceParent.getType() == EntityType.WIKI) {
+                value = documentAccessBridge.getProperty(classReference, classReference, propertyName);
+            }
+        }
+
+        return value;
+    }
+
+    private Object getPreferenceValueAfter(MigrationAction action, String propertyName)
+    {
+        for (Preference preference : action.getPreferences()) {
+            if (StringUtils.equals(preference.getName(), propertyName)) {
+                return preference.getValue();
+            }
+        }
+
+        DocumentReference webPreferences
+                = new DocumentReference("WebPreferences", action.getTargetDocument().getLastSpaceReference());
+        Object value = documentAccessBridge.getProperty(webPreferences, classReference, propertyName);
+
+        if (value == null) {
+            // Fallback to the parent
+            EntityReference spaceParent = webPreferences.getLastSpaceReference().getParent();
+            if (spaceParent.getType() == EntityType.SPACE) {
+                // Parent document
+                DocumentReference parent = new DocumentReference("WebHome", new SpaceReference(spaceParent));
+                // Get action concerning this document
+                MigrationAction parentAction = plan.getActionWithTarget(parent);
+                // Get the value from there
+                value = getPreferenceValueAfter(parentAction, propertyName);
             } else if (spaceParent.getType() == EntityType.WIKI) {
                 value = documentAccessBridge.getProperty(classReference, classReference, propertyName);
             }

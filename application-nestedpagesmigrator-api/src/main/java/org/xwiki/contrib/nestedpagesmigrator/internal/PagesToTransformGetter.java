@@ -146,6 +146,9 @@ public class PagesToTransformGetter
                         "and doc.name <> 'WebPreferences'");
         }
 
+        // Exclude the preferences of the wiki!
+        xwql.append(" and doc.fullName <> 'XWiki.XWikiPreferences'");
+
         if (configuration.hasIncludedSpaces()) {
             xwql.append(" and doc.space in (:includedSpaceList)");
         }

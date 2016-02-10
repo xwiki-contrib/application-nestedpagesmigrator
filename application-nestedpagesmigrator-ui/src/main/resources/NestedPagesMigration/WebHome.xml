@@ -55,6 +55,7 @@
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
+    &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludeSpace"&gt;exclude space&lt;/button&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
     (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
     from &lt;a target="_blank" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
@@ -397,7 +398,7 @@
     self.toggleDisplayChildren = function() {
       self.displayChildren(!self.displayChildren());
     }
-    
+
   }
   
   function AppConfiguration() {
@@ -623,8 +624,9 @@
     };
     
     self.excludePage = function() {
-      if (confirm('Are you sure to exclude this page from the migration?')) {
-        self.configuration.excludedPages(appendToString(self.configuration.excludedPages(), this.serializedSourceDocument()));
+      var page = this.serializedSourceDocument();
+      if (confirm('Are you sure to exclude the page ['+page+'] from the migration? The plan may be recomputed.')) {
+        self.configuration.excludedPages(appendToString(self.configuration.excludedPages(), page));
         // Adding an exclusion can seriously change the plan (if children are moved), so we re-compute it
         if (!self.configuration.dontMoveChildren()) {
           self.computePlan();
@@ -639,6 +641,14 @@
             self.actions.remove(detectAction);
           }
         }
+      }
+    }
+    
+    self.excludeSpace = function() {
+      var space = XWiki.Model.serialize(this.sourceDocument.extractReference(XWiki.EntityType.SPACE));
+      if (confirm('Are you sure to exclude the space ['+space+'] from the migration? The plan will be recomputed.')) {
+        self.configuration.excludedSpaces(appendToString(self.configuration.excludedSpaces(), space));
+        self.computePlan();
       }
     }
     

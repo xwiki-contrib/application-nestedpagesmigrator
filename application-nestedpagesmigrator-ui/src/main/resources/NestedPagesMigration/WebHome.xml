@@ -700,7 +700,7 @@
           });
         }
       }).fail(function() {
-        notification.replace(new XWiki.widgets.Notification('Failed to get the current parent of the page. It may not exist.', 'error'));
+        notification.replace(new XWiki.widgets.Notification('Failed to get the current parent of the page which may not exist.', 'error'));
       });
     };
     

@@ -428,9 +428,9 @@
     this.dontMoveChildren      = ko.observable(false);
     this.addRedirection        = ko.observable(true);
     this.excludedPages         = ko.observable('');
-    this.excludedSpaces        = ko.observable('XWiki');
+    this.excludedSpaces        = ko.observable('XWiki,Admin');
     this.includedSpaces        = ko.observable('');
-    this.excludedObjectClasses = ko.observable('XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass');
+    this.excludedObjectClasses = ko.observable('XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass');
     this.excludedObjectClasses.extend({ notify: 'always' });
   }
       

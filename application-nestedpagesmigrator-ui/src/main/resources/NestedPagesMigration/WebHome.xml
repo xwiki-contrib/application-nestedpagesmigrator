@@ -53,7 +53,7 @@
   &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0"&gt;
     &lt;input type="checkbox" data-bind="attr: {name : serializedSourceDocument()}, checked: enabled" /&gt;
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; getNumberOfChildren() &gt; 0, click: enableWithChildren" &gt;(all)&lt;/a&gt;
-    &lt;strong data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
+    &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
@@ -62,6 +62,11 @@
     (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
     from &lt;a target="_blank" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
     &lt;!-- ko if: displayChildren() --&gt;
+      &lt;!-- ko if: preferences.length &gt; 0 --&gt;
+        &lt;ul  data-bind="foreach: preferences"&gt;
+          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_pref_' + property}, checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;!-- /ko --&gt;
       &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
     &lt;!-- /ko --&gt;
   &lt;/li&gt;
@@ -363,16 +368,16 @@
   /**
    * Class representing a migration action
    */
-   
   function MigrationAction(source, target, parent) {
     var self = this;
     
-    self.parent = parent;
-    self.sourceDocument = resolveLocally(source);
-    self.targetDocument = resolveLocally(target);
-    self.children = ko.observableArray();
+    self.parent          = parent;
+    self.sourceDocument  = resolveLocally(source);
+    self.targetDocument  = resolveLocally(target);
+    self.children        = ko.observableArray();
     self.displayChildren = ko.observable(false);
-    self.enabled        = ko.observable(true);
+    self.enabled         = ko.observable(true);
+    self.preferences     = [];
     
     self.serializedSourceDocument = function () {
       return XWiki.Model.serialize(self.sourceDocument);
@@ -406,6 +411,9 @@
       for (var i = 0; i &lt; self.children().length; ++i) {
         self.children()[i].enabled(false);
       }
+      for (var i = 0; i &lt; self.preferences.length; ++i) {
+        self.preferences[i].enabled(false);
+      }
     };
     
     self.enabled.subscribe(function (newValue) {
@@ -416,10 +424,24 @@
     
     self.enableWithChildren = function() {
       self.enabled(true);
+      for (var i = 0; i &lt; self.preferences.length; ++i) {
+        self.preferences[i].enabled(true);
+      }
       for (var i = 0; i &lt; self.children().length; ++i) {
         self.children()[i].enableWithChildren();
       }
     }
+  }
+  
+  /**
+   * Class representing a preference.
+   */
+  function Preference(property, value) {
+    var self = this;
+    
+    self.property = property;
+    self.value    = value;
+    self.enabled  = ko.observable(true);
   }
 
   /**
@@ -657,8 +679,15 @@
         console.log('INFO: Plan computed');
         var parseAction = function (data, parent) {
           var action = new MigrationAction(data.sourceDocument, data.targetDocument, parent);
-          for (var i = 0; i &lt; data.children.length; ++i) {
-            action.children.push(parseAction(data.children[i], action));
+          if (data.children) {
+            for (var i = 0; i &lt; data.children.length; ++i) {
+              action.children.push(parseAction(data.children[i], action));
+            }
+          }
+          if (data.preferences) {
+            for (var property in data.preferences) {
+              action.preferences[action.preferences.length] = new Preference(property, data.preferences[property]);
+            }
           }
           return action;
         };
@@ -859,7 +888,7 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>.migration-plan ul &gt; li &gt; strong {
+      <code>.migration-plan .documentName {
   cursor: pointer;
 }</code>
     </property>

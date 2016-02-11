@@ -29,6 +29,7 @@ import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.job.Job;
+import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.job.event.status.JobStatus;
 
 /**
@@ -47,13 +48,27 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
     @Inject
     private ComponentManager componentManager;
 
+    @Inject
+    private JobProgressManager progressManager;
+
     @Override
     protected void runInternal() throws Exception
     {
+        progressManager.pushLevelProgress(2, this);
+        progressManager.startStep(this);
+
         PagesMigrationPlanCreator pagesMigrationPlanCreator
                 = componentManager.getInstance(PagesMigrationPlanCreator.class);
         MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(request.getConfiguration());
+
+        progressManager.startStep(this);
+        PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
+                = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
+        preferencesMigrationPlanCreator.convertPreferences(plan, request.getConfiguration());
+
         getStatus().setPlan(plan);
+
+        progressManager.popLevelProgress(this);
     }
 
     @Override

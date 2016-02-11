@@ -102,7 +102,7 @@ public class PreferencesMigrationPlanCreator
         }
         DocumentReference webPreferences
                 = new DocumentReference("WebPreferences", documentReference.getLastSpaceReference());
-        return (documentAccessBridge.getProperty(webPreferences, classReference, property) != null);
+        return !isNull(documentAccessBridge.getProperty(webPreferences, classReference, property));
     }
 
     private Object getPreferenceValue(DocumentReference document, String propertyName)
@@ -115,7 +115,7 @@ public class PreferencesMigrationPlanCreator
         DocumentReference webPreferences = new DocumentReference("WebPreferences", space);
         Object value = documentAccessBridge.getProperty(webPreferences, classReference, propertyName);
 
-        if (value == null) {
+        if (isNull(value)) {
             // Fallback to the parent space
             EntityReference spaceParent = webPreferences.getLastSpaceReference().getParent();
             if (spaceParent.getType() == EntityType.SPACE) {
@@ -140,7 +140,7 @@ public class PreferencesMigrationPlanCreator
                 = new DocumentReference("WebPreferences", action.getTargetDocument().getLastSpaceReference());
         Object value = documentAccessBridge.getProperty(webPreferences, classReference, propertyName);
 
-        if (value == null) {
+        if (isNull(value)) {
             // Fallback to the parent
             EntityReference spaceParent = webPreferences.getLastSpaceReference().getParent();
             if (spaceParent.getType() == EntityType.SPACE) {
@@ -156,5 +156,19 @@ public class PreferencesMigrationPlanCreator
         }
 
         return value;
+    }
+
+    private boolean isNull(Object value)
+    {
+        if (value == null) {
+            return true;
+        }
+
+        if (value instanceof String) {
+            String stringValue = (String) value;
+            return StringUtils.isBlank(stringValue) || "--".equals(stringValue);
+        }
+
+        return false;
     }
 }

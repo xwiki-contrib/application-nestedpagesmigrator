@@ -28,6 +28,11 @@
       <fullName>Classic.Dvorak</fullName>
       <parent>Music.Classic.WebHome</parent>
     </page>
+    <page>
+      <!-- This page was already at the good place -->
+      <fullName>Music.Classic.Dvorak.SymphonyNo5.WebHome</fullName>
+      <parent>Music.Classic.Dvorak.WebHome</parent>
+    </page>
   </before>
   <!-- Expected state after the migration -->
   <after>
@@ -44,6 +49,18 @@
       <from>Classic.Dvorak</from>
       <preferences>
         <skin>MusicSkin</skin>
+      </preferences>
+    </page>
+    <!-- The problem is that this action will actually not be created since this page is already nested.
+         So in reality, Music.Classic.Dvorak.SymphonyNo5.WebHome will get 'MusicSkin' as skin instead of default.
+         The only way to avoid that is to verify the preferences ISO of ALL PAGES, not only the ones concerned by
+         the migration.
+         Either we consider this as an edge case, or we fix it. -->
+    <page>
+      <fullName>Music.Classic.Dvorak.SymphonyNo5.WebHome</fullName>
+      <from>Music.Classic.Dvorak.SymphonyNo5.WebHome</from>
+      <preferences>
+        <skin>XWiki.DefaultSkin</skin>
       </preferences>
     </page>
   </after>
@@ -63,7 +80,16 @@
             "targetDocument": "xwiki:Music.Classic.Dvorak.WebHome",
             "preferences": {
               "skin": "MusicSkin"
-            }
+            },
+            "children": [
+              {
+                "sourceDocument": "xwiki:Music.Classic.Dvorak.SymphonyNo5.WebHome",
+                "targetDocument": "xwiki:Music.Classic.Dvorak.SymphonyNo5.WebHome",
+                "preferences": {
+                  "skin": "XWiki.DefaultSkin"
+                }
+              }
+            ]
           }
         ]
       }

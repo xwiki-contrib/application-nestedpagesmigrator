@@ -66,18 +66,14 @@
       <fullName>Main.Movies.DancesWithWolves.WebHome</fullName>
       <from>Dramas.DancesWithWolves</from>
       <preferences>
+        <skin>XWiki.DefaultSkin</skin>
         <showLeftPanels>false</showLeftPanels>
       </preferences>
     </page>
-
   </after>
   <!-- Plan as JSON -->
   <plan><![CDATA[
 [
-  {
-    "sourceDocument": "xwiki:Dramas.WebHome",
-    "targetDocument": "xwiki:Dramas.WebHome"
-  },
   {
     "sourceDocument": "xwiki:Main.WebHome",
     "targetDocument": "xwiki:Main.WebHome",
@@ -85,18 +81,33 @@
       {
         "sourceDocument": "xwiki:Movies.WebHome",
         "targetDocument": "xwiki:Main.Movies.WebHome",
+        "preferences": {
+          "skin": "XWiki.MoviesSkin",
+          "showLeftPanels": "true"
+        },
         "children": [
-          {
-            "sourceDocument": "xwiki:Dramas.DancesWithWolves",
-            "targetDocument": "xwiki:Main.Movies.DancesWithWolves.WebHome"
-          },
           {
             "sourceDocument": "xwiki:Movies.StarTrek",
             "targetDocument": "xwiki:Main.Movies.StarTrek.WebHome"
+          },
+          {
+            "sourceDocument": "xwiki:Dramas.DancesWithWolves",
+            "targetDocument": "xwiki:Main.Movies.DancesWithWolves.WebHome",
+            "preferences": {
+              "skin": "XWiki.DefaultSkin",
+              "showLeftPanels": "false"
+            }
           }
         ]
       }
     ]
+  },
+  {
+    "sourceDocument": "xwiki:Dramas.WebHome",
+    "targetDocument": "xwiki:Dramas.WebHome",
+    "preferences": {
+      "showLeftPanels": "false"
+    }
   }
 ]
 ]]></plan>

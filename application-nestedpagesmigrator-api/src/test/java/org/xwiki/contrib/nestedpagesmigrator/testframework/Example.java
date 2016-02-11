@@ -21,6 +21,7 @@ package org.xwiki.contrib.nestedpagesmigrator.testframework;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -159,5 +160,14 @@ public class Example
     public boolean isDontMoveChildrenEnabled()
     {
         return "true".equals(xmlDocument.getRootElement().getAttributeValue("dontMoveChildren"));
+    }
+
+    public Collection<Preference> getGlobalPreferences()
+    {
+        Collection<Preference> preferences = new ArrayList<>();
+        for (Element preference : getBefore().getChild("preferences").getChildren()) {
+            preferences.add(new Preference(preference.getName(), preference.getText()));
+        }
+        return preferences;
     }
 }

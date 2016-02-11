@@ -67,7 +67,7 @@ public class PreferencesMigrationPlanCreator
     {
         this.plan = plan;
         classReference = new DocumentReference(configuration.getWikiReference().getName(), "XWiki", "XWikiPreferences");
-        properties = preferencesPropertiesGetter.getPreferences();
+        properties = preferencesPropertiesGetter.getPreferencesProperties();
 
         progressManager.pushLevelProgress(plan.getActions().size(), this);
         for (MigrationAction action : plan.getTopLevelAction().getChildren()) {
@@ -83,7 +83,8 @@ public class PreferencesMigrationPlanCreator
         for (String property : properties) {
             Object valueBefore = getPreferenceValue(action.getSourceDocument(), property);
             Object valueAfter = getPreferenceValueAfter(action, property);
-            if (valueBefore != null && !valueBefore.equals(valueAfter)) {
+            boolean hasProperty = hasProperty(action.getSourceDocument(), property);
+            if (valueBefore != null && (!valueBefore.equals(valueAfter) || hasProperty)) {
                 // Do something here
                 action.addPreference(new Preference(property, valueBefore));
             }
@@ -92,6 +93,16 @@ public class PreferencesMigrationPlanCreator
         for (MigrationAction child : action.getChildren()) {
             convertPreferences(child);
         }
+    }
+
+    private boolean hasProperty(DocumentReference documentReference, String property)
+    {
+        if (!"WebHome".equals(documentReference.getName())) {
+            return false;
+        }
+        DocumentReference webPreferences
+                = new DocumentReference("WebPreferences", documentReference.getLastSpaceReference());
+        return (documentAccessBridge.getProperty(webPreferences, classReference, property) != null);
     }
 
     private Object getPreferenceValue(DocumentReference document, String propertyName)

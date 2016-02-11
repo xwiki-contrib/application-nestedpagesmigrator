@@ -1,0 +1,74 @@
+<!--
+  Example with space preferences and existing nested documents.
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <preferences>
+      <skin>XWiki.DefaultSkin</skin>
+      <iconTheme>Font Awesome</iconTheme>
+      <showLeftPanels>true</showLeftPanels>
+    </preferences>
+    <page>
+      <fullName>Music.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Music.Classic.WebHome</fullName>
+      <parent>Music.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Classic.WebHome</fullName>
+      <parent/>
+      <preferences>
+        <skin>MusicSkin</skin>
+      </preferences>
+    </page>
+    <page>
+      <fullName>Classic.Dvorak</fullName>
+      <parent>Music.Classic.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Music.WebHome</fullName>
+      <from>Music.WebHome</from>
+    </page>
+    <page>
+      <fullName>Music.Classic.WebHome</fullName>
+      <from>Music.Classic.WebHome</from>
+    </page>
+    <page>
+      <fullName>Music.Classic.Dvorak.WebHome</fullName>
+      <from>Classic.Dvorak</from>
+      <preferences>
+        <skin>MusicSkin</skin>
+      </preferences>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Music.WebHome",
+    "targetDocument": "xwiki:Music.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Music.Classic.WebHome",
+        "targetDocument": "xwiki:Music.Classic.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:Classic.Dvorak",
+            "targetDocument": "xwiki:Music.Classic.Dvorak.WebHome",
+            "preferences": {
+              "skin": "MusicSkin"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

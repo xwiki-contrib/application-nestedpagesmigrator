@@ -207,10 +207,4 @@ public class PagesMigrationPlanCreatorTest
     {
         testExample("/example7.xml");
     }
-
-    @Test
-    public void testWithPreferences() throws Exception
-    {
-        testExample("/example8.xml");
-    }
 }

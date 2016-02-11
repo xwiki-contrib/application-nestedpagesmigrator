@@ -47,7 +47,7 @@ public class PreferencesPropertiesGetter
     @Inject
     private Provider<XWikiContext> contextProvider;
 
-    public Collection<String> getPreferences() throws MigrationException
+    public Collection<String> getPreferencesProperties() throws MigrationException
     {
         XWikiContext context = contextProvider.get();
         XWiki xwiki = context.getWiki();

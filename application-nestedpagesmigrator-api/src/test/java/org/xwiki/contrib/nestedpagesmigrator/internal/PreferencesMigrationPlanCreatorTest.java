@@ -19,20 +19,30 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.internal;
 
-import javax.inject.Provider;
+import java.util.Arrays;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.xwiki.bridge.DocumentAccessBridge;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Example;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
+import org.xwiki.job.event.status.JobProgressManager;
+import org.xwiki.model.EntityType;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.text.StringUtils;
 
-import com.xpn.xwiki.XWiki;
-import com.xpn.xwiki.XWikiContext;
-
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -44,32 +54,133 @@ public class PreferencesMigrationPlanCreatorTest
     public MockitoComponentMockingRule<PreferencesMigrationPlanCreator> mocker =
             new MockitoComponentMockingRule<>(PreferencesMigrationPlanCreator.class);
 
-    private Provider<XWikiContext> contextProvider;
-    private XWikiContext context;
-    private XWiki xwiki;
+    private PreferencesPropertiesGetter preferencesPropertiesGetter;
+    private DocumentAccessBridge documentAccessBridge;
+    private JobProgressManager progressManager;
     
     @Before
     public void setUp() throws Exception
     {
-        contextProvider = mocker.registerMockComponent(XWikiContext.TYPE_PROVIDER);
-        context = mock(XWikiContext.class);
-        when(contextProvider.get()).thenReturn(context);
-        xwiki = mock(XWiki.class);
-        when(context.getWiki()).thenReturn(xwiki);
+        preferencesPropertiesGetter = mocker.getInstance(PreferencesPropertiesGetter.class);
+        documentAccessBridge = mocker.getInstance(DocumentAccessBridge.class);
+        progressManager = mocker.getInstance(JobProgressManager.class);
+
+        when(preferencesPropertiesGetter.getPreferencesProperties()).thenReturn(
+                Arrays.asList("skin", "iconTheme", "showLeftPanels"));
     }
 
-    private void setUpExample(Example example) throws Exception
+    private DocumentReference getHierarchyParent(DocumentReference documentReference)
     {
+        EntityReference spaceParent = documentReference.getLastSpaceReference().getParent();
+        if (spaceParent.getType() == EntityType.SPACE) {
+            return new DocumentReference("WebHome", new SpaceReference(spaceParent));
+        } else {
+            return null;
+        }
+    }
+
+    private MigrationPlanTree setUpExample(Example example) throws Exception
+    {
+        // Create a plan tree corresponding to the XML.
+        // Note: the order of the page in the XML is important (parent must be declared before children) otherwise this
+        // code will fail.
+        MigrationPlanTree plan = new MigrationPlanTree();
+        for (Page page : example.getAllPagesAfter()) {
+            DocumentReference parent = getHierarchyParent(page.getDocumentReference());
+            MigrationAction parentAction;
+            if (parent == null) {
+                parentAction = plan.getTopLevelAction();
+            } else {
+                parentAction = plan.getActionWithTarget(parent);
+            }
+            MigrationAction.createInstance(page.getFrom(), page.getDocumentReference(), parentAction, plan);
+        }
+
+        DocumentReference preferencesClass = new DocumentReference("mywiki", "XWiki", "XWikiPreferences");
+        // Add mocks for the expected preferences
         for (Page page : example.getAllPages()) {
             for (Preference preference : page.getPreferences()) {
-                //preference.getName()
+                DocumentReference webPreferences
+                        = new DocumentReference("WebPreferences", page.getDocumentReference().getLastSpaceReference());
+                when(documentAccessBridge.getProperty(eq(webPreferences), eq(preferencesClass),
+                        eq(preference.getName()))).thenReturn(preference.getValue());
             }
         }
+        for (Preference preference : example.getGlobalPreferences()) {
+            when(documentAccessBridge.getProperty(eq(preferencesClass), eq(preferencesClass), eq(preference.getName())))
+                    .thenReturn(preference.getValue());
+        }
+
+        return plan;
+    }
+
+    private void verifyPreferences(Example example, MigrationPlanTree plan) throws Exception
+    {
+        for (Page page : example.getAllPagesAfter()) {
+            MigrationAction action = plan.getActionWithTarget(page.getDocumentReference());
+            for (Preference preference : page.getPreferences()) {
+                boolean found = false;
+                for (Preference actionPref : action.getPreferences()) {
+                    if (actionPref.getName().equals(preference.getName())) {
+                        found = true;
+                        assertEquals(String.format("Expected preference [%s = %s] for document [%s] has an incorrect " +
+                                "value [%s].\n%s", preference.getName(), preference.getValue(),
+                                page.getDocumentReference(), actionPref.getValue(),
+                                MigrationPlanSerializer.serialize(plan)),
+                                preference.getValue(),
+                                actionPref.getValue());
+                    }
+                }
+                assertTrue(String.format("Expected preference [%s] for document [%s] was not found.\n%s",
+                        preference.getName(), page.getDocumentReference(), MigrationPlanSerializer.serialize(plan)),
+                        found);
+            }
+            for (Preference actionPref : action.getPreferences()) {
+                boolean found = false;
+                for (Preference preference : page.getPreferences()) {
+                    if (StringUtils.equals(preference.getName(), actionPref.getName())) {
+                        found = true;
+                        break;
+                    }
+                }
+                assertTrue(String.format("Unexpected preference [%s] has been found for document [%s].\n%s",
+                        actionPref.getName(), page.getDocumentReference(), MigrationPlanSerializer.serialize(plan)),
+                        found);
+            }
+        }
+    }
+
+    private void testExample(String exampleName) throws Exception
+    {
+        // Load example
+        Example example = new Example(exampleName);
+
+        // Create mocks
+        MigrationPlanTree plan = setUpExample(example);
+
+        // Run the component
+        mocker.getComponentUnderTest().convertPreferences(plan,
+                new MigrationConfiguration(new WikiReference("mywiki")));
+
+        // Verify
+        verifyPreferences(example, plan);
+
+        // The plan should be the exact same
+        assertEquals(
+                String.format("The serialized plan is different.\n %s", MigrationPlanSerializer.serialize(plan)),
+                example.getPlan(),
+                MigrationPlanSerializer.serialize(plan));
     }
 
     @Test
     public void testBasicExample() throws Exception
     {
-        //testExample("/example8.xml");
+        testExample("/example-preferences-1.xml");
+    }
+
+    @Test
+    public void testExampleWithNestedPages() throws Exception
+    {
+        testExample("/example-preferences-2.xml");
     }
 }

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.xwiki.contrib.nestedpagesmigrator.Preference;
+import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
@@ -39,6 +40,8 @@ public class Page
     private boolean isFailedToLoad;
 
     private Collection<Preference> preferences = new ArrayList<>();
+
+    private Collection<Right> rights = new ArrayList<>();
 
     public Page(DocumentReference documentReference, DocumentReference parent)
     {
@@ -100,5 +103,15 @@ public class Page
     public void addPreference(Preference preference)
     {
         preferences.add(preference);
+    }
+
+    public Collection<Right> getRights()
+    {
+        return rights;
+    }
+
+    public void addRight(Right right)
+    {
+        rights.add(right);
     }
 }

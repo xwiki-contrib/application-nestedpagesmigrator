@@ -31,6 +31,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.Preference;
+import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
@@ -90,6 +91,15 @@ public class Example
         }
         return new DocumentReference(wiki, spaceList, page);
     }
+
+    private Right elementToRight(Element right)
+    {
+        return new Right(
+                resolveDocument(right.getChildText("user")),
+                resolveDocument(right.getChildText("group")),
+                right.getChildText("level").split(","), "allow".equals(right.getChildText("value"))
+            );
+    }
     
     private Page getPageFromElement(Element element) 
     {
@@ -106,6 +116,13 @@ public class Example
         if (preferences != null) {
             for (Element preference : preferences.getChildren()) {
                 page.addPreference(new Preference(preference.getName(), preference.getText()));
+            }
+        }
+
+        Element rights = element.getChild("rights");
+        if (rights != null) {
+            for (Element right : rights.getChildren()) {
+                page.addRight(elementToRight(right));
             }
         }
         
@@ -169,5 +186,14 @@ public class Example
             preferences.add(new Preference(preference.getName(), preference.getText()));
         }
         return preferences;
+    }
+
+    public Collection<Right> getGlobalRights()
+    {
+        Collection<Right> rights = new ArrayList<>();
+        for (Element right : getBefore().getChild("rights").getChildren()) {
+            rights.add(elementToRight(right));
+        }
+        return rights;
     }
 }

@@ -38,6 +38,8 @@ public class MigrationAction implements Serializable, Comparable
     private DocumentReference targetDocument;
 
     private Collection<Preference> preferences = new ArrayList<>();
+
+    private Collection<Right> rights = new ArrayList<>();
     
     private List<MigrationAction> children = new ArrayList<>();
 
@@ -153,6 +155,16 @@ public class MigrationAction implements Serializable, Comparable
     public void addPreference(Preference preference)
     {
         preferences.add(preference);
+    }
+
+    public Collection<Right> getRights()
+    {
+        return rights;
+    }
+
+    public void addRight(Right right)
+    {
+        rights.add(right);
     }
 
     /**

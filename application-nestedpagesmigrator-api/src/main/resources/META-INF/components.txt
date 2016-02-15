@@ -4,4 +4,5 @@ org.xwiki.contrib.nestedpagesmigrator.internal.PagesMigrationPlanCreator
 org.xwiki.contrib.nestedpagesmigrator.internal.PagesToTransformGetter
 org.xwiki.contrib.nestedpagesmigrator.internal.PreferencesPropertiesGetter
 org.xwiki.contrib.nestedpagesmigrator.internal.PreferencesMigrationPlanCreator
+org.xwiki.contrib.nestedpagesmigrator.internal.RightsMigrationPlanCreator
 org.xwiki.contrib.nestedpagesmigrator.script.NestedPagesMigratorScriptService

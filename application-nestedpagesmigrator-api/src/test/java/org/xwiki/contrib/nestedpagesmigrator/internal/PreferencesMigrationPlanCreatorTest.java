@@ -32,10 +32,7 @@ import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Example;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
 import org.xwiki.job.event.status.JobProgressManager;
-import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 import org.xwiki.text.StringUtils;
@@ -48,7 +45,7 @@ import static org.mockito.Mockito.when;
 /**
  * @version $Id: $
  */
-public class PreferencesMigrationPlanCreatorTest
+public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCreatorTest
 {
     @Rule
     public MockitoComponentMockingRule<PreferencesMigrationPlanCreator> mocker =
@@ -69,32 +66,10 @@ public class PreferencesMigrationPlanCreatorTest
                 Arrays.asList("skin", "iconTheme", "showLeftPanels"));
     }
 
-    private DocumentReference getHierarchyParent(DocumentReference documentReference)
+    @Override
+    protected MigrationPlanTree setUpExample(Example example) throws Exception
     {
-        EntityReference spaceParent = documentReference.getLastSpaceReference().getParent();
-        if (spaceParent.getType() == EntityType.SPACE) {
-            return new DocumentReference("WebHome", new SpaceReference(spaceParent));
-        } else {
-            return null;
-        }
-    }
-
-    private MigrationPlanTree setUpExample(Example example) throws Exception
-    {
-        // Create a plan tree corresponding to the XML.
-        // Note: the order of the page in the XML is important (parent must be declared before children) otherwise this
-        // code will fail.
-        MigrationPlanTree plan = new MigrationPlanTree();
-        for (Page page : example.getAllPagesAfter()) {
-            DocumentReference parent = getHierarchyParent(page.getDocumentReference());
-            MigrationAction parentAction;
-            if (parent == null) {
-                parentAction = plan.getTopLevelAction();
-            } else {
-                parentAction = plan.getActionWithTarget(parent);
-            }
-            MigrationAction.createInstance(page.getFrom(), page.getDocumentReference(), parentAction, plan);
-        }
+        MigrationPlanTree plan = super.setUpExample(example);
 
         DocumentReference preferencesClass = new DocumentReference("mywiki", "XWiki", "XWikiPreferences");
         // Add mocks for the expected preferences

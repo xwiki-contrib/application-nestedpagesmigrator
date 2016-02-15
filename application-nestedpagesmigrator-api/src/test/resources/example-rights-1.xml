@@ -1,0 +1,134 @@
+<!--
+  Example with rights.
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <rights>
+      <right>
+        <group>XWiki.AllGroup</group>
+        <level>view,edit,comment,create,register</level>
+        <value>allow</value>
+      </right>
+      <right>
+        <group>XWiki.AdminGroup</group>
+        <level>admin,programing</level>
+        <value>allow</value>
+      </right>
+      <right>
+        <user>XWiki.Shakespeare</user>
+        <level>admin</level>
+        <value>allow</value>
+      </right>
+      <right>
+        <user>XWiki.Dostoievski</user>
+        <level>comment</level>
+        <value>deny</value>
+      </right>
+    </rights>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+      <rights>
+        <right>
+          <user>XWiki.AllGroup</user>
+          <level>comment</level>
+          <value>deny</value>
+        </right>
+      </rights>
+    </page>
+    <page>
+      <fullName>Movies.DancesWithWolves</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Main.StarTrek</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Dramas.WebHome</fullName>
+      <parent>Movies.WebHome</parent>
+      <rights>
+        <right>
+          <user>XWiki.AllGroup</user>
+          <level>create</level>
+          <value>deny</value>
+        </right>
+        <right>
+          <user>XWiki.Dostoievski</user>
+          <level>comment</level>
+          <value>allow</value>
+        </right>
+      </rights>
+    </page>
+    <!-- The rights for The Hours can be lost! -->
+    <page>
+      <fullName>Dramas.TheHours</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <from>Main.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.WebHome</fullName>
+      <from>Movies.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.DancesWithWolves.WebHome</fullName>
+      <from>Movies.DancesWithWolves</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.StartTrek.WebHome</fullName>
+      <from>Main.StarTrek</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.Dramas.WebHome</fullName>
+      <from>Dramas.WebHome</from>
+    </page>
+    <page>
+      <fullName>Main.Movies.TheHours.WebHome</fullName>
+      <from>Dramas.TheHours</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Movies.WebHome",
+        "targetDocument": "xwiki:Main.Movies.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:Movies.DancesWithWolves",
+            "targetDocument": "xwiki:Main.Movies.DancesWithWolves.WebHome"
+          },
+          {
+            "sourceDocument": "xwiki:Main.StarTrek",
+            "targetDocument": "xwiki:Main.Movies.StartTrek.WebHome"
+          },
+          {
+            "sourceDocument": "xwiki:Dramas.WebHome",
+            "targetDocument": "xwiki:Main.Movies.Dramas.WebHome"
+          },
+          {
+            "sourceDocument": "xwiki:Dramas.TheHours",
+            "targetDocument": "xwiki:Main.Movies.TheHours.WebHome"
+          }
+        ]
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

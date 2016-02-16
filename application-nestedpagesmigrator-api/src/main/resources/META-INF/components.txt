@@ -2,7 +2,7 @@ org.xwiki.contrib.nestedpagesmigrator.internal.DefaultNestedPagesMigrator
 org.xwiki.contrib.nestedpagesmigrator.internal.rights.DocumentRightsBridge
 org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJob
 org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator
-org.xwiki.contrib.nestedpagesmigrator.internal.PagesToTransformGetter
+org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesToTransformGetter
 org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesPropertiesGetter
 org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMigrationPlanCreator
 org.xwiki.contrib.nestedpagesmigrator.internal.rights.RightsMigrationPlanCreator

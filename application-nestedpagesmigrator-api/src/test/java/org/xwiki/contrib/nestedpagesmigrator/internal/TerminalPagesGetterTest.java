@@ -23,6 +23,7 @@ import javax.inject.Provider;
 
 import org.junit.Before;
 import org.junit.Rule;
+import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesToTransformGetter;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.query.Query;

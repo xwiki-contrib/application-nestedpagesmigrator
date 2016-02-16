@@ -35,7 +35,6 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTreeListener;
-import org.xwiki.contrib.nestedpagesmigrator.internal.PagesToTransformGetter;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.logging.Message;
 import org.xwiki.model.reference.DocumentReference;

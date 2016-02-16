@@ -28,7 +28,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
-import org.xwiki.contrib.nestedpagesmigrator.internal.MigrationPlanSerializer;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
 import org.xwiki.job.Job;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
@@ -40,6 +40,7 @@ import com.xpn.xwiki.XWikiContext;
 
 /**
  * @version $Id: $
+ * @since 0.2
  */
 @Named("nestedpagesmigrator")
 @Singleton

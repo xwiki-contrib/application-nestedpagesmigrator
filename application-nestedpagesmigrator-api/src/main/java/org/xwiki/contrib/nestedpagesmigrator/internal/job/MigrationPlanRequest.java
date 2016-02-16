@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.nestedpagesmigrator.internal;
+package org.xwiki.contrib.nestedpagesmigrator.internal.job;
 
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.job.AbstractRequest;

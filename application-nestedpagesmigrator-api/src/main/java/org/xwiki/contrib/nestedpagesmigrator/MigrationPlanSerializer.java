@@ -17,13 +17,11 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.nestedpagesmigrator.internal;
+package org.xwiki.contrib.nestedpagesmigrator;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
 
-import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
-import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.google.gson.Gson;
@@ -39,7 +37,7 @@ import com.google.gson.JsonSerializer;
  * Serialize a migration plan to a JSON tree.
  *  
  * @version $Id: $
- * @since 0.2 
+ * @since 0.3
  */
 public class MigrationPlanSerializer
 {

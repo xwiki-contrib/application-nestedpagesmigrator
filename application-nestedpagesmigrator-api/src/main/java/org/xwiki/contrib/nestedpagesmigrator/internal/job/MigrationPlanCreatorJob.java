@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.nestedpagesmigrator.internal;
+package org.xwiki.contrib.nestedpagesmigrator.internal.job;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -27,6 +27,9 @@ import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
+import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator;
+import org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMigrationPlanCreator;
+import org.xwiki.contrib.nestedpagesmigrator.internal.rights.RightsMigrationPlanCreator;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.job.Job;
 import org.xwiki.job.event.status.JobProgressManager;

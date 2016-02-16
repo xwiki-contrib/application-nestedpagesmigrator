@@ -25,14 +25,13 @@ import javax.inject.Named;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
-import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator;
 import org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMigrationPlanCreator;
 import org.xwiki.contrib.nestedpagesmigrator.internal.rights.RightsMigrationPlanCreator;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.job.Job;
-import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.job.event.status.JobStatus;
 
 /**
@@ -49,38 +48,36 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
     public static final String JOB_TYPE = "npmig";
     
     @Inject
-    private ComponentManager componentManager;
-
-    @Inject
-    private JobProgressManager progressManager;
-
-    @Inject
     private RightsMigrationPlanCreator rightsMigrationPlanCreator;
 
     @Override
     protected void runInternal() throws Exception
     {
-        progressManager.pushLevelProgress(3, this);
+        try {
+            progressManager.pushLevelProgress(3, this);
 
-        // Step 1: convert pages
-        progressManager.startStep(this);
-        PagesMigrationPlanCreator pagesMigrationPlanCreator
-                = componentManager.getInstance(PagesMigrationPlanCreator.class);
-        MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(request.getConfiguration());
+            // Step 1: convert pages
+            progressManager.startStep(this);
+            PagesMigrationPlanCreator pagesMigrationPlanCreator
+                    = componentManager.getInstance(PagesMigrationPlanCreator.class);
+            MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(request.getConfiguration());
 
-        // Step 2: convert preferences
-        progressManager.startStep(this);
-        PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
-                = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
-        preferencesMigrationPlanCreator.convertPreferences(plan, request.getConfiguration());
+            // Step 2: convert preferences
+            progressManager.startStep(this);
+            PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
+                    = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
+            preferencesMigrationPlanCreator.convertPreferences(plan, request.getConfiguration());
 
-        // Step 3: convert rights
-        progressManager.startStep(this);
-        rightsMigrationPlanCreator.convertRights(plan, request.getConfiguration());
+            // Step 3: convert rights
+            progressManager.startStep(this);
+            rightsMigrationPlanCreator.convertRights(plan, request.getConfiguration());
 
-        // End
-        getStatus().setPlan(plan);
-        progressManager.popLevelProgress(this);
+            // End
+            getStatus().setPlan(plan);
+            progressManager.popLevelProgress(this);
+        } catch (MigrationException e) {
+            logger.error("Failed to compute the migration plan.", e);
+        }
     }
 
     @Override

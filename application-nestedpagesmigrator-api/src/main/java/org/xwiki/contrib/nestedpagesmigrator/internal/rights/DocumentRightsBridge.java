@@ -21,6 +21,7 @@ package org.xwiki.contrib.nestedpagesmigrator.internal.rights;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -65,13 +66,19 @@ public class DocumentRightsBridge
             XWikiContext context = contextProvider.get();
             XWiki xwiki = context.getWiki();
             XWikiDocument doc = xwiki.getDocument(document, context);
-            for (BaseObject obj : doc.getXObjects(classReference)) {
-                String[] groups = obj.getLargeStringValue("groups").split(",");
-                String[] users  = obj.getLargeStringValue("users").split(",");
-                String[] levels = obj.getLargeStringValue("levels").split(",");
-                boolean allow   = obj.getIntValue("allow", 1) == 1;
-                parseRight(users, levels, allow, true, document.getWikiReference(), rights);
-                parseRight(groups, levels, allow, false, document.getWikiReference(), rights);
+            Collection<BaseObject> rightsObjects = doc.getXObjects(classReference);
+            if (rightsObjects != null) {
+                for (BaseObject obj : rightsObjects) {
+                    if (obj == null) {
+                        continue;
+                    }
+                    Collection<String> groups = getValues("groups", obj);
+                    Collection<String> users  = getValues("users", obj);
+                    Collection<String> levels = getValues("levels", obj);
+                    boolean allow = obj.getIntValue("allow", 1) == 1;
+                    parseRight(users, levels, allow, true, document.getWikiReference(), rights);
+                    parseRight(groups, levels, allow, false, document.getWikiReference(), rights);
+                }
             }
         } catch (XWikiException e) {
             throw new MigrationException(String.format("Failed to get the objects of the document [%s].", document), e);
@@ -80,18 +87,12 @@ public class DocumentRightsBridge
         return rights;
     }
 
-    private void parseRight(String[] targets, String[] levels, boolean allow, boolean isTargetUsers,
+    private void parseRight(Collection<String> targets, Collection<String> levels, boolean allow, boolean isTargetUsers,
             WikiReference wikiReference, Collection<Right> rights)
     {
         for (String target : targets) {
-            if (StringUtils.isBlank(target)) {
-                continue;
-            }
             DocumentReference targetRef = documentReferenceResolver.resolve(target, wikiReference);
             for (String level : levels) {
-                if (StringUtils.isBlank(level)) {
-                    continue;
-                }
                 if (isTargetUsers) {
                     rights.add(new Right(targetRef, null, level, allow));
                 } else {
@@ -99,5 +100,20 @@ public class DocumentRightsBridge
                 }
             }
         }
+    }
+
+    public Collection<String> getValues(String property, BaseObject object)
+    {
+        String value = object.getLargeStringValue(property);
+        if (value == null) {
+            return Collections.emptyList();
+        }
+        Collection<String> results = new ArrayList<>();
+        for (String v : value.split(",")) {
+            if (StringUtils.isNotBlank(v)) {
+                results.add(v);
+            }
+        }
+        return results;
     }
 }

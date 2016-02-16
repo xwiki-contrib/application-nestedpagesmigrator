@@ -155,6 +155,7 @@ public class RightsMigrationPlanCreator
                 // Same right already configured by descendant, so we ignore it
                 if (localRight.hasSameConcern(currentRight)) {
                     it.remove();
+                    break;
                 }
             }
         }

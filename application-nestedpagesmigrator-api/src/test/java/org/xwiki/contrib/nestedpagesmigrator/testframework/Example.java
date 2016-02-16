@@ -92,13 +92,14 @@ public class Example
         return new DocumentReference(wiki, spaceList, page);
     }
 
-    private Right elementToRight(Element right)
+    private void elementToRights(Element right, Page page)
     {
-        return new Right(
-                resolveDocument(right.getChildText("user")),
-                resolveDocument(right.getChildText("group")),
-                right.getChildText("level").split(","), "allow".equals(right.getChildText("value"))
-            );
+        DocumentReference user  = resolveDocument(right.getChildText("user"));
+        DocumentReference group = resolveDocument(right.getChildText("group"));
+        boolean value           = "allow".equals(right.getChildText("value"));
+        for (String level : right.getChildText("level").split(",")) {
+            page.addRight(new Right(user, group, level, value));
+        }
     }
     
     private Page getPageFromElement(Element element) 
@@ -122,7 +123,7 @@ public class Example
         Element rights = element.getChild("rights");
         if (rights != null) {
             for (Element right : rights.getChildren()) {
-                page.addRight(elementToRight(right));
+                elementToRights(right, page);
             }
         }
         
@@ -192,7 +193,12 @@ public class Example
     {
         Collection<Right> rights = new ArrayList<>();
         for (Element right : getBefore().getChild("rights").getChildren()) {
-            rights.add(elementToRight(right));
+            DocumentReference user  = resolveDocument(right.getChildText("user"));
+            DocumentReference group = resolveDocument(right.getChildText("group"));
+            boolean value           = "allow".equals(right.getChildText("value"));
+            for (String level : right.getChildText("level").split(",")) {
+                rights.add(new Right(user, group, level, value));
+            }
         }
         return rights;
     }

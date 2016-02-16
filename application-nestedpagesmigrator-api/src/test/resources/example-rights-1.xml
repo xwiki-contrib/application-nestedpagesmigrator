@@ -35,7 +35,7 @@
       <parent>Main.WebHome</parent>
       <rights>
         <right>
-          <user>XWiki.AllGroup</user>
+          <group>XWiki.AllGroup</group>
           <level>comment</level>
           <value>deny</value>
         </right>
@@ -45,6 +45,7 @@
       <fullName>Movies.DancesWithWolves</fullName>
       <parent>Movies.WebHome</parent>
     </page>
+    <!-- Star trek will now have rights from Movies...-->
     <page>
       <fullName>Main.StarTrek</fullName>
       <parent>Movies.WebHome</parent>
@@ -54,7 +55,7 @@
       <parent>Movies.WebHome</parent>
       <rights>
         <right>
-          <user>XWiki.AllGroup</user>
+          <group>XWiki.AllGroup</group>
           <level>create</level>
           <value>deny</value>
         </right>
@@ -80,6 +81,13 @@
     <page>
       <fullName>Main.Movies.WebHome</fullName>
       <from>Movies.WebHome</from>
+      <rights>
+        <right>
+          <group>XWiki.AllGroup</group>
+          <level>comment</level>
+          <value>deny</value>
+        </right>
+      </rights>
     </page>
     <page>
       <fullName>Main.Movies.DancesWithWolves.WebHome</fullName>
@@ -88,14 +96,57 @@
     <page>
       <fullName>Main.Movies.StartTrek.WebHome</fullName>
       <from>Main.StarTrek</from>
+      <!-- Dismiss the Movies rights -->
+      <rights>
+        <right>
+          <group>XWiki.AllGroup</group>
+          <level>comment</level>
+          <value>allow</value>
+        </right>
+      </rights>
     </page>
     <page>
       <fullName>Main.Movies.Dramas.WebHome</fullName>
       <from>Dramas.WebHome</from>
+      <rights>
+        <right>
+          <group>XWiki.AllGroup</group>
+          <level>create</level>
+          <value>deny</value>
+        </right>
+        <right>
+          <user>XWiki.Dostoievski</user>
+          <level>comment</level>
+          <value>allow</value>
+        </right>
+        <right>
+          <group>XWiki.AllGroup</group>
+          <level>comment</level>
+          <value>allow</value>
+        </right>
+      </rights>
     </page>
     <page>
       <fullName>Main.Movies.TheHours.WebHome</fullName>
       <from>Dramas.TheHours</from>
+      <!-- Comes from Dramas.WebHome -->
+      <rights>
+        <right>
+          <group>XWiki.AllGroup</group>
+          <level>create</level>
+          <value>deny</value>
+        </right>
+        <right>
+          <user>XWiki.Dostoievski</user>
+          <level>comment</level>
+          <value>allow</value>
+        </right>
+        <right>
+          <group>XWiki.AllGroup</group>
+          <level>comment</level>
+          <value>allow</value>
+        </right>
+      </rights>
     </page>
   </after>
   <!-- Plan as JSON -->
@@ -108,6 +159,13 @@
       {
         "sourceDocument": "xwiki:Movies.WebHome",
         "targetDocument": "xwiki:Main.Movies.WebHome",
+        "rights": [
+          {
+            "group": "xwiki:XWiki.AllGroup",
+            "level": "comment",
+            "allow": false
+          }
+        ],
         "children": [
           {
             "sourceDocument": "xwiki:Movies.DancesWithWolves",
@@ -115,15 +173,56 @@
           },
           {
             "sourceDocument": "xwiki:Main.StarTrek",
-            "targetDocument": "xwiki:Main.Movies.StartTrek.WebHome"
+            "targetDocument": "xwiki:Main.Movies.StartTrek.WebHome",
+            "rights": [
+              {
+                "group": "xwiki:XWiki.AllGroup",
+                "level": "comment",
+                "allow": true
+              }
+            ]
           },
           {
             "sourceDocument": "xwiki:Dramas.WebHome",
-            "targetDocument": "xwiki:Main.Movies.Dramas.WebHome"
+            "targetDocument": "xwiki:Main.Movies.Dramas.WebHome",
+            "rights": [
+              {
+                "group": "xwiki:XWiki.AllGroup",
+                "level": "create",
+                "allow": false
+              },
+              {
+                "user": "xwiki:XWiki.Dostoievski",
+                "level": "comment",
+                "allow": true
+              },
+              {
+                "group": "xwiki:XWiki.AllGroup",
+                "level": "comment",
+                "allow": true
+              }
+            ]
           },
           {
             "sourceDocument": "xwiki:Dramas.TheHours",
-            "targetDocument": "xwiki:Main.Movies.TheHours.WebHome"
+            "targetDocument": "xwiki:Main.Movies.TheHours.WebHome",
+            "rights": [
+              {
+                "group": "xwiki:XWiki.AllGroup",
+                "level": "create",
+                "allow": false
+              },
+              {
+                "user": "xwiki:XWiki.Dostoievski",
+                "level": "comment",
+                "allow": true
+              },
+              {
+                "group": "xwiki:XWiki.AllGroup",
+                "level": "comment",
+                "allow": true
+              }
+            ]
           }
         ]
       }

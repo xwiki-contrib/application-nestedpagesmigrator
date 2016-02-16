@@ -19,31 +19,145 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.internal;
 
-import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
-import org.xwiki.bridge.DocumentAccessBridge;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.annotation.InstantiationStrategy;
-import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
+import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.job.event.status.JobProgressManager;
+import org.xwiki.model.EntityType;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.SpaceReference;
 
 /**
  * @version $Id: $
+ * @since 0.3
  */
 @Component(roles = RightsMigrationPlanCreator.class)
-@InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
+@Singleton
 public class RightsMigrationPlanCreator
 {
     @Inject
-    private DocumentAccessBridge documentAccessBridge;
-
-    @Inject
     private JobProgressManager progressManager;
 
-    public void convertRights(MigrationPlanTree plan, MigrationConfiguration configuration)
-    {
+    @Inject
+    private DocumentRightsBridge documentRightsBridge;
 
+    public void convertRights(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException
+    {
+        progressManager.pushLevelProgress(plan.getActions().size(), this);
+        for (MigrationAction action : plan.getTopLevelAction().getChildren()) {
+            convertRights(action, plan);
+        }
+        progressManager.popLevelProgress(this);
+    }
+
+    private void convertRights(MigrationAction action, MigrationPlanTree plan) throws MigrationException
+    {
+        progressManager.startStep(this);
+
+        Collection<Right> oldRights = getRightsFromHierarchy(action.getSourceDocument(), null);
+        Collection<Right> newRights = getRightsFromHierarchy(action.getTargetDocument(), plan);
+
+        // Preserve all old rights
+        for (Right oldRight : oldRights) {
+            boolean found = false;
+            for (Right newRight : newRights) {
+                if (oldRight.equals(newRight)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // We need to add the right to the action
+                action.addRight(oldRight);
+            }
+        }
+
+        // Now make sure we don't have inherited right that was not there before
+        for (Right newRight : newRights) {
+            boolean found = false;
+            for (Right oldRight : oldRights) {
+                if (oldRight.equals(newRight)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // A new right have been inherited. We need to dismiss it!
+                action.addRight(newRight.getInverseRight());
+            }
+        }
+
+        // Convert children too
+        for (MigrationAction child : action.getChildren()) {
+            convertRights(child, plan);
+        }
+    }
+
+    private Collection<Right> getRightsFromHierarchy(DocumentReference documentReference, MigrationPlanTree plan)
+        throws MigrationException
+    {
+        Collection<Right> rights = new ArrayList<>();
+        getRightsFromHierarchy(documentReference.getLastSpaceReference(), rights, plan);
+        return rights;
+    }
+
+    private void getRightsFromHierarchy(SpaceReference spaceReference, Collection<Right> rights, MigrationPlanTree plan)
+            throws MigrationException
+    {
+        if (plan != null) {
+            MigrationAction action = plan.getActionWithTarget(new DocumentReference("WebHome", spaceReference));
+            if (action != null) {
+                // Copy the list because addRightsIfNotSameConcern() modify it and we don't want to modify the action.
+                List<Right> actionRights = new LinkedList<>(action.getRights());
+                addRightsIfNotSameConcern(actionRights, rights);
+            }
+        }
+
+        getRightsFromDocument(new DocumentReference("WebPreferences", spaceReference), rights);
+
+        // Now parse the parent
+        EntityReference spaceParent = spaceReference.getParent();
+        if (spaceParent.getType() == EntityType.SPACE) {
+            getRightsFromHierarchy(new SpaceReference(spaceParent), rights, plan);
+        } else if (spaceParent.getType() == EntityType.WIKI) {
+            DocumentReference wikiPreferences = new DocumentReference(spaceReference.getWikiReference().getName(),
+                    "XWiki", "XWikiPreferences");
+            getRightsFromDocument(wikiPreferences, rights);
+        }
+    }
+
+    private void getRightsFromDocument(DocumentReference document, Collection<Right> rights)
+            throws MigrationException
+    {
+        Collection<Right> localRights = documentRightsBridge.getRights(document);
+        addRightsIfNotSameConcern(localRights, rights);
+    }
+
+    private void addRightsIfNotSameConcern(Collection<Right> rightsToAdd, Collection<Right> currentRights)
+    {
+        Iterator<Right> it = rightsToAdd.iterator();
+        while (it.hasNext()) {
+            Right localRight = it.next();
+            for (Right currentRight : currentRights) {
+                // Same right already configured by descendant, so we ignore it
+                if (localRight.hasSameConcern(currentRight)) {
+                    it.remove();
+                }
+            }
+        }
+        currentRights.addAll(rightsToAdd);
     }
 }

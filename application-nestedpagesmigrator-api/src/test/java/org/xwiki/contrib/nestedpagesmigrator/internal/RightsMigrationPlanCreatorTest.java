@@ -22,7 +22,7 @@ package org.xwiki.contrib.nestedpagesmigrator.internal;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.xwiki.bridge.DocumentAccessBridge;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
@@ -34,6 +34,8 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -46,13 +48,13 @@ public class RightsMigrationPlanCreatorTest extends AbstractMigrationPlanCreator
     public MockitoComponentMockingRule<RightsMigrationPlanCreator> mocker =
             new MockitoComponentMockingRule<>(RightsMigrationPlanCreator.class);
 
-    private DocumentAccessBridge documentAccessBridge;
+    private DocumentRightsBridge documentRightsBridge;
     private JobProgressManager progressManager;
     
     @Before
     public void setUp() throws Exception
     {
-        documentAccessBridge = mocker.getInstance(DocumentAccessBridge.class);
+        documentRightsBridge = mocker.getInstance(DocumentRightsBridge.class);
         progressManager = mocker.getInstance(JobProgressManager.class);
     }
 
@@ -62,39 +64,56 @@ public class RightsMigrationPlanCreatorTest extends AbstractMigrationPlanCreator
     {
         MigrationPlanTree plan = super.setUpExample(example);
 
-        DocumentReference preferencesClass = new DocumentReference("mywiki", "XWiki", "XWikiPreferences");
-        // Add mocks for the expected preferences
+        // Add mocks for the current preferences
         for (Page page : example.getAllPages()) {
-            for (Right right: page.getRights()) {
+            // In our example framework, only 'WebHome' can have global preferences
+            // (--> bound to WebPreferences actually)
+            if (page.getDocumentReference().getName().equals("WebHome")) {
                 DocumentReference webPreferences
                         = new DocumentReference("WebPreferences", page.getDocumentReference().getLastSpaceReference());
-                when(documentAccessBridge.getProperty(eq(webPreferences), eq(preferencesClass),
-                        eq("level"))).thenReturn(right.getLevels());
-                when(documentAccessBridge.getProperty(eq(webPreferences), eq(preferencesClass),
-                        eq("value"))).thenReturn(right.isAllow());
-                when(documentAccessBridge.getProperty(eq(webPreferences), eq(preferencesClass),
-                        eq("user"))).thenReturn(right.getUser() != null ? right.getUser().toString() : null);
-                when(documentAccessBridge.getProperty(eq(webPreferences), eq(preferencesClass),
-                        eq("group"))).thenReturn(right.getGroup() != null ? right.getGroup().toString() : null);
+                when(documentRightsBridge.getRights(eq(webPreferences))).thenReturn(page.getRights());
             }
         }
-        for (Right right : example.getGlobalRights()) {
-            when(documentAccessBridge.getProperty(eq(preferencesClass), eq(preferencesClass), eq("level")))
-                    .thenReturn(right.getLevels());
-            when(documentAccessBridge.getProperty(eq(preferencesClass), eq(preferencesClass), eq("value")))
-                    .thenReturn(right.isAllow());
-            when(documentAccessBridge.getProperty(eq(preferencesClass), eq(preferencesClass), eq("user")))
-                    .thenReturn(right.getUser() != null ? right.getUser().toString() : null);
-            when(documentAccessBridge.getProperty(eq(preferencesClass), eq(preferencesClass), eq("group")))
-                    .thenReturn(right.getGroup() != null ? right.getGroup().toString() : null);
-        }
+
+        DocumentReference globalPreferences = new DocumentReference("xwiki", "XWiki", "XWikiPreferences");
+        when(documentRightsBridge.getRights(eq(globalPreferences))).thenReturn(example.getGlobalRights());
 
         return plan;
     }
 
     private void verifyRights(Example example, MigrationPlanTree plan) throws Exception
     {
+        String serializedPlan = MigrationPlanSerializer.serialize(plan);
 
+        for (Page page : example.getAllPagesAfter()) {
+            MigrationAction action = plan.getActionWithTarget(page.getDocumentReference());
+            assertNotNull(String.format("An action with the target [%s] was expected.\n%s",
+                    page.getDocumentReference(), serializedPlan ), action);
+            for (Right expectedRight : page.getRights()) {
+                boolean found = false;
+                for (Right right : action.getRights()) {
+                    if (right.equals(expectedRight)) {
+                        found = true;
+                        break;
+                    }
+                }
+                assertTrue(String.format("%s was expected for document [%s].\n%s", expectedRight.toString(),
+                        page.getDocumentReference(), serializedPlan ), found);
+            }
+
+            // The other way
+            for (Right right : action.getRights()) {
+                boolean found = false;
+                for (Right expectedRight : page.getRights()) {
+                    if (expectedRight.equals(right)) {
+                        found = true;
+                        break;
+                    }
+                }
+                assertTrue(String.format("Unexpected %s found on document [%s].\n%s", right.toString(),
+                        page.getDocumentReference(), serializedPlan), found);
+            }
+        }
     }
 
     private void testExample(String exampleName) throws Exception
@@ -107,7 +126,7 @@ public class RightsMigrationPlanCreatorTest extends AbstractMigrationPlanCreator
 
         // Run the component
         mocker.getComponentUnderTest().convertRights(plan,
-                new MigrationConfiguration(new WikiReference("mywiki")));
+                new MigrationConfiguration(new WikiReference("xwiki")));
 
         // Verify
         verifyRights(example, plan);

@@ -22,6 +22,7 @@ package org.xwiki.contrib.nestedpagesmigrator;
 import java.io.Serializable;
 
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.text.StringUtils;
 
 /**
  * @version $Id: $
@@ -32,16 +33,16 @@ public class Right implements Serializable
 
     private DocumentReference group;
 
-    private String[] levels;
+    private String level;
 
-    private boolean value;
+    private boolean allow;
 
-    public Right(DocumentReference user, DocumentReference group, String[] levels, boolean value)
+    public Right(DocumentReference user, DocumentReference group, String level, boolean allow)
     {
         this.user = user;
         this.group = group;
-        this.levels = levels;
-        this.value = value;
+        this.level = level;
+        this.allow = allow;
     }
 
     public DocumentReference getUser()
@@ -49,38 +50,59 @@ public class Right implements Serializable
         return user;
     }
 
-    public void setUser(DocumentReference user)
-    {
-        this.user = user;
-    }
-
     public DocumentReference getGroup()
     {
         return group;
     }
 
-    public void setGroup(DocumentReference group)
+    public String getLevel()
     {
-        this.group = group;
-    }
-
-    public String[] getLevels()
-    {
-        return levels;
-    }
-
-    public void setLevels(String[] levels)
-    {
-        this.levels = levels;
+        return level;
     }
 
     public boolean isAllow()
     {
-        return value;
+        return allow;
     }
 
-    public void setValue(boolean value)
+    @Override
+    public String toString()
     {
-        this.value = value;
+        DocumentReference target = user;
+        String type = "user";
+        if (user == null) {
+            target = group;
+            type = "group";
+        }
+
+        return String.format("Right [%s %s, %s, %s]", type, target, level, allow ? "allow" : "deny");
+    }
+
+    public boolean hasSameConcern(Right otherRight)
+    {
+        if (user != null) {
+            return user.equals(otherRight.user) && StringUtils.equals(level, otherRight.level);
+        } else if (group != null) {
+            return group.equals(otherRight.group) && StringUtils.equals(level, otherRight.level);
+        } else {
+            // Should never happen
+            return false;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o instanceof Right) {
+            Right otherRight = (Right) o;
+            return allow == otherRight.allow && hasSameConcern(otherRight);
+        }
+
+        return false;
+    }
+
+    public Right getInverseRight()
+    {
+        return new Right(user, group, level, !allow);
     }
 }

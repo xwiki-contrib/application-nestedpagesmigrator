@@ -22,6 +22,7 @@ package org.xwiki.contrib.nestedpagesmigrator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
@@ -37,11 +38,11 @@ public class MigrationAction implements Serializable, Comparable
     
     private DocumentReference targetDocument;
 
-    private Collection<Preference> preferences = new ArrayList<>();
+    private Collection<Preference> preferences;
 
-    private Collection<Right> rights = new ArrayList<>();
+    private Collection<Right> rights;
     
-    private List<MigrationAction> children = new ArrayList<>();
+    private List<MigrationAction> children;
 
     /**
      * Helper to create an instance and record it in its plan.
@@ -114,12 +115,15 @@ public class MigrationAction implements Serializable, Comparable
     
     public void addChild(MigrationAction action)
     {
+        if (children == null) {
+            children = new ArrayList<>();
+        }
         children.add(action);
     }
     
     public List<MigrationAction> getChildren()
     {
-        return children;
+        return children != null ? children : Collections.<MigrationAction>emptyList();
     }
 
     @Override
@@ -145,7 +149,7 @@ public class MigrationAction implements Serializable, Comparable
      */
     public Collection<Preference> getPreferences()
     {
-        return preferences;
+        return preferences != null ? preferences : Collections.<Preference>emptyList();
     }
 
     /**
@@ -154,16 +158,22 @@ public class MigrationAction implements Serializable, Comparable
      */
     public void addPreference(Preference preference)
     {
+        if (preferences == null) {
+            preferences = new ArrayList<>();
+        }
         preferences.add(preference);
     }
 
     public Collection<Right> getRights()
     {
-        return rights;
+        return rights != null ? rights : Collections.<Right>emptyList();
     }
 
     public void addRight(Right right)
     {
+        if (rights == null) {
+            rights = new ArrayList<>();
+        }
         rights.add(right);
     }
 

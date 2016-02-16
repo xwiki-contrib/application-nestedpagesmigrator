@@ -51,23 +51,32 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
     @Inject
     private JobProgressManager progressManager;
 
+    @Inject
+    private RightsMigrationPlanCreator rightsMigrationPlanCreator;
+
     @Override
     protected void runInternal() throws Exception
     {
-        progressManager.pushLevelProgress(2, this);
-        progressManager.startStep(this);
+        progressManager.pushLevelProgress(3, this);
 
+        // Step 1: convert pages
+        progressManager.startStep(this);
         PagesMigrationPlanCreator pagesMigrationPlanCreator
                 = componentManager.getInstance(PagesMigrationPlanCreator.class);
         MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(request.getConfiguration());
 
+        // Step 2: convert preferences
         progressManager.startStep(this);
         PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
                 = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
         preferencesMigrationPlanCreator.convertPreferences(plan, request.getConfiguration());
 
-        getStatus().setPlan(plan);
+        // Step 3: convert rights
+        progressManager.startStep(this);
+        rightsMigrationPlanCreator.convertRights(plan, request.getConfiguration());
 
+        // End
+        getStatus().setPlan(plan);
         progressManager.popLevelProgress(this);
     }
 

@@ -21,8 +21,8 @@ package org.xwiki.contrib.nestedpagesmigrator;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.text.StringUtils;
 
 /**
  * @version $Id: $
@@ -37,12 +37,15 @@ public class Right implements Serializable
 
     private boolean allow;
 
-    public Right(DocumentReference user, DocumentReference group, String level, boolean allow)
+    private DocumentReference from;
+
+    public Right(DocumentReference user, DocumentReference group, String level, boolean allow, DocumentReference from)
     {
         this.user = user;
         this.group = group;
         this.level = level;
         this.allow = allow;
+        this.from = from;
     }
 
     public DocumentReference getUser()
@@ -65,6 +68,11 @@ public class Right implements Serializable
         return allow;
     }
 
+    public DocumentReference getFrom()
+    {
+        return from;
+    }
+
     @Override
     public String toString()
     {
@@ -75,19 +83,18 @@ public class Right implements Serializable
             type = "group";
         }
 
-        return String.format("Right [%s %s, %s, %s]", type, target, level, allow ? "allow" : "deny");
+        return String.format("Right [%s %s, %s, %s, %s]", type, target, level, allow ? "allow" : "deny", from);
     }
 
     public boolean hasSameConcern(Right otherRight)
     {
-        if (user != null) {
-            return user.equals(otherRight.user) && StringUtils.equals(level, otherRight.level);
-        } else if (group != null) {
-            return group.equals(otherRight.group) && StringUtils.equals(level, otherRight.level);
-        } else {
-            // Should never happen
-            return false;
-        }
+        return new EqualsBuilder().append(user, otherRight.user).append(group, otherRight.group)
+                .append(level, otherRight.level).isEquals();
+    }
+
+    public boolean hasSameEffect(Right otherRight)
+    {
+        return allow == otherRight.allow && hasSameConcern(otherRight);
     }
 
     @Override
@@ -95,7 +102,8 @@ public class Right implements Serializable
     {
         if (o instanceof Right) {
             Right otherRight = (Right) o;
-            return allow == otherRight.allow && hasSameConcern(otherRight);
+            return hasSameConcern(otherRight) && new EqualsBuilder().append(allow, otherRight.allow)
+                    .append(from, otherRight.from).isEquals();
         }
 
         return false;
@@ -103,6 +111,6 @@ public class Right implements Serializable
 
     public Right getInverseRight()
     {
-        return new Right(user, group, level, !allow);
+        return new Right(user, group, level, !allow, from);
     }
 }

@@ -97,8 +97,9 @@ public class Example
         DocumentReference user  = resolveDocument(right.getChildText("user"));
         DocumentReference group = resolveDocument(right.getChildText("group"));
         boolean value           = "allow".equals(right.getChildText("value"));
+        DocumentReference from  = resolveDocument(right.getChildText("from"));
         for (String level : right.getChildText("level").split(",")) {
-            page.addRight(new Right(user, group, level, value));
+            page.addRight(new Right(user, group, level, value, from));
         }
     }
     
@@ -196,8 +197,9 @@ public class Example
             DocumentReference user  = resolveDocument(right.getChildText("user"));
             DocumentReference group = resolveDocument(right.getChildText("group"));
             boolean value           = "allow".equals(right.getChildText("value"));
+            DocumentReference from  = resolveDocument(right.getChildText("from"));
             for (String level : right.getChildText("level").split(",")) {
-                rights.add(new Right(user, group, level, value));
+                rights.add(new Right(user, group, level, value, from));
             }
         }
         return rights;

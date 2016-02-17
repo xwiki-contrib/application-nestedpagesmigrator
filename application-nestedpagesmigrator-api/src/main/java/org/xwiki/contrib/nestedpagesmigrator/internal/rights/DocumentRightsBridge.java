@@ -76,8 +76,8 @@ public class DocumentRightsBridge
                     Collection<String> users  = getValues("users", obj);
                     Collection<String> levels = getValues("levels", obj);
                     boolean allow = obj.getIntValue("allow", 1) == 1;
-                    parseRight(users, levels, allow, true, document.getWikiReference(), rights);
-                    parseRight(groups, levels, allow, false, document.getWikiReference(), rights);
+                    parseRight(users, levels, allow, true, document.getWikiReference(), rights, document);
+                    parseRight(groups, levels, allow, false, document.getWikiReference(), rights, document);
                 }
             }
         } catch (XWikiException e) {
@@ -88,15 +88,15 @@ public class DocumentRightsBridge
     }
 
     private void parseRight(Collection<String> targets, Collection<String> levels, boolean allow, boolean isTargetUsers,
-            WikiReference wikiReference, Collection<Right> rights)
+            WikiReference wikiReference, Collection<Right> rights, DocumentReference from)
     {
         for (String target : targets) {
             DocumentReference targetRef = documentReferenceResolver.resolve(target, wikiReference);
             for (String level : levels) {
                 if (isTargetUsers) {
-                    rights.add(new Right(targetRef, null, level, allow));
+                    rights.add(new Right(targetRef, null, level, allow, from));
                 } else {
-                    rights.add(new Right(null, targetRef, level, allow));
+                    rights.add(new Right(null, targetRef, level, allow, from));
                 }
             }
         }

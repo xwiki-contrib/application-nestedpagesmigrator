@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
@@ -169,12 +170,20 @@ public class MigrationAction implements Serializable, Comparable
         return rights != null ? rights : Collections.<Right>emptyList();
     }
 
-    public void addRight(Right right)
+    public void addRight(Right newRight)
     {
         if (rights == null) {
             rights = new ArrayList<>();
         }
-        rights.add(right);
+        Iterator<Right> it = rights.iterator();
+        while (it.hasNext()) {
+            Right oldRight = it.next();
+            if (oldRight.hasSameConcern(newRight)) {
+                // remove the right having the same concern
+                it.remove();
+            }
+        }
+        rights.add(newRight);
     }
 
     /**

@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -74,7 +73,7 @@ public class RightsMigrationPlanCreator
         for (Right oldRight : oldRights) {
             boolean found = false;
             for (Right newRight : newRights) {
-                if (oldRight.equals(newRight)) {
+                if (oldRight.hasSameEffect(newRight)) {
                     found = true;
                     break;
                 }
@@ -82,6 +81,14 @@ public class RightsMigrationPlanCreator
             if (!found) {
                 // We need to add the right to the action
                 action.addRight(oldRight);
+                Iterator<Right> it = newRights.iterator();
+                while (it.hasNext()) {
+                    Right newRight = it.next();
+                    if (newRight.hasSameConcern(oldRight)) {
+                        it.remove();
+                    }
+                }
+                newRights.add(oldRight);
             }
         }
 
@@ -89,7 +96,7 @@ public class RightsMigrationPlanCreator
         for (Right newRight : newRights) {
             boolean found = false;
             for (Right oldRight : oldRights) {
-                if (oldRight.equals(newRight)) {
+                if (oldRight.hasSameEffect(newRight)) {
                     found = true;
                     break;
                 }
@@ -120,9 +127,7 @@ public class RightsMigrationPlanCreator
         if (plan != null) {
             MigrationAction action = plan.getActionWithTarget(new DocumentReference("WebHome", spaceReference));
             if (action != null) {
-                // Copy the list because addRightsIfNotSameConcern() modify it and we don't want to modify the action.
-                List<Right> actionRights = new LinkedList<>(action.getRights());
-                addRightsIfNotSameConcern(actionRights, rights);
+                addRightsIfNotSameConcern(action.getRights(), rights);
             }
         }
 
@@ -148,7 +153,8 @@ public class RightsMigrationPlanCreator
 
     private void addRightsIfNotSameConcern(Collection<Right> rightsToAdd, Collection<Right> currentRights)
     {
-        Iterator<Right> it = rightsToAdd.iterator();
+        Collection<Right> selectedRightsToAdd = new LinkedList<>(rightsToAdd);
+        Iterator<Right> it = selectedRightsToAdd.iterator();
         while (it.hasNext()) {
             Right localRight = it.next();
             for (Right currentRight : currentRights) {
@@ -159,6 +165,6 @@ public class RightsMigrationPlanCreator
                 }
             }
         }
-        currentRights.addAll(rightsToAdd);
+        currentRights.addAll(selectedRightsToAdd);
     }
 }

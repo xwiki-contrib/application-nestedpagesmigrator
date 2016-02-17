@@ -64,12 +64,12 @@
     &lt;!-- ko if: displayChildren() --&gt;
       &lt;!-- ko if: preferences.length &gt; 0 --&gt;
         &lt;ul  data-bind="foreach: preferences"&gt;
-          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_pref_' + property}, checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt;&lt;/li&gt;
+          &lt;li class="text-warning"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_pref_' + property}, checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       &lt;!-- ko if: rights.length &gt; 0 --&gt;
         &lt;ul  data-bind="foreach: rights"&gt;
-          &lt;li class="text-warning"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_right_' + ${escapetool.d}index()}, checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: getType()" /&gt; &lt;span data-bind="text: getTarget()" /&gt;: &lt;span data-bind="text: getAllow()" /&gt;&lt;/strong&gt;&lt;/li&gt;
+          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_right_' + ${escapetool.d}index()}, checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
@@ -442,37 +442,60 @@
   /**
    * Class representing a preference.
    */
-  function Preference(property, value) {
+  function Preference(property, value, origin) {
     var self = this;
     
     self.property = property;
     self.value    = value;
+    self.origin   = origin;
     self.enabled  = ko.observable(true);
+    
+    self.getSerializedOrigin = function () {
+      return localSerializer(self.origin);
+    };
+    
+    self.getOriginLink = function () {
+      return new XWiki.Document(resolveLocally(self.origin)).getURL('admin');
+    };
   }
   
   /**
    * Class representing a right.
    */
-  function Right(user, group, level, allow) {
+  function Right(user, group, level, allow, origin) {
     var self = this;
     
-    self.user  = user;
-    self.group = group;
-    self.level = level;
-    self.allow = allow;
+    self.user   = user;
+    self.group  = group;
+    self.level  = level;
+    self.allow  = allow;
+    self.origin = origin;
     self.enabled  = ko.observable(true);
     
     self.getType = function () {
       return self.user ? 'user' : 'group';
-    }
+    };
     
     self.getTarget = function () {
       return self.user ? self.user : self.group;
-    }
+    };
     
     self.getAllow = function () {
       return self.allow ? 'allow' : 'deny';
-    }
+    };
+    
+    self.toString = function () {
+      return self.getType() + ' : ' + self.getTarget() + ', ' + self.level + ' : ' + self.getAllow();
+    };
+    
+    self.getSerializedOrigin = function () {
+      return localSerializer(self.origin);
+    };
+    
+    self.getOriginLink = function () {
+      var ref = resolveLocally(self.origin);
+      return new XWiki.Document(ref).getURL('admin', ref.name == 'WebPreferences' ? 'section=PageAndChildrenRights' : 'section=Rights');
+    };
   }
 
   /**
@@ -716,13 +739,13 @@
             }
           }
           if (data.preferences) {
-            for (var property in data.preferences) {
-              action.preferences[action.preferences.length] = new Preference(property, data.preferences[property]);
+            for (var i = 0; i &lt; data.preferences.length; ++i) {
+              action.preferences[action.preferences.length] = new Preference(data.preferences[i].name, data.preferences[i].value, data.preferences[i].origin);
             }
           }
           if (data.rights) {
             for (var i = 0; i &lt; data.rights.length; ++i) {
-              action.rights[action.rights.length] = new Right(data.rights[i].user, data.rights[i].group, data.rights[i].level, data.rights[i].allow == "true")
+              action.rights[action.rights.length] = new Right(data.rights[i].user, data.rights[i].group, data.rights[i].level, data.rights[i].allow == "true", data.rights[i].origin)
             }
           }
           return action;

@@ -84,7 +84,7 @@ public class PreferencesMigrationPlanCreator
             Preference valueBefore = getPreferenceValue(action.getSourceDocument(), property);
             Object valueAfter = getPreferenceValueAfter(action, property);
             boolean hasProperty = hasProperty(action.getSourceDocument(), property);
-            if (valueBefore != null && (!valueBefore.getValue().equals(valueAfter) || hasProperty)) {
+            if (valueBefore.getValue() != null && (!valueBefore.getValue().equals(valueAfter) || hasProperty)) {
                 // Do something here
                 action.addPreference(valueBefore);
             }

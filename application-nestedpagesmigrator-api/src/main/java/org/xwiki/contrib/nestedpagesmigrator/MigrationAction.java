@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.text.StringUtils;
 
 /**
  * An atomic operation of a {@link MigrationPlanTree}.
@@ -155,14 +156,22 @@ public class MigrationAction implements Serializable, Comparable
 
     /**
      * Add a preference to store in the WebPreferences after the page conversion.
-     * @param preference preference to add
+     * @param newPreference preference to add
      */
-    public void addPreference(Preference preference)
+    public void addPreference(Preference newPreference)
     {
         if (preferences == null) {
             preferences = new ArrayList<>();
         }
-        preferences.add(preference);
+        Iterator<Preference> it = preferences.iterator();
+        while (it.hasNext()) {
+            Preference oldPreference = it.next();
+            if (StringUtils.equals(oldPreference.getName(), newPreference.getName())) {
+                // remove the old preference
+                it.remove();
+            }
+        }
+        preferences.add(newPreference);
     }
 
     public Collection<Right> getRights()

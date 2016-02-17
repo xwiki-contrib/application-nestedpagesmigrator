@@ -9,25 +9,21 @@
         <group>XWiki.AllGroup</group>
         <level>view,edit,comment,create,register</level>
         <value>allow</value>
-        <from>XWiki.XWikiPreferences</from>
       </right>
       <right>
         <group>XWiki.AdminGroup</group>
         <level>admin,programing</level>
         <value>allow</value>
-        <from>XWiki.XWikiPreferences</from>
       </right>
       <right>
         <user>XWiki.Shakespeare</user>
         <level>admin</level>
         <value>allow</value>
-        <from>XWiki.XWikiPreferences</from>
       </right>
       <right>
         <user>XWiki.Dostoievski</user>
         <level>comment</level>
         <value>deny</value>
-        <from>XWiki.XWikiPreferences</from>
       </right>
     </rights>
     <page>
@@ -42,13 +38,11 @@
           <group>XWiki.AllGroup</group>
           <level>comment</level>
           <value>deny</value>
-          <from>Movies.WebPreferences</from>
         </right>
         <right>
           <group>XWiki.AllGroup</group>
           <level>delete</level>
           <value>allow</value>
-          <from>Movies.WebPreferences</from>
         </right>
       </rights>
     </page>
@@ -69,13 +63,11 @@
           <group>XWiki.AllGroup</group>
           <level>create</level>
           <value>deny</value>
-          <from>Dramas.WebPreferences</from>
         </right>
         <right>
           <user>XWiki.Dostoievski</user>
           <level>comment</level>
           <value>allow</value>
-          <from>Dramas.WebPreferences</from>
         </right>
       </rights>
     </page>
@@ -99,13 +91,13 @@
           <group>XWiki.AllGroup</group>
           <level>comment</level>
           <value>deny</value>
-          <from>Movies.WebPreferences</from>
+          <origin>Movies.WebPreferences</origin>
         </right>
         <right>
           <group>XWiki.AllGroup</group>
           <level>delete</level>
           <value>allow</value>
-          <from>Movies.WebPreferences</from>
+          <origin>Movies.WebPreferences</origin>
         </right>
       </rights>
     </page>
@@ -122,13 +114,13 @@
           <group>XWiki.AllGroup</group>
           <level>comment</level>
           <value>allow</value>
-          <from>XWiki.XWikiPreferences</from>
+          <origin>XWiki.XWikiPreferences</origin>
         </right>
         <right>
           <group>XWiki.AllGroup</group>
           <level>delete</level>
           <value>deny</value>
-          <from>Movies.WebPreferences</from>
+          <origin>Movies.WebPreferences</origin>
         </right>
       </rights>
     </page>
@@ -140,25 +132,25 @@
           <group>XWiki.AllGroup</group>
           <level>create</level>
           <value>deny</value>
-          <from>Dramas.WebPreferences</from>
+          <origin>Dramas.WebPreferences</origin>
         </right>
         <right>
           <user>XWiki.Dostoievski</user>
           <level>comment</level>
           <value>allow</value>
-          <from>Dramas.WebPreferences</from>
+          <origin>Dramas.WebPreferences</origin>
         </right>
         <right>
           <group>XWiki.AllGroup</group>
           <level>comment</level>
           <value>allow</value>
-          <from>XWiki.XWikiPreferences</from>
+          <origin>XWiki.XWikiPreferences</origin>
         </right>
         <right>
           <group>XWiki.AllGroup</group>
           <level>delete</level>
           <value>deny</value>
-          <from>Movies.WebPreferences</from>
+          <origin>Movies.WebPreferences</origin>
         </right>
       </rights>
     </page>
@@ -171,25 +163,25 @@
           <group>XWiki.AllGroup</group>
           <level>create</level>
           <value>deny</value>
-          <from>Dramas.WebPreferences</from>
+          <origin>Dramas.WebPreferences</origin>
         </right>
         <right>
           <user>XWiki.Dostoievski</user>
           <level>comment</level>
           <value>allow</value>
-          <from>Dramas.WebPreferences</from>
+          <origin>Dramas.WebPreferences</origin>
         </right>
         <right>
           <group>XWiki.AllGroup</group>
           <level>comment</level>
           <value>allow</value>
-          <from>XWiki.XWikiPreferences</from>
+          <origin>XWiki.XWikiPreferences</origin>
         </right>
         <right>
           <group>XWiki.AllGroup</group>
           <level>delete</level>
           <value>deny</value>
-          <from>Movies.WebPreferences</from>
+          <origin>Movies.WebPreferences</origin>
         </right>
       </rights>
     </page>
@@ -209,13 +201,13 @@
             "group": "xwiki:XWiki.AllGroup",
             "level": "comment",
             "allow": false,
-            "from": "xwiki:Movies.WebPreferences"
+            "origin": "xwiki:Movies.WebPreferences"
           },
           {
             "group": "xwiki:XWiki.AllGroup",
             "level": "delete",
             "allow": true,
-            "from": "xwiki:Movies.WebPreferences"
+            "origin": "xwiki:Movies.WebPreferences"
           }
         ],
         "children": [
@@ -231,13 +223,13 @@
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "comment",
                 "allow": true,
-                "from": "xwiki:XWiki.XWikiPreferences"
+                "origin": "xwiki:XWiki.XWikiPreferences"
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "delete",
                 "allow": false,
-                "from": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences"
               }
             ]
           },
@@ -249,25 +241,25 @@
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "create",
                 "allow": false,
-                "from": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences"
               },
               {
                 "user": "xwiki:XWiki.Dostoievski",
                 "level": "comment",
                 "allow": true,
-                "from": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences"
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "comment",
                 "allow": true,
-                "from": "xwiki:XWiki.XWikiPreferences"
+                "origin": "xwiki:XWiki.XWikiPreferences"
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "delete",
                 "allow": false,
-                "from": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences"
               }
             ]
           },
@@ -279,25 +271,25 @@
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "create",
                 "allow": false,
-                "from": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences"
               },
               {
                 "user": "xwiki:XWiki.Dostoievski",
                 "level": "comment",
                 "allow": true,
-                "from": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences"
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "comment",
                 "allow": true,
-                "from": "xwiki:XWiki.XWikiPreferences"
+                "origin": "xwiki:XWiki.XWikiPreferences"
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "delete",
                 "allow": false,
-                "from": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences"
               }
             ]
           }

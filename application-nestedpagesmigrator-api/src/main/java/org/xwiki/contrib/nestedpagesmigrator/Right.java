@@ -37,15 +37,15 @@ public class Right implements Serializable
 
     private boolean allow;
 
-    private DocumentReference from;
+    private DocumentReference origin;
 
-    public Right(DocumentReference user, DocumentReference group, String level, boolean allow, DocumentReference from)
+    public Right(DocumentReference user, DocumentReference group, String level, boolean allow, DocumentReference origin)
     {
         this.user = user;
         this.group = group;
         this.level = level;
         this.allow = allow;
-        this.from = from;
+        this.origin = origin;
     }
 
     public DocumentReference getUser()
@@ -68,9 +68,9 @@ public class Right implements Serializable
         return allow;
     }
 
-    public DocumentReference getFrom()
+    public DocumentReference getOrigin()
     {
-        return from;
+        return origin;
     }
 
     @Override
@@ -83,7 +83,7 @@ public class Right implements Serializable
             type = "group";
         }
 
-        return String.format("Right [%s %s, %s, %s, %s]", type, target, level, allow ? "allow" : "deny", from);
+        return String.format("Right [%s %s, %s, %s, %s]", type, target, level, allow ? "allow" : "deny", origin);
     }
 
     public boolean hasSameConcern(Right otherRight)
@@ -103,7 +103,7 @@ public class Right implements Serializable
         if (o instanceof Right) {
             Right otherRight = (Right) o;
             return hasSameConcern(otherRight) && new EqualsBuilder().append(allow, otherRight.allow)
-                    .append(from, otherRight.from).isEquals();
+                    .append(origin, otherRight.origin).isEquals();
         }
 
         return false;
@@ -111,6 +111,6 @@ public class Right implements Serializable
 
     public Right getInverseRight()
     {
-        return new Right(user, group, level, !allow, from);
+        return new Right(user, group, level, !allow, origin);
     }
 }

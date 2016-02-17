@@ -88,15 +88,15 @@ public class DocumentRightsBridge
     }
 
     private void parseRight(Collection<String> targets, Collection<String> levels, boolean allow, boolean isTargetUsers,
-            WikiReference wikiReference, Collection<Right> rights, DocumentReference from)
+            WikiReference wikiReference, Collection<Right> rights, DocumentReference origin)
     {
         for (String target : targets) {
             DocumentReference targetRef = documentReferenceResolver.resolve(target, wikiReference);
             for (String level : levels) {
                 if (isTargetUsers) {
-                    rights.add(new Right(targetRef, null, level, allow, from));
+                    rights.add(new Right(targetRef, null, level, allow, origin));
                 } else {
-                    rights.add(new Right(null, targetRef, level, allow, from));
+                    rights.add(new Right(null, targetRef, level, allow, origin));
                 }
             }
         }

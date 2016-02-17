@@ -97,9 +97,12 @@ public class Example
         DocumentReference user  = resolveDocument(right.getChildText("user"));
         DocumentReference group = resolveDocument(right.getChildText("group"));
         boolean value           = "allow".equals(right.getChildText("value"));
-        DocumentReference from  = resolveDocument(right.getChildText("from"));
+        DocumentReference origin = resolveDocument(right.getChildText("origin"));
+        if (origin == null) {
+            origin = new DocumentReference("WebPreferences", page.getDocumentReference().getLastSpaceReference());
+        }
         for (String level : right.getChildText("level").split(",")) {
-            page.addRight(new Right(user, group, level, value, from));
+            page.addRight(new Right(user, group, level, value, origin));
         }
     }
     
@@ -201,14 +204,14 @@ public class Example
 
     public Collection<Right> getGlobalRights()
     {
+        DocumentReference origin = new DocumentReference("xwiki", "XWiki", "XWikiPreferences");
         Collection<Right> rights = new ArrayList<>();
         for (Element right : getBefore().getChild("rights").getChildren()) {
             DocumentReference user  = resolveDocument(right.getChildText("user"));
             DocumentReference group = resolveDocument(right.getChildText("group"));
             boolean value           = "allow".equals(right.getChildText("value"));
-            DocumentReference from  = resolveDocument(right.getChildText("from"));
             for (String level : right.getChildText("level").split(",")) {
-                rights.add(new Right(user, group, level, value, from));
+                rights.add(new Right(user, group, level, value, origin));
             }
         }
         return rights;

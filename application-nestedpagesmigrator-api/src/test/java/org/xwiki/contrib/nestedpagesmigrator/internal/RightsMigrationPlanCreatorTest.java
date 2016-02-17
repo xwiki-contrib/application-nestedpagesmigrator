@@ -76,7 +76,7 @@ public class RightsMigrationPlanCreatorTest extends AbstractMigrationPlanCreator
                         = new DocumentReference("WebPreferences", page.getDocumentReference().getLastSpaceReference());
                 when(documentRightsBridge.getRights(eq(webPreferences))).thenReturn(page.getRights());
                 for (Right right : page.getRights()) {
-                    assertEquals(webPreferences, right.getFrom());
+                    assertEquals(webPreferences, right.getOrigin());
                 }
             }
         }
@@ -84,7 +84,7 @@ public class RightsMigrationPlanCreatorTest extends AbstractMigrationPlanCreator
         DocumentReference globalPreferences = new DocumentReference("xwiki", "XWiki", "XWikiPreferences");
         when(documentRightsBridge.getRights(eq(globalPreferences))).thenReturn(example.getGlobalRights());
         for (Right right : example.getGlobalRights()) {
-            assertEquals(globalPreferences, right.getFrom());
+            assertEquals(globalPreferences, right.getOrigin());
         }
 
         return plan;

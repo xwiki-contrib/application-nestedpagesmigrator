@@ -81,12 +81,12 @@ public class PreferencesMigrationPlanCreator
         progressManager.startStep(this);
 
         for (String property : properties) {
-            Object valueBefore = getPreferenceValue(action.getSourceDocument(), property);
+            Preference valueBefore = getPreferenceValue(action.getSourceDocument(), property);
             Object valueAfter = getPreferenceValueAfter(action, property);
             boolean hasProperty = hasProperty(action.getSourceDocument(), property);
-            if (valueBefore != null && (!valueBefore.equals(valueAfter) || hasProperty)) {
+            if (valueBefore != null && (!valueBefore.getValue().equals(valueAfter) || hasProperty)) {
                 // Do something here
-                action.addPreference(new Preference(property, valueBefore));
+                action.addPreference(valueBefore);
             }
         }
 
@@ -105,12 +105,12 @@ public class PreferencesMigrationPlanCreator
         return !isNull(documentAccessBridge.getProperty(webPreferences, classReference, property));
     }
 
-    private Object getPreferenceValue(DocumentReference document, String propertyName)
+    private Preference getPreferenceValue(DocumentReference document, String propertyName)
     {
         return getPreferenceValue(document.getLastSpaceReference(), propertyName);
     }
 
-    private Object getPreferenceValue(SpaceReference space, String propertyName)
+    private Preference getPreferenceValue(SpaceReference space, String propertyName)
     {
         DocumentReference webPreferences = new DocumentReference("WebPreferences", space);
         Object value = documentAccessBridge.getProperty(webPreferences, classReference, propertyName);
@@ -119,13 +119,14 @@ public class PreferencesMigrationPlanCreator
             // Fallback to the parent space
             EntityReference spaceParent = webPreferences.getLastSpaceReference().getParent();
             if (spaceParent.getType() == EntityType.SPACE) {
-                value = getPreferenceValue(new SpaceReference(spaceParent), propertyName);
+                return getPreferenceValue(new SpaceReference(spaceParent), propertyName);
             } else if (spaceParent.getType() == EntityType.WIKI) {
-                value = documentAccessBridge.getProperty(classReference, classReference, propertyName);
+                return new Preference(propertyName,
+                        documentAccessBridge.getProperty(classReference, classReference, propertyName), classReference);
             }
         }
 
-        return value;
+        return new Preference(propertyName, value, webPreferences);
     }
 
     private Object getPreferenceValueAfter(MigrationAction action, String propertyName)

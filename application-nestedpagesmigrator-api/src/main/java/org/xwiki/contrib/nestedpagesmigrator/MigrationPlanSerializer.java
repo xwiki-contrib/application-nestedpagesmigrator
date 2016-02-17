@@ -28,7 +28,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -59,23 +58,13 @@ public class MigrationPlanSerializer
                 return null;
             }
 
-            if (src.iterator().next() instanceof Preference) {
-                // Special case: the preferences
-                JsonObject object = new JsonObject();
-                for (Object child : src) {
-                    Preference preference = (Preference) child;
-                    object.add(preference.getName(), context.serialize(preference.getValue()));
-                }
-                return object;
-            } else {
-                // Otherwise, apply the standard strategy
-                JsonArray array = new JsonArray();
-                for (Object child : src) {
-                    JsonElement element = context.serialize(child);
-                    array.add(element);
-                }
-                return array;
+            // Otherwise, apply the standard strategy
+            JsonArray array = new JsonArray();
+            for (Object child : src) {
+                JsonElement element = context.serialize(child);
+                array.add(element);
             }
+            return array;
         }
     }
 

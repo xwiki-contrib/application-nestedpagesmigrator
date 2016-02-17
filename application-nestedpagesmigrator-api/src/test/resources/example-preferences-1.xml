@@ -5,9 +5,18 @@
   <!-- State before the migration -->
   <before>
     <preferences>
-      <skin>XWiki.DefaultSkin</skin>
-      <iconTheme>Font Awesome</iconTheme>
-      <showLeftPanels>true</showLeftPanels>
+      <preference>
+        <name>skin</name>
+        <value>XWiki.DefaultSkin</value>
+      </preference>
+      <preference>
+        <name>iconTheme</name>
+        <value>Font Awesome</value>
+      </preference>
+      <preference>
+        <name>showLeftPanels</name>
+        <value>true</value>
+      </preference>
     </preferences>
     <page>
       <fullName>Main.WebHome</fullName>
@@ -17,8 +26,14 @@
       <fullName>Movies.WebHome</fullName>
       <parent>Main.WebHome</parent>
       <preferences>
-        <skin>XWiki.MoviesSkin</skin>
-        <showLeftPanels>true</showLeftPanels>
+        <preference>
+          <name>skin</name>
+          <value>XWiki.MoviesSkin</value>
+        </preference>
+        <preference>
+          <name>showLeftPanels</name>
+          <value>true</value>
+        </preference>
       </preferences>
     </page>
     <page>
@@ -28,7 +43,10 @@
     <page>
       <fullName>Dramas.WebHome</fullName>
       <preferences>
-        <showLeftPanels>false</showLeftPanels>
+        <preference>
+          <name>showLeftPanels</name>
+          <value>false</value>
+        </preference>
       </preferences>
       <parent/>
     </page>
@@ -47,8 +65,16 @@
       <fullName>Main.Movies.WebHome</fullName>
       <from>Movies.WebHome</from>
       <preferences>
-        <skin>XWiki.MoviesSkin</skin>
-        <showLeftPanels>true</showLeftPanels>
+        <preference>
+          <name>skin</name>
+          <value>XWiki.MoviesSkin</value>
+          <origin>Movies.WebPreferences</origin>
+        </preference>
+        <preference>
+          <name>showLeftPanels</name>
+          <value>true</value>
+          <origin>Movies.WebPreferences</origin>
+        </preference>
       </preferences>
     </page>
     <page>
@@ -59,15 +85,27 @@
       <fullName>Dramas.WebHome</fullName>
       <from>Dramas.WebHome</from>
       <preferences>
-        <showLeftPanels>false</showLeftPanels>
+        <preference>
+          <name>showLeftPanels</name>
+          <value>false</value>
+          <origin>Dramas.WebPreferences</origin>
+        </preference>
       </preferences>
     </page>
     <page>
       <fullName>Main.Movies.DancesWithWolves.WebHome</fullName>
       <from>Dramas.DancesWithWolves</from>
       <preferences>
-        <skin>XWiki.DefaultSkin</skin>
-        <showLeftPanels>false</showLeftPanels>
+        <preference>
+          <name>skin</name>
+          <value>XWiki.DefaultSkin</value>
+          <origin>XWiki.XWikiPreferences</origin>
+        </preference>
+        <preference>
+          <name>showLeftPanels</name>
+          <value>false</value>
+          <origin>Dramas.WebPreferences</origin>
+        </preference>
       </preferences>
     </page>
   </after>
@@ -81,10 +119,18 @@
       {
         "sourceDocument": "xwiki:Movies.WebHome",
         "targetDocument": "xwiki:Main.Movies.WebHome",
-        "preferences": {
-          "skin": "XWiki.MoviesSkin",
-          "showLeftPanels": "true"
-        },
+        "preferences": [
+          {
+            "name": "skin",
+            "value": "XWiki.MoviesSkin",
+            "origin": "xwiki:Movies.WebPreferences"
+          },
+          {
+            "name": "showLeftPanels",
+            "value": "true",
+            "origin": "xwiki:Movies.WebPreferences"
+          }
+        ],
         "children": [
           {
             "sourceDocument": "xwiki:Movies.StarTrek",
@@ -93,10 +139,18 @@
           {
             "sourceDocument": "xwiki:Dramas.DancesWithWolves",
             "targetDocument": "xwiki:Main.Movies.DancesWithWolves.WebHome",
-            "preferences": {
-              "skin": "XWiki.DefaultSkin",
-              "showLeftPanels": "false"
-            }
+            "preferences": [
+              {
+                "name": "skin",
+                "value": "XWiki.DefaultSkin",
+                "origin": "xwiki:XWiki.XWikiPreferences"
+              },
+              {
+                "name": "showLeftPanels",
+                "value": "false",
+                "origin": "xwiki:Dramas.WebPreferences"
+              }
+            ]
           }
         ]
       }
@@ -105,9 +159,13 @@
   {
     "sourceDocument": "xwiki:Dramas.WebHome",
     "targetDocument": "xwiki:Dramas.WebHome",
-    "preferences": {
-      "showLeftPanels": "false"
-    }
+    "preferences": [
+      {
+        "name": "showLeftPanels",
+        "value": "false",
+        "origin": "xwiki:Dramas.WebPreferences"
+      }
+    ]
   }
 ]
 ]]></plan>

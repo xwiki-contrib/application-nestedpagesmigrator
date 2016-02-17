@@ -5,9 +5,18 @@
   <!-- State before the migration -->
   <before>
     <preferences>
-      <skin>XWiki.DefaultSkin</skin>
-      <iconTheme>Font Awesome</iconTheme>
-      <showLeftPanels>true</showLeftPanels>
+      <preference>
+        <name>skin</name>
+        <value>XWiki.DefaultSkin</value>
+      </preference>
+      <preference>
+        <name>iconTheme</name>
+        <value>Font Awesome</value>
+      </preference>
+      <preference>
+        <name>showLeftPanels</name>
+        <value>true</value>
+      </preference>
     </preferences>
     <page>
       <fullName>Music.WebHome</fullName>
@@ -21,7 +30,10 @@
       <fullName>Classic.WebHome</fullName>
       <parent/>
       <preferences>
-        <skin>MusicSkin</skin>
+        <preference>
+          <name>skin</name>
+          <value>MusicSkin</value>
+        </preference>
       </preferences>
     </page>
     <page>
@@ -48,7 +60,11 @@
       <fullName>Music.Classic.Dvorak.WebHome</fullName>
       <from>Classic.Dvorak</from>
       <preferences>
-        <skin>MusicSkin</skin>
+        <preference>
+          <name>skin</name>
+          <value>MusicSkin</value>
+          <origin>Classic.WebPreferences</origin>
+        </preference>
       </preferences>
     </page>
     <!-- The problem is that this action will actually not be created since this page is already nested.
@@ -60,7 +76,11 @@
       <fullName>Music.Classic.Dvorak.SymphonyNo5.WebHome</fullName>
       <from>Music.Classic.Dvorak.SymphonyNo5.WebHome</from>
       <preferences>
-        <skin>XWiki.DefaultSkin</skin>
+        <preference>
+          <name>skin</name>
+          <value>XWiki.DefaultSkin</value>
+          <origin>XWiki.XWikiPreferences</origin>
+        </preference>
       </preferences>
     </page>
   </after>
@@ -78,16 +98,24 @@
           {
             "sourceDocument": "xwiki:Classic.Dvorak",
             "targetDocument": "xwiki:Music.Classic.Dvorak.WebHome",
-            "preferences": {
-              "skin": "MusicSkin"
-            },
+            "preferences": [
+              {
+                "name": "skin",
+                "value": "MusicSkin",
+                "origin": "xwiki:Classic.WebPreferences"
+              }
+            ],
             "children": [
               {
                 "sourceDocument": "xwiki:Music.Classic.Dvorak.SymphonyNo5.WebHome",
                 "targetDocument": "xwiki:Music.Classic.Dvorak.SymphonyNo5.WebHome",
-                "preferences": {
-                  "skin": "XWiki.DefaultSkin"
-                }
+                "preferences": [
+                  {
+                    "name": "skin",
+                    "value": "XWiki.DefaultSkin",
+                    "origin": "xwiki:XWiki.XWikiPreferences"
+                  }
+                ]
               }
             ]
           }

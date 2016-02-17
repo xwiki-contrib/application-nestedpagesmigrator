@@ -74,7 +74,7 @@ public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCr
     {
         MigrationPlanTree plan = super.setUpExample(example);
 
-        DocumentReference preferencesClass = new DocumentReference("mywiki", "XWiki", "XWikiPreferences");
+        DocumentReference preferencesClass = new DocumentReference("xwiki", "XWiki", "XWikiPreferences");
         // Add mocks for the expected preferences
         for (Page page : example.getAllPages()) {
             for (Preference preference : page.getPreferences()) {
@@ -94,6 +94,7 @@ public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCr
 
     private void verifyPreferences(Example example, MigrationPlanTree plan) throws Exception
     {
+        String serializedPlan = MigrationPlanSerializer.serialize(plan);
         for (Page page : example.getAllPagesAfter()) {
             MigrationAction action = plan.getActionWithTarget(page.getDocumentReference());
             for (Preference preference : page.getPreferences()) {
@@ -104,13 +105,19 @@ public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCr
                         assertEquals(String.format("Expected preference [%s = %s] for document [%s] has an incorrect " +
                                 "value [%s].\n%s", preference.getName(), preference.getValue(),
                                 page.getDocumentReference(), actionPref.getValue(),
-                                MigrationPlanSerializer.serialize(plan)),
+                                serializedPlan),
                                 preference.getValue(),
                                 actionPref.getValue());
+                        assertEquals(String.format("Expected preference [%s = %s] for document [%s] has an incorrect " +
+                                        "origin [%s].\n%s", preference.getName(), preference.getValue(),
+                                page.getDocumentReference(), actionPref.getOrigin(),
+                                serializedPlan),
+                                preference.getOrigin(),
+                                actionPref.getOrigin());
                     }
                 }
                 assertTrue(String.format("Expected preference [%s] for document [%s] was not found.\n%s",
-                        preference.getName(), page.getDocumentReference(), MigrationPlanSerializer.serialize(plan)),
+                        preference.getName(), page.getDocumentReference(), serializedPlan),
                         found);
             }
             for (Preference actionPref : action.getPreferences()) {
@@ -122,7 +129,7 @@ public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCr
                     }
                 }
                 assertTrue(String.format("Unexpected preference [%s] has been found for document [%s].\n%s",
-                        actionPref.getName(), page.getDocumentReference(), MigrationPlanSerializer.serialize(plan)),
+                        actionPref.getName(), page.getDocumentReference(), serializedPlan),
                         found);
             }
         }
@@ -138,7 +145,7 @@ public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCr
 
         // Run the component
         mocker.getComponentUnderTest().convertPreferences(plan,
-                new MigrationConfiguration(new WikiReference("mywiki")));
+                new MigrationConfiguration(new WikiReference("xwiki")));
 
         // Verify
         verifyPreferences(example, plan);

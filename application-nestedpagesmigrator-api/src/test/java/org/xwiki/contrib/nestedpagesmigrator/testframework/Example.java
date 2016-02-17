@@ -117,7 +117,13 @@ public class Example
         Element preferences = element.getChild("preferences");
         if (preferences != null) {
             for (Element preference : preferences.getChildren()) {
-                page.addPreference(new Preference(preference.getName(), preference.getText()));
+                String name = preference.getChildText("name");
+                String value = preference.getChildText("value");
+                DocumentReference origin = resolveDocument(preference.getChildText("origin"));
+                if (origin == null) {
+                    origin = new DocumentReference("WebPreferences", reference.getLastSpaceReference());
+                }
+                page.addPreference(new Preference(name, value, origin));
             }
         }
 
@@ -183,9 +189,12 @@ public class Example
 
     public Collection<Preference> getGlobalPreferences()
     {
+        DocumentReference origin = new DocumentReference("xwiki", "XWiki", "XWikiPreferences");
         Collection<Preference> preferences = new ArrayList<>();
         for (Element preference : getBefore().getChild("preferences").getChildren()) {
-            preferences.add(new Preference(preference.getName(), preference.getText()));
+            String name = preference.getChildText("name");
+            String value = preference.getChildText("value");
+            preferences.add(new Preference(name, value, origin));
         }
         return preferences;
     }

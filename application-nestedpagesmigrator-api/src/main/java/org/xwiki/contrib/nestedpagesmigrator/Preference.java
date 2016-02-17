@@ -21,6 +21,8 @@ package org.xwiki.contrib.nestedpagesmigrator;
 
 import java.io.Serializable;
 
+import org.xwiki.model.reference.DocumentReference;
+
 /**
  * @version $Id: $
  * @since 0.3
@@ -31,10 +33,13 @@ public class Preference implements Serializable
 
     private Object value;
 
-    public Preference(String name, Object value)
+    private DocumentReference origin;
+
+    public Preference(String name, Object value, DocumentReference origin)
     {
         this.name = name;
         this.value = value;
+        this.origin = origin;
     }
 
     public String getName()
@@ -45,5 +50,10 @@ public class Preference implements Serializable
     public Object getValue()
     {
         return value;
+    }
+
+    public DocumentReference getOrigin()
+    {
+        return origin;
     }
 }

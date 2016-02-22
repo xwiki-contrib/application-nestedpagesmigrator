@@ -52,7 +52,7 @@
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0"&gt;
     &lt;input type="checkbox" data-bind="attr: {name : serializedSourceDocument()}, checked: enabled" /&gt;
-    &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; getNumberOfChildren() &gt; 0, click: enableWithChildren" &gt;(all)&lt;/a&gt;
+    &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || rights.length &gt; 0 || preferences.length &gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
     &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;

@@ -60,16 +60,16 @@
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludeSpace"&gt;exclude space&lt;/button&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
     (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
-    from &lt;a target="_blank" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
+    from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
     &lt;!-- ko if: displayChildren() --&gt;
       &lt;!-- ko if: preferences.length &gt; 0 --&gt;
         &lt;ul  data-bind="foreach: preferences"&gt;
-          &lt;li class="text-warning"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_pref_' + property}, checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
+          &lt;li class="text-warning"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_pref_' + property}, checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       &lt;!-- ko if: rights.length &gt; 0 --&gt;
         &lt;ul  data-bind="foreach: rights"&gt;
-          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_right_' + ${escapetool.d}index()}, checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
+          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_right_' + ${escapetool.d}index()}, checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;

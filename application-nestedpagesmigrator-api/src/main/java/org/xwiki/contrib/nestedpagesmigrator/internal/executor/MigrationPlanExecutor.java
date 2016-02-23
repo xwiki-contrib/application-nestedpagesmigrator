@@ -109,7 +109,8 @@ public class MigrationPlanExecutor
         try {
             // Move the document
             if (!action.isIdentity()
-                    && configuration.isActionEnabled(serializer.serialize(action.getSourceDocument()))) {
+                    && configuration.isActionEnabled(
+                        String.format("%s_page", serializer.serialize(action.getSourceDocument())))) {
                 moveDocument(action);
             }
 
@@ -170,7 +171,7 @@ public class MigrationPlanExecutor
         request.setId(Arrays.asList(RefactoringJobs.GROUP,
                 StringUtils.removeStart(RefactoringJobs.MOVE, RefactoringJobs.GROUP_PREFIX), suffix));
 
-        // Run the job
+        // Run the job synchronously
         jobExecutor.execute(RefactoringJobs.MOVE, request).join();
 
         EntityReference spaceParent = action.getTargetDocument().getLastSpaceReference().getParent();
@@ -184,7 +185,7 @@ public class MigrationPlanExecutor
     {
         String sourceDocument = serializer.serialize(action.getSourceDocument());
         BaseObject obj = document.getXObject(preferencesClassReference, true, context);
-        int iter = 1;
+        int iter = 0;
         for (Preference preference : action.getPreferences()) {
             if (configuration.isActionEnabled(String.format("%s_preference_%d", sourceDocument, iter))) {
                 obj.set(preference.getName(), preference.getValue(), context);
@@ -196,7 +197,7 @@ public class MigrationPlanExecutor
     private void applyRights(MigrationAction action, XWikiDocument document, XWikiContext context) throws XWikiException
     {
         String sourceDocument = serializer.serialize(action.getSourceDocument());
-        int iter = 1;
+        int iter = 0;
         for (Right right : action.getRights()) {
             if (configuration.isActionEnabled(String.format("%s_right_%d", sourceDocument, iter))) {
                 BaseObject obj = document.newXObject(rightsClassReference, context);

@@ -56,7 +56,7 @@
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0"&gt;
-    &lt;input type="checkbox" data-bind="attr: {name : serializedSourceDocument()}, checked: enabled" /&gt;
+    &lt;input type="checkbox" data-bind="checked: enabled" /&gt;
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || rights.length &gt; 0 || preferences.length &gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
     &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
@@ -69,12 +69,12 @@
     &lt;!-- ko if: displayChildren() --&gt;
       &lt;!-- ko if: preferences.length &gt; 0 --&gt;
         &lt;ul  data-bind="foreach: preferences"&gt;
-          &lt;li class="text-warning"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_pref_' + property}, checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
+          &lt;li class="text-warning"&gt;&lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       &lt;!-- ko if: rights.length &gt; 0 --&gt;
         &lt;ul  data-bind="foreach: rights"&gt;
-          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="attr: {name: ${escapetool.d}parent.serializedSourceDocument() + '_right_' + ${escapetool.d}index()}, checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
+          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
@@ -90,7 +90,7 @@
     &lt;div data-bind="if: isComputing()"&gt;
       &lt;p&gt;The plan is being computed and it could take some time. Please wait...&lt;/p&gt;
       &lt;div class="ui-progress-background"&gt;
-        &lt;div class="ui-progress-bar green" data-bind="style: {width: planProgress() + '%'}" /&gt;
+        &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}" /&gt;
       &lt;/div&gt;
     &lt;/div&gt;
     &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()"&gt;
@@ -115,7 +115,8 @@
   Display configuration
   -------------------------------------------&gt;
 &lt;h2&gt;Configuration&lt;/h2&gt;
-&lt;form class="xform row"&gt;
+&lt;form class="xform"&gt;
+  &lt;div class="row"&gt;
   &lt;div class="col-xs-12 col-md-6"&gt;
     &lt;dl&gt;
       &lt;!-- Exclude hidden pages --&gt;
@@ -168,17 +169,37 @@
       &lt;/dd&gt;
     &lt;/dl&gt;
   &lt;/div&gt;
+  &lt;/div&gt;
   &lt;div class="clearfix"&gt;
-    &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing"&gt;Compute plan&lt;/button&gt;
+    &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
+    &lt;button class="btn btn-primary" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: executePlan"&gt;Execute plan&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
 &lt;!------------------------------------------
   Display plan
   -------------------------------------------&gt;
-&lt;div data-bind="if: isPlanRequested()"&gt;
+&lt;div data-bind="if: isPlanRequested() &amp;&amp; !isPlanExecuting()"&gt;
   ## We escape the dollar of the knockout variable '$root' because $root also exists in velocity
   &lt;!-- ko template: {name: 'DisplayPlan', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
+&lt;/div&gt;
+&lt;!------------------------------------------
+  Execute Plan
+  -------------------------------------------&gt;
+&lt;div data-bind="if: isPlanExecuting()"&gt;
+  &lt;div class="box"&gt;
+    &lt;p&gt;The plan is being executed and it could take some time. Please wait...&lt;/p&gt;
+    &lt;div class="ui-progress-background"&gt;
+      &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}" /&gt;
+    &lt;/div&gt;
+    &lt;ul class="log" data-bind="if: logs().length &gt; 0"&gt;
+      &lt;!-- ko foreach: logs --&gt;
+      &lt;li class="log-item" data-bind="css: getClass()"&gt;
+        &lt;div data-bind="text: message" /&gt;
+      &lt;/li&gt;
+      &lt;!-- /ko --&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
 &lt;/div&gt;
 {{/html}}
 #end
@@ -590,15 +611,16 @@
     var self = this;
     
     // Fields
-    self.configuration   = new AppConfiguration();
-    self.actions         = ko.observableArray();
-    self.isPlanRequested = ko.observable(false);
-    self.isComputing     = ko.observable(false);
-    self.xclasses        = ko.observableArray();
+    self.configuration     = new AppConfiguration();
+    self.actions           = ko.observableArray();
+    self.isPlanRequested   = ko.observable(false);
+    self.isComputing       = ko.observable(false);
+    self.xclasses          = ko.observableArray();
     self.xclassListVisible = ko.observable(false);
-    self.jobId           = false;
-    self.planProgress    = ko.observable(0);
-    self.logs            = ko.observableArray();
+    self.jobId             = false;
+    self.progress          = ko.observable(0);
+    self.logs              = ko.observableArray();
+    self.isPlanExecuting   = ko.observable(false);
     
     self.toggleXClassList = function () {
       self.xclassListVisible(!self.xclassListVisible());
@@ -674,7 +696,7 @@
      * Send an ajax request to start a new job for the creation of a plan.
      */
     self.computePlan = function() {
-      self.planProgress(0);
+      self.progress(0);
       self.isPlanRequested(true);
       self.isComputing(true);
       self.actions.removeAll();
@@ -690,27 +712,30 @@
           'excludedObjectClasses': self.configuration.excludedObjectClasses()
         }).done(function (data) {
           self.jobId = data.jobId;
-          self.getJobStatus();
+          self.getJobStatus('computePlan');
+          self.getJobLogs();
         }).fail(function () {
           console.log('ERROR: Failed to start a new plan computation.');
         });
     };
 
     /**
-     * Perform an AJAX request to get the current job status, so we can update the progress bar.
+     * Perform an AJAX request to get the current job status, so we can update progress the bar.
      */
-    self.getJobStatus = function () {
+    self.getJobStatus = function (action) {
       var restURLPrefix = xm.restURL.substring(0, xm.restURL.indexOf('/rest/') + 6);
       var jobURL = restURLPrefix + 'jobstatus/' + self.jobId + '?media=json';
       $.getJSON(jobURL).done(function (data) {
         var state = data.state;
         if (state == 'FINISHED') {
-          self.planProgress(100);
-          self.getMigrationPlan();
+          self.progress(100);
+          if (action == 'computePlan') {
+            self.getMigrationPlan();
+          }
         } else if (state == 'RUNNING' || state == 'NONE') {
-          self.planProgress(data.progress.offset * 100);
+          self.progress(data.progress.offset * 100);
           // retry in 0.5 seconds
-          setTimeout(self.getJobStatus, 500);
+          setTimeout(function() { self.getJobStatus(action) }, 500);
         }
       });
     };
@@ -728,9 +753,9 @@
         for (var i = 0; i &lt; logs.length; ++i) {
           self.logs.push(new Log(logs[i].formattedMessage, logs[i].level));
         }
-        if (self.planProgress() &lt; 100) {
+        if (self.progress() &lt; 100) {
           // retry in 0.5 seconds
-          setTimeout(self.getJobStatus, 500);
+          setTimeout(self.getJobLogs, 500);
         }
       });
     }
@@ -842,6 +867,57 @@
         notification.replace(new XWiki.widgets.Notification('Failed to get the current parent of the page which may not exist.', 'error'));
       });
     };
+    
+    /**
+     * Called when the user clicks on "execute plan"
+     */
+    self.executePlan = function () {
+      if (!confirm('Are you sure? This operation cannot be undone.')) {
+        return;
+      }
+      self.isPlanExecuting(true);
+      self.progress(0);
+      
+      var getDisabledActions = function (action) {
+        var disabledActions = '';
+        if (!action.enabled()) {
+          disabledActions += action.serializedSourceDocument() + '_page,';
+        }
+        for (var i = 0; i &lt; action.preferences.length; ++i) {
+          var preference = action.preferences[i];
+          if (!preference.enabled()) {
+            disabledActions += action.serializedSourceDocument() + '_preference_' + i + ',';
+          }
+        }
+        for (var i = 0; i &lt; action.rights.length; ++i) {
+          var right = action.rights[i];
+          if (!right.enabled()) {
+            disabledActions += action.serializedSourceDocument() + '_right_' + i + ',';
+          }
+        }
+        for (var i = 0; i &lt; action.children().length; ++i) {
+          disabledActions += getDisabledActions(action.children()[i]);
+        }
+        return disabledActions;
+      }
+      
+      var disabledActions = '';
+      for (var i = 0; i &lt; self.actions().length; ++i) {
+        var action = self.actions()[i];
+        disabledActions += getDisabledActions(action);
+      }
+      
+      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+        'action'               : 'executePlan',
+        'addRedirection'       : self.configuration.addRedirection(),
+        'disabledActions'      : disabledActions
+      }).done(function (data) {
+        self.jobId = data.jobId;
+        self.getJobStatus('executePlan');
+      }).fail(function () {
+        console.log('ERROR: Failed to execute the plan.');
+      });
+    }
     
     // Initialize the XClasses field.
     self.initXClasses();

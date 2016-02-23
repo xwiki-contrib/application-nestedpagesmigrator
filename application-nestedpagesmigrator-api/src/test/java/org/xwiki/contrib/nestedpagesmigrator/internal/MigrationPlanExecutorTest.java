@@ -197,9 +197,9 @@ public class MigrationPlanExecutorTest
 
         // Configuration
         MigrationConfiguration configuration = new MigrationConfiguration(new WikiReference("xwiki"));
-        configuration.addDisabledAction("xwiki:Movies.Rebbecca_preference_2");
-        configuration.addDisabledAction("xwiki:Movies.Titanic3D_right_3");
-        configuration.addDisabledAction("xwiki:Movies.StarWars");
+        configuration.addDisabledAction("xwiki:Movies.Rebbecca_preference_1");
+        configuration.addDisabledAction("xwiki:Movies.Titanic3D_right_2");
+        configuration.addDisabledAction("xwiki:Movies.StarWars_page");
 
         // Test
         mocker.getComponentUnderTest().performMigration(plan, configuration);

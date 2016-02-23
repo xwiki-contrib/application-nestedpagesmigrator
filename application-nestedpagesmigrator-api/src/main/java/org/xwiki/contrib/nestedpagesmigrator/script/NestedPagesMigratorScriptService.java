@@ -21,22 +21,21 @@ package org.xwiki.contrib.nestedpagesmigrator.script;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
-import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
+import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
 import org.xwiki.job.Job;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.security.authorization.AccessDeniedException;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
-
-import com.xpn.xwiki.XWikiContext;
 
 /**
  * @version $Id: $
@@ -54,13 +53,12 @@ public class NestedPagesMigratorScriptService implements ScriptService
     private AuthorizationManager authorizationManager;
 
     @Inject
-    private Provider<XWikiContext> xcontextProvider;
+    private DocumentAccessBridge documentAccessBridge;
     
     private void checkAdminAccess(WikiReference wikiReference) throws AccessDeniedException
     {
         // User need to be admin to run this application
-        XWikiContext xcontext = xcontextProvider.get();
-        authorizationManager.checkAccess(Right.ADMIN, xcontext.getUserReference(), wikiReference);
+        authorizationManager.checkAccess(Right.ADMIN, documentAccessBridge.getCurrentUserReference(), wikiReference);
     }
     
     public Job startMigrationPlanCreation(MigrationConfiguration configuration)
@@ -82,5 +80,24 @@ public class NestedPagesMigratorScriptService implements ScriptService
         
         return MigrationPlanSerializer.serialize(nestedPagesMigrator.getPlan(wikiId));
     }
-    
+
+    /**
+     * Start the execution of a previously computed plan.
+     *
+     * @param configuration the configuration of the migration
+     * @return the job which executes the migration
+     *
+     * @throws AccessDeniedException if the current user has not ADMIN right on the wiki
+     * @throws MigrationException if error occurs
+     *
+     * @since 0.4
+     */
+    public Job startMigration(MigrationConfiguration configuration) throws AccessDeniedException, MigrationException
+    {
+        checkAdminAccess(configuration.getWikiReference());
+
+        MigrationPlanTree plan = nestedPagesMigrator.getPlan(configuration.getWikiReference().getName());
+
+        return nestedPagesMigrator.startMigration(plan, configuration);
+    }
 }

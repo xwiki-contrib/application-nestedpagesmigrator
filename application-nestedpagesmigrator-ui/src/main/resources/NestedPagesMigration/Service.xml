@@ -40,7 +40,21 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity wiki="false"}}
-#if ("$!request.action" == 'createPlan')
+#************************************************************************
+ * Controller
+ ************************************************************************#
+#set ($action = "$!request.action")
+#if ($action == 'createPlan')
+  #createPlan()
+#elseif ($action == 'printPlan')
+  #printPlan()
+#elseif ($action == 'executePlan')
+  #executePlan()
+#end
+#************************************************************************
+ * Create Plan
+ ************************************************************************#
+#macro(createPlan)
   #**
    * Transform the string parameter to a list of document references
    *#
@@ -103,8 +117,38 @@
   #set ($map = {'jobId': $stringtool.join($job.request.id, '/')})
   #set ($discard = $response.setContentType('application/json'))
   $jsontool.serialize($map)
-#elseif ("$!request.action" == 'printPlan')
+#end
+#************************************************************************
+ * Display the plan
+ ************************************************************************#
+#macro(printPlan)
   $services.nestedpagesmigrator.getSerializedPlan($services.wiki.currentWikiId)
+#end
+#************************************************************************
+ * Execute the plan
+ ************************************************************************#
+#macro(executePlan)
+  ###
+  ### Create the configuration
+  ###
+  #set ($configuration = $services.nestedpagesmigrator.newMigrationConfiguration($services.wiki.currentWikiId))
+  #set ($addRedirection = "$!request.addRedirection" == 'true')
+  #set ($discard = $configuration.setAddAutoRedirect($addRedirection))
+  #set ($disabledActions = "$!request.disabledActions")
+  ## We might have problem if ',' is used in the page name
+  #foreach ($disabledAction in $disabledActions.split(','))
+    #set ($discard = $configuration.addDisabledAction($disabledAction))
+  #end
+  ###
+  ### Start the job
+  ###
+  #set ($job = $services.nestedpagesmigrator.startMigration($configuration))
+  ###
+  ### Print the job id
+  ###
+  #set ($map = {'jobId': $stringtool.join($job.request.id, '/')})
+  #set ($discard = $response.setContentType('application/json'))
+  $jsontool.serialize($map)
 #end
 {{/velocity}}
 </content>

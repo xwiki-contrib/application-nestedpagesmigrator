@@ -55,6 +55,8 @@ public class RightsMigrationPlanCreator
 
     public void convertRights(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException
     {
+        // TODO: when "allow" is given to some people, it denies all the others!!!!!
+
         progressManager.pushLevelProgress(plan.getActions().size(), this);
         for (MigrationAction action : plan.getTopLevelAction().getChildren()) {
             convertRights(action, plan);

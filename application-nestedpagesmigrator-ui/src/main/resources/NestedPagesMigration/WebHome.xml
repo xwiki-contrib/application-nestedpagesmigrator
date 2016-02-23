@@ -186,20 +186,19 @@
 &lt;!------------------------------------------
   Execute Plan
   -------------------------------------------&gt;
-&lt;div data-bind="if: isPlanExecuting()"&gt;
-  &lt;div class="box"&gt;
-    &lt;p&gt;The plan is being executed and it could take some time. Please wait...&lt;/p&gt;
-    &lt;div class="ui-progress-background"&gt;
-      &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}" /&gt;
-    &lt;/div&gt;
-    &lt;ul class="log" data-bind="if: logs().length &gt; 0"&gt;
-      &lt;!-- ko foreach: logs --&gt;
-      &lt;li class="log-item" data-bind="css: getClass()"&gt;
-        &lt;div data-bind="text: message" /&gt;
-      &lt;/li&gt;
-      &lt;!-- /ko --&gt;
-    &lt;/ul&gt;
+&lt;div class="box" data-bind="if: isPlanExecuting()"&gt;
+  &lt;p&gt;The plan is being executed and it could take some time. Please wait...&lt;/p&gt;
+  &lt;div class="ui-progress-background"&gt;
+    &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}"&gt;
+    &lt;div&gt;
   &lt;/div&gt;
+  &lt;ul class="log" data-bind="if: logs().length &gt; 0"&gt;
+    &lt;!-- ko foreach: logs --&gt;
+    &lt;li class="log-item" data-bind="css: getClass()"&gt;
+      &lt;div data-bind="text: message" /&gt;
+    &lt;/li&gt;
+    &lt;!-- /ko --&gt;
+  &lt;/ul&gt;
 &lt;/div&gt;
 {{/html}}
 #end
@@ -914,6 +913,8 @@
       }).done(function (data) {
         self.jobId = data.jobId;
         self.getJobStatus('executePlan');
+        self.logs.removeAll();
+        self.getJobLogs();
       }).fail(function () {
         console.log('ERROR: Failed to execute the plan.');
       });

@@ -106,11 +106,14 @@ public class MigrationPlanExecutor
     {
         progressManager.startStep(this);
 
+        String sourceDocument = serializer.serialize(action.getSourceDocument());
+        logger.info("Converting [{}].", sourceDocument);
+
         try {
             // Move the document
             if (!action.isIdentity()
                     && configuration.isActionEnabled(
-                        String.format("%s_page", serializer.serialize(action.getSourceDocument())))) {
+                        String.format("%s_page", sourceDocument))) {
                 moveDocument(action);
             }
 

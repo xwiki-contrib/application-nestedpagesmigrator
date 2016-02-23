@@ -34,6 +34,7 @@ import org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMig
 import org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesPropertiesGetter;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Example;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
+import org.xwiki.contrib.nestedpagesmigrator.testframework.PlanCreator;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.WikiReference;
@@ -48,7 +49,7 @@ import static org.mockito.Mockito.when;
 /**
  * @version $Id: $
  */
-public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCreatorTest
+public class PreferencesMigrationPlanCreatorTest
 {
     @Rule
     public MockitoComponentMockingRule<PreferencesMigrationPlanCreator> mocker =
@@ -69,10 +70,9 @@ public class PreferencesMigrationPlanCreatorTest extends AbstractMigrationPlanCr
                 Arrays.asList("skin", "iconTheme", "showLeftPanels"));
     }
 
-    @Override
     protected MigrationPlanTree setUpExample(Example example) throws Exception
     {
-        MigrationPlanTree plan = super.setUpExample(example);
+        MigrationPlanTree plan = PlanCreator.createPlan(example);
 
         DocumentReference preferencesClass = new DocumentReference("xwiki", "XWiki", "XWikiPreferences");
         // Add mocks for the expected preferences

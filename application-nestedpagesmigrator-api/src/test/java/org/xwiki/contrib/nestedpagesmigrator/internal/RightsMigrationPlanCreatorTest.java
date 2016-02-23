@@ -31,6 +31,7 @@ import org.xwiki.contrib.nestedpagesmigrator.internal.rights.DocumentRightsBridg
 import org.xwiki.contrib.nestedpagesmigrator.internal.rights.RightsMigrationPlanCreator;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Example;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
+import org.xwiki.contrib.nestedpagesmigrator.testframework.PlanCreator;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.WikiReference;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.when;
 /**
  * @version $Id: $
  */
-public class RightsMigrationPlanCreatorTest extends AbstractMigrationPlanCreatorTest
+public class RightsMigrationPlanCreatorTest
 {
     @Rule
     public MockitoComponentMockingRule<RightsMigrationPlanCreator> mocker =
@@ -62,10 +63,9 @@ public class RightsMigrationPlanCreatorTest extends AbstractMigrationPlanCreator
     }
 
 
-    @Override
     protected MigrationPlanTree setUpExample(Example example) throws Exception
     {
-        MigrationPlanTree plan = super.setUpExample(example);
+        MigrationPlanTree plan = PlanCreator.createPlan(example);
 
         // Add mocks for the current preferences
         for (Page page : example.getAllPages()) {

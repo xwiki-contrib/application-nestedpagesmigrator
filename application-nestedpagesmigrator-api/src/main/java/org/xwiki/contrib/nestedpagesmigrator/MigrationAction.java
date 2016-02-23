@@ -203,4 +203,28 @@ public class MigrationAction implements Serializable, Comparable
     {
         return new DocumentReference("WebPreferences", targetDocument.getLastSpaceReference());
     }
+
+    /**
+     * @return if the target is the same than the source
+     */
+    public boolean isIdentity()
+    {
+        return sourceDocument.equals(targetDocument);
+    }
+
+    /**
+     * @return if the action has preferences
+     */
+    public boolean hasPreferences()
+    {
+        return preferences != null && !preferences.isEmpty();
+    }
+
+    /**
+     * @return if some rights are configured
+     */
+    public boolean hasRights()
+    {
+        return rights != null && !rights.isEmpty();
+    }
 }

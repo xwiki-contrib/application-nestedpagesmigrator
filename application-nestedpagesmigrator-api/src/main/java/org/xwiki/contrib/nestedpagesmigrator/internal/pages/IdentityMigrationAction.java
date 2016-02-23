@@ -41,8 +41,8 @@ public class IdentityMigrationAction extends MigrationAction
      *  
      * @return the created instance
      */
-    public static IdentityMigrationAction createInstance(DocumentReference documentReference, MigrationAction parentAction,
-            MigrationPlanTree plan) throws MigrationException
+    public static IdentityMigrationAction createInstance(DocumentReference documentReference,
+            MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
     {
         IdentityMigrationAction action = new IdentityMigrationAction(documentReference);
         parentAction.addChild(action);
@@ -58,5 +58,11 @@ public class IdentityMigrationAction extends MigrationAction
     {
         // Doing nothing means having the same location as target.
         super(documentReference, documentReference);
+    }
+
+    @Override
+    public boolean isIdentity()
+    {
+        return true;
     }
 }

@@ -17,12 +17,10 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.nestedpagesmigrator.internal;
+package org.xwiki.contrib.nestedpagesmigrator.testframework;
 
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
-import org.xwiki.contrib.nestedpagesmigrator.testframework.Example;
-import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -31,19 +29,9 @@ import org.xwiki.model.reference.SpaceReference;
 /**
  * @version $Id: $
  */
-public abstract class AbstractMigrationPlanCreatorTest
+public class PlanCreator
 {
-    protected DocumentReference getHierarchyParent(DocumentReference documentReference)
-    {
-        EntityReference spaceParent = documentReference.getLastSpaceReference().getParent();
-        if (spaceParent.getType() == EntityType.SPACE) {
-            return new DocumentReference("WebHome", new SpaceReference(spaceParent));
-        } else {
-            return null;
-        }
-    }
-
-    protected MigrationPlanTree setUpExample(Example example) throws Exception
+    public static MigrationPlanTree createPlan(Example example) throws Exception
     {
         // Create a plan tree corresponding to the XML.
         // Note: the order of the page in the XML is important (parent must be declared before children) otherwise this
@@ -61,5 +49,15 @@ public abstract class AbstractMigrationPlanCreatorTest
         }
 
         return plan;
+    }
+
+    private static DocumentReference getHierarchyParent(DocumentReference documentReference)
+    {
+        EntityReference spaceParent = documentReference.getLastSpaceReference().getParent();
+        if (spaceParent.getType() == EntityType.SPACE) {
+            return new DocumentReference("WebHome", new SpaceReference(spaceParent));
+        } else {
+            return null;
+        }
     }
 }

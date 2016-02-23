@@ -78,6 +78,12 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
         return jobStatus.getPlan();
     }
 
+    @Override
+    public Job startMigration(MigrationPlanTree plan) throws MigrationException
+    {
+        return null;
+    }
+
     private List<String> getJobId(String wikiId)
     {
         // One job per wiki

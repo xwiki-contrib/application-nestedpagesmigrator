@@ -26,6 +26,8 @@ import javax.inject.Provider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
@@ -90,10 +92,13 @@ public class MigrationPlanExecutorTest
         serializer = mocker.getInstance(EntityReferenceSerializer.TYPE_STRING);
         documentAccessBridge = mocker.getInstance(DocumentAccessBridge.class);
 
-        when(serializer.serialize(eq(new DocumentReference("xwiki", "XWiki", "UserA")))).thenReturn("xwiki:XWiki.UserA");
-        when(serializer.serialize(eq(new DocumentReference("xwiki", "XWiki", "UserB")))).thenReturn("xwiki:XWiki.UserB");
-        when(serializer.serialize(eq(new DocumentReference("xwiki", "XWiki", "GroupA")))).thenReturn("xwiki:XWiki.GroupA");
-        when(serializer.serialize(eq(new DocumentReference("xwiki", "XWiki", "GroupB")))).thenReturn("xwiki:XWiki.GroupB");
+        when(serializer.serialize(any(DocumentReference.class))).thenAnswer(new Answer<String>()
+        {
+            public String answer(InvocationOnMock invocation) throws Throwable
+            {
+                return invocation.getArguments()[0].toString();
+            }
+        });
 
         job = mock(Job.class);
         when(jobExecutor.execute(anyString(), any(MoveRequest.class))).thenReturn(job);
@@ -123,6 +128,7 @@ public class MigrationPlanExecutorTest
                 plan);
 
         action3.addPreference(new Preference("skin", "xwiki:XWiki.MoviesSkin", null));
+        action3.addPreference(new Preference("iconTheme", "silk", null));
         action3.addPreference(new Preference("colorTheme", "MoviesColorTheme", null));
 
         MigrationAction action4 = MigrationAction.createInstance(
@@ -142,11 +148,17 @@ public class MigrationPlanExecutorTest
 
         action5.addRight(new Right(new DocumentReference("xwiki", "XWiki", "UserB"), null, "admin", true, null));
         action5.addRight(new Right(null, new DocumentReference("xwiki", "XWiki", "GroupB"), "delete", false, null));
+        action5.addRight(new Right(null, new DocumentReference("xwiki", "XWiki", "GroupC"), "delete", false, null));
         action5.addPreference(new Preference("skin", "xwiki:XWiki.Titanic3DSkin", null));
         action5.addPreference(new Preference("colorTheme", "Titanic3DColorTheme", null));
 
         MigrationAction action6 = IdentityMigrationAction.createInstance(
                 new DocumentReference("xwiki", "Main", "WebHome"),
+                plan.getTopLevelAction(),
+                plan);
+
+        MigrationAction action7 = MigrationAction.createInstance(new DocumentReference("xwiki", "Movies", "StarWars"),
+                new DocumentReference("xwiki", Arrays.asList("Movies", "StarWars"), "WebHome"),
                 plan.getTopLevelAction(),
                 plan);
 
@@ -183,12 +195,18 @@ public class MigrationPlanExecutorTest
         when(docTitanic3DPreferences.getXObject(eq(new DocumentReference("xwiki", "XWiki", "XWikiPreferences")),
                 eq(true), eq(context))).thenReturn(objTitanic3DPreferences);
 
+        // Configuration
+        MigrationConfiguration configuration = new MigrationConfiguration(new WikiReference("xwiki"));
+        configuration.addDisabledAction("xwiki:Movies.Rebbecca_preference_2");
+        configuration.addDisabledAction("xwiki:Movies.Titanic3D_right_3");
+        configuration.addDisabledAction("xwiki:Movies.StarWars");
+
         // Test
-        mocker.getComponentUnderTest().performMigration(plan, new MigrationConfiguration(new WikiReference("xwiki")));
+        mocker.getComponentUnderTest().performMigration(plan, configuration);
 
         // Verify jobs have been executed
         verify(job, times(5)).join();
-        // only 5 times because action6 is identity!
+        // only 5 times because action6 is identity, and action7 is disabled!
 
         // Verify document are saved
         String message = "Rights and/or preferences set by the Nested Pages Migrator Application.";
@@ -218,8 +236,8 @@ public class MigrationPlanExecutorTest
         verify(objTitanic3DRight2).set(eq("allow"), eq(0), eq(context));
 
         // Verify steps have been triggered
-        verify(progressManager).pushLevelProgress(eq(6), any(MigrationPlanExecutor.class));
-        verify(progressManager, times(6)).startStep(any(MigrationPlanExecutor.class));
+        verify(progressManager).pushLevelProgress(eq(7), any(MigrationPlanExecutor.class));
+        verify(progressManager, times(7)).startStep(any(MigrationPlanExecutor.class));
         verify(progressManager).popLevelProgress(any(MigrationPlanExecutor.class));
 
         // Verify parent fields have been updated
@@ -234,6 +252,11 @@ public class MigrationPlanExecutorTest
         verify(documentAccessBridge).setDocumentParentReference(eq(action5.getTargetDocument()),
                 eq(new DocumentReference("xwiki", Arrays.asList("Main", "Dramas", "Titanic"), "WebHome")));
         verify(documentAccessBridge, never()).setDocumentParentReference(eq(action6.getTargetDocument()),
+                any(DocumentReference.class));
+
+        // Verify disabled actions have not been executed
+        verify(objRebbeccaPreferences, never()).set(eq("iconTheme"), any(), eq(context));
+        verify(documentAccessBridge, never()).setDocumentParentReference(eq(action7.getTargetDocument()),
                 any(DocumentReference.class));
     }
 

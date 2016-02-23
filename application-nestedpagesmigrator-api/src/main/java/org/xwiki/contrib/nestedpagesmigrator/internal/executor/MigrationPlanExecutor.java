@@ -108,7 +108,8 @@ public class MigrationPlanExecutor
 
         try {
             // Move the document
-            if (!action.isIdentity()) {
+            if (!action.isIdentity()
+                    && configuration.isActionEnabled(serializer.serialize(action.getSourceDocument()))) {
                 moveDocument(action);
             }
 
@@ -181,24 +182,34 @@ public class MigrationPlanExecutor
 
     private void applyPreferences(MigrationAction action, XWikiDocument document, XWikiContext context)
     {
+        String sourceDocument = serializer.serialize(action.getSourceDocument());
         BaseObject obj = document.getXObject(preferencesClassReference, true, context);
+        int iter = 1;
         for (Preference preference : action.getPreferences()) {
-            obj.set(preference.getName(), preference.getValue(), context);
+            if (configuration.isActionEnabled(String.format("%s_preference_%d", sourceDocument, iter))) {
+                obj.set(preference.getName(), preference.getValue(), context);
+            }
+            iter++;
         }
     }
 
     private void applyRights(MigrationAction action, XWikiDocument document, XWikiContext context) throws XWikiException
     {
+        String sourceDocument = serializer.serialize(action.getSourceDocument());
+        int iter = 1;
         for (Right right : action.getRights()) {
-            BaseObject obj = document.newXObject(rightsClassReference, context);
-            if (right.getUser() != null) {
-                obj.set("users", serializer.serialize(right.getUser()), context);
+            if (configuration.isActionEnabled(String.format("%s_right_%d", sourceDocument, iter))) {
+                BaseObject obj = document.newXObject(rightsClassReference, context);
+                if (right.getUser() != null) {
+                    obj.set("users", serializer.serialize(right.getUser()), context);
+                }
+                if (right.getGroup() != null) {
+                    obj.set("groups", serializer.serialize(right.getGroup()), context);
+                }
+                obj.set("levels", right.getLevel(), context);
+                obj.set("allow", right.isAllow() ? 1 : 0, context);
             }
-            if (right.getGroup() != null) {
-                obj.set("groups", serializer.serialize(right.getGroup()), context);
-            }
-            obj.set("levels", right.getLevel(), context);
-            obj.set("allow", right.isAllow() ? 1 : 0, context);
+            iter++;
         }
     }
 }

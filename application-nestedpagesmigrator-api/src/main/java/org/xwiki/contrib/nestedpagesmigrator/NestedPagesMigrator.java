@@ -32,5 +32,5 @@ public interface NestedPagesMigrator
 
     MigrationPlanTree getPlan(String wikiId);
 
-    Job startMigration(MigrationPlanTree plan) throws MigrationException;
+    Job startMigration(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException;
 }

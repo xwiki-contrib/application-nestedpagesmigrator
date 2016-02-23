@@ -32,6 +32,8 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJob;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJobStatus;
+import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorJob;
+import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorRequest;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanRequest;
 import org.xwiki.job.Job;
 import org.xwiki.job.JobException;
@@ -45,6 +47,10 @@ import org.xwiki.job.JobStatusStore;
 @Singleton
 public class DefaultNestedPagesMigrator implements NestedPagesMigrator
 {
+    private static final String CREATE_PLAN = "createmigrationplan";
+
+    private static final String EXECUTE_PLAN = "executemigrationplan";
+
     @Inject
     private JobExecutor jobExecutor;
 
@@ -56,11 +62,11 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     {
         try {
             MigrationPlanRequest migrationPlanRequest = new MigrationPlanRequest();
-            migrationPlanRequest.setId(getJobId(configuration.getWikiReference().getName()));
+            migrationPlanRequest.setId(getJobId(configuration.getWikiReference().getName(), CREATE_PLAN));
             migrationPlanRequest.setConfiguration(configuration);
             return jobExecutor.execute(MigrationPlanCreatorJob.JOB_TYPE, migrationPlanRequest);
         } catch (JobException e) {
-            throw new MigrationException("Failed to create a migration pla,.", e);
+            throw new MigrationException("Failed to create a migration plan.", e);
         }
     }
 
@@ -68,7 +74,7 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     public MigrationPlanTree getPlan(String wikiId)
     {
         MigrationPlanCreatorJobStatus jobStatus;
-        List<String> jobId = getJobId(wikiId);
+        List<String> jobId = getJobId(wikiId, CREATE_PLAN);
         Job job = jobExecutor.getJob(jobId);
         if (job != null) {
             jobStatus = (MigrationPlanCreatorJobStatus) job.getStatus();
@@ -79,14 +85,22 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     }
 
     @Override
-    public Job startMigration(MigrationPlanTree plan) throws MigrationException
+    public Job startMigration(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException
     {
-        return null;
+        try {
+            MigrationPlanExecutorRequest request = new MigrationPlanExecutorRequest();
+            request.setId(getJobId(configuration.getWikiReference().getName(), EXECUTE_PLAN));
+            request.setConfiguration(configuration);
+            request.setPlan(plan);
+            return jobExecutor.execute(MigrationPlanExecutorJob.JOB_TYPE, request);
+        } catch (JobException e) {
+            throw new MigrationException("Failed to execute the migration plan.", e);
+        }
     }
 
-    private List<String> getJobId(String wikiId)
+    private List<String> getJobId(String wikiId, String action)
     {
         // One job per wiki
-        return Arrays.asList(MigrationPlanCreatorJob.JOB_TYPE, "createmigrationplan", wikiId);
+        return Arrays.asList(MigrationPlanCreatorJob.JOB_TYPE, action, wikiId);
     }
 }

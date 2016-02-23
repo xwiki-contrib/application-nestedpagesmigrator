@@ -22,7 +22,9 @@ package org.xwiki.contrib.nestedpagesmigrator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
@@ -48,6 +50,8 @@ public class MigrationConfiguration implements Serializable
     private List<DocumentReference> excludedObjectClasses = new ArrayList<>();
 
     private List<DocumentReference> excludedPages = new ArrayList<>();
+
+    private Set<String> disabledActions = new HashSet<>();
     
     private WikiReference wikiReference;
     
@@ -188,5 +192,15 @@ public class MigrationConfiguration implements Serializable
     public void setAddAutoRedirect(boolean addAutoRedirect)
     {
         this.addAutoRedirect = addAutoRedirect;
+    }
+
+    public void addDisabledAction(String actionName)
+    {
+        disabledActions.add(actionName);
+    }
+
+    public boolean isActionEnabled(String actionName)
+    {
+        return !disabledActions.contains(actionName);
     }
 }

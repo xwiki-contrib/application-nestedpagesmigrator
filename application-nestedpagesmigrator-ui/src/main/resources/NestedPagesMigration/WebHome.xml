@@ -40,6 +40,11 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
+#if (!$services.security.authorization.hasAccess('admin', $xcontext.userReference, $doc.documentReference.wikiReference))
+  {{error}}
+  You don't have the right to use this tool on this wiki. You need to be administrator.
+  {{/error}}
+#else
 ## Both job.css and extension.css are needed because the ui-progress classes that we need to display
 ## a progress bar are in one of these 2 files depending on the XWiki version
 #set ($discard = $xwiki.ssfx.use('uicomponents/job/job.css', true))
@@ -176,6 +181,7 @@
   &lt;!-- /ko --&gt;
 &lt;/div&gt;
 {{/html}}
+#end
 {{/velocity}}
 </content>
   <object>

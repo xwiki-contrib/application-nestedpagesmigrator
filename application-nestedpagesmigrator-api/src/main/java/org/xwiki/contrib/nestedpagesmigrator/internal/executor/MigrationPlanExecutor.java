@@ -110,7 +110,7 @@ public class MigrationPlanExecutor
 
         String sourceDocument = serializer.serialize(action.getSourceDocument());
         String targetDocument = serializer.serialize(action.getTargetDocument());
-        logger.debug("Converting [{}] to [{}].", sourceDocument, targetDocument);
+        logger.info("Converting [{}] to [{}].", sourceDocument, targetDocument);
 
         try {
             // Move the document

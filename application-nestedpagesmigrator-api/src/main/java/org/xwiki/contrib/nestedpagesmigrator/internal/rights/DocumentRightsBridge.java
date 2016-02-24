@@ -58,8 +58,11 @@ public class DocumentRightsBridge
     private DocumentReferenceResolver<String> documentReferenceResolver;
 
     /**
+     * Get the list of global rights present in the "WebPreferences" page related to the document. Inheritance is not
+     * handled.
+     *
      * @param document document to check
-     * @return the list of global rights that are present in the "WebPreferences" page related to the document
+     * @return the list of global rights present in the "WebPreferences" page related to the document.
      *
      * @throws MigrationException if error happens
      */

@@ -193,14 +193,14 @@ public class MigrationConfiguration implements Serializable
         excludedObjectClasses.addAll(classReferences);
     }
 
-    public void addExcludedPage(DocumentReference classReference)
+    public void addExcludedPage(DocumentReference pageReference)
     {
-        excludedPages.add(classReference);
+        excludedPages.add(pageReference);
     }
 
-    public void addExcludedPages(Collection<DocumentReference> classReferences)
+    public void addExcludedPages(Collection<DocumentReference> pageReferences)
     {
-        excludedPages.addAll(classReferences);
+        excludedPages.addAll(pageReferences);
     }
 
     public WikiReference getWikiReference()

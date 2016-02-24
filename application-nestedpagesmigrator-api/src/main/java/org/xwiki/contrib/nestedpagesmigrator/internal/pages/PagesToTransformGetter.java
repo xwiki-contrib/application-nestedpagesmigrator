@@ -94,7 +94,7 @@ public class PagesToTransformGetter
             progressManager.startStep(this);
             
             // Send how many document are going to be read
-            progressManager.pushLevelProgress(docNames.size());
+            progressManager.pushLevelProgress(docNames.size(), this);
             for (String docName : docNames) {
                 progressManager.startStep(this);
                 

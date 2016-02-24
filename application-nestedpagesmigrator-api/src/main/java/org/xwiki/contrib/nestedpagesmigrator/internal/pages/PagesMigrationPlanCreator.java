@@ -108,7 +108,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
         plan = new MigrationPlanTree();
         plan.addListener(this);
         
-        progressManager.pushLevelProgress(concernedDocuments.size());
+        progressManager.pushLevelProgress(concernedDocuments.size(), this);
         progressManager.startStep(this);
         if (configuration.isDontMoveChildren()) {
             for (DocumentReference terminalDoc : concernedDocuments) {

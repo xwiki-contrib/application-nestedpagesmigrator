@@ -58,23 +58,27 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
 
             // Step 1: convert pages
             progressManager.startStep(this);
+            logger.info("Compute the new page hierarchy.");
             PagesMigrationPlanCreator pagesMigrationPlanCreator
                     = componentManager.getInstance(PagesMigrationPlanCreator.class);
             MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(request.getConfiguration());
 
             // Step 2: convert preferences
             progressManager.startStep(this);
+            logger.info("Compute the new page preferences.");
             PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
                     = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
             preferencesMigrationPlanCreator.convertPreferences(plan, request.getConfiguration());
 
             // Step 3: convert rights
             progressManager.startStep(this);
+            logger.info("Compute the new page rights.");
             rightsMigrationPlanCreator.convertRights(plan, request.getConfiguration());
 
             // End
             getStatus().setPlan(plan);
             progressManager.popLevelProgress(this);
+            logger.info("Plan is computed.");
         } catch (MigrationException e) {
             logger.error("Failed to compute the migration plan.", e);
         }

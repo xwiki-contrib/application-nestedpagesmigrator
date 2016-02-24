@@ -94,12 +94,14 @@ public class MigrationPlanExecutor
                 new DocumentReference(configuration.getWikiReference().getName(), "XWiki", "XWikiPreferences");
 
         progressManager.pushLevelProgress(plan.getActions().size(), this);
+        logger.info("Start the execution of the plan.");
 
         for (MigrationAction action: plan.getTopLevelAction().getChildren()) {
             performAction(action);
         }
 
         progressManager.popLevelProgress(this);
+        logger.info("Plan have been executed.");
     }
 
     private void performAction(MigrationAction action)
@@ -108,7 +110,7 @@ public class MigrationPlanExecutor
 
         String sourceDocument = serializer.serialize(action.getSourceDocument());
         String targetDocument = serializer.serialize(action.getTargetDocument());
-        logger.info("Converting [{}] to [{}].", sourceDocument, targetDocument);
+        logger.debug("Converting [{}] to [{}].", sourceDocument, targetDocument);
 
         try {
             // Move the document
@@ -178,6 +180,7 @@ public class MigrationPlanExecutor
         // Run the job synchronously
         jobExecutor.execute(RefactoringJobs.MOVE, request).join();
 
+        // Update the "parent" field of the target document to point to the new parent
         EntityReference spaceParent = action.getTargetDocument().getLastSpaceReference().getParent();
         if (spaceParent.getType() == EntityType.SPACE) {
             documentAccessBridge.setDocumentParentReference(action.getTargetDocument(), new DocumentReference("WebHome",

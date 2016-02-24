@@ -82,6 +82,19 @@
   &lt;/li&gt;
 &lt;/script&gt;
 &lt;!------------------------------------------
+  Display Logs
+  -------------------------------------------&gt;
+&lt;script id="DisplayLogs" type="text/html"&gt;
+  &lt;h2 class="log-title"&gt;Logs: &lt;/h2&gt;
+  &lt;ul class="log" data-bind="if: logs().length &gt; 0"&gt;
+    &lt;!-- ko foreach: logs --&gt;
+    &lt;li class="log-item" data-bind="css: getClass()"&gt;
+      &lt;div data-bind="text: message" /&gt;
+    &lt;/li&gt;
+    &lt;!-- /ko --&gt;
+  &lt;/ul&gt;
+&lt;/script&gt;
+&lt;!------------------------------------------
   Display plan
   -------------------------------------------&gt;
 &lt;script id="DisplayPlan" type="text/html"&gt;
@@ -102,13 +115,8 @@
       &lt;p&gt;There is nothing to do!&lt;/p&gt;
     &lt;/div&gt;
     &lt;!-- /ko --&gt;
-    &lt;ul class="log" data-bind="if: logs().length &gt; 0"&gt;
-      &lt;!-- ko foreach: logs --&gt;
-      &lt;li class="log-item" data-bind="css: getClass()"&gt;
-        &lt;div data-bind="text: message" /&gt;
-      &lt;/li&gt;
-      &lt;!-- /ko --&gt;
-    &lt;/ul&gt;
+    &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
+    &lt;!-- /ko --&gt;
   &lt;/div&gt;
 &lt;/Script&gt;
 &lt;!------------------------------------------
@@ -186,20 +194,25 @@
 &lt;!------------------------------------------
   Execute Plan
   -------------------------------------------&gt;
-&lt;!-- ko if: isPlanExecuting() --&gt;
+&lt;!-- ko if: isPlanExecuting() &amp;&amp; !success()--&gt;
 &lt;div class="box"&gt;
   &lt;p&gt;The plan is being executed and it could take some time. Please wait...&lt;/p&gt;
   &lt;div class="ui-progress-background"&gt;
     &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}"&gt;&lt;/div&gt;
   &lt;/div&gt;
-  &lt;ul class="log" data-bind="if: logs().length &gt; 0"&gt;
-    &lt;!-- ko foreach: logs --&gt;
-    &lt;li class="log-item" data-bind="css: getClass()"&gt;
-      &lt;div data-bind="text: message" /&gt;
-    &lt;/li&gt;
-    &lt;!-- /ko --&gt;
-  &lt;/ul&gt;
+  &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
+  &lt;!-- /ko --&gt;
 &lt;/div&gt;
+&lt;!-- /ko --&gt;
+&lt;!------------------------------------------
+  End message
+  -------------------------------------------&gt;
+&lt;!-- ko if: success() --&gt;
+  &lt;div class="box successmessage"&gt;
+  The plan have been executed!
+  &lt;/div&gt;
+  &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
+  &lt;!-- /ko --&gt;
 &lt;!-- /ko --&gt;
 {{/html}}
 #end
@@ -621,6 +634,7 @@
     self.progress          = ko.observable(0);
     self.logs              = ko.observableArray();
     self.isPlanExecuting   = ko.observable(false);
+    self.success           = ko.observable(false);
     
     self.toggleXClassList = function () {
       self.xclassListVisible(!self.xclassListVisible());
@@ -712,7 +726,7 @@
           'excludedObjectClasses': self.configuration.excludedObjectClasses()
         }).done(function (data) {
           self.jobId = data.jobId;
-          self.getJobStatus('computePlan');
+          self.getJobStatus(function() { self.getMigrationPlan(); });
           self.getJobLogs();
         }).fail(function () {
           console.log('ERROR: Failed to start a new plan computation.');
@@ -722,20 +736,20 @@
     /**
      * Perform an AJAX request to get the current job status, so we can update progress the bar.
      */
-    self.getJobStatus = function (action) {
+    self.getJobStatus = function (successCallback) {
       var restURLPrefix = xm.restURL.substring(0, xm.restURL.indexOf('/rest/') + 6);
       var jobURL = restURLPrefix + 'jobstatus/' + self.jobId + '?media=json';
       $.getJSON(jobURL).done(function (data) {
         var state = data.state;
         if (state == 'FINISHED') {
           self.progress(100);
-          if (action == 'computePlan') {
-            self.getMigrationPlan();
+          if (successCallback) {
+            successCallback();
           }
         } else if (state == 'RUNNING' || state == 'NONE') {
           self.progress(data.progress.offset * 100);
           // retry in 0.5 seconds
-          setTimeout(function() { self.getJobStatus(action) }, 500);
+          setTimeout(function() { self.getJobStatus(successCallback) }, 500);
         }
       });
     };
@@ -899,7 +913,7 @@
           disabledActions += getDisabledActions(action.children()[i]);
         }
         return disabledActions;
-      }
+      };
       
       var disabledActions = '';
       for (var i = 0; i &lt; self.actions().length; ++i) {
@@ -907,13 +921,17 @@
         disabledActions += getDisabledActions(action);
       }
       
-      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
-        'action'               : 'executePlan',
-        'addRedirection'       : self.configuration.addRedirection(),
-        'disabledActions'      : disabledActions
+      $.ajax(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+        'data': {
+          'action'               : 'executePlan',
+          'addRedirection'       : self.configuration.addRedirection(),
+          'disabledActions'      : disabledActions
+        },
+        'method': 'POST',
+        'data-type': 'json'
       }).done(function (data) {
         self.jobId = data.jobId;
-        self.getJobStatus('executePlan');
+        self.getJobStatus(function() { self.success(true); });
         self.logs.removeAll();
         self.getJobLogs();
       }).fail(function () {
@@ -1037,8 +1055,20 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>.migration-plan .documentName {
+      <code>#template('colorThemeInit.vm')
+
+.migration-plan .documentName {
   cursor: pointer;
+}
+
+.log {
+  background-color: $theme.pageContentBackgroundColor;
+}
+
+.log-title {
+  text-transform: uppercase;
+  font-size: 0.9em;
+  font-weight: bold;
 }</code>
     </property>
     <property>
@@ -1048,7 +1078,7 @@
       <name>CSS</name>
     </property>
     <property>
-      <parse/>
+      <parse>1</parse>
     </property>
     <property>
       <use>currentPage</use>

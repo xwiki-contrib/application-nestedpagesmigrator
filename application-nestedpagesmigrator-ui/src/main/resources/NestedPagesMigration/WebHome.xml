@@ -28,7 +28,8 @@
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
   <creationDate>1252454400000</creationDate>
-  <parent>Main.WebHome</parent>
+  <!-- Set itself as parent so this page will not be migrated! -->
+  <parent>NestedPagesMigration.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <date>1452784366000</date>

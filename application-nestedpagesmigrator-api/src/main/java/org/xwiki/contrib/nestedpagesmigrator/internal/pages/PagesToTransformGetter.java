@@ -48,6 +48,8 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
+ * Get the list of pages that must be converted.
+ *
  * @version $Id: $
  */
 @Component(roles = PagesToTransformGetter.class)
@@ -73,6 +75,13 @@ public class PagesToTransformGetter
     @Named("local")
     private EntityReferenceSerializer<String> referenceSerializer;
 
+    /**
+     * @param configuration the configuration of the migration
+     *
+     * @return the list of pages to convert
+     *
+     * @throws MigrationException if error happens
+     */
     public List<DocumentReference> getPagesToConvert(MigrationConfiguration configuration) throws MigrationException
     {  
         try {
@@ -200,6 +209,11 @@ public class PagesToTransformGetter
         return query;
     }
 
+    /**
+     * @param doc the document to verify
+     * @param excludedObjectClasses the list of forbidden classes
+     * @return either or not the document contains an instance of a forbidden class
+     */
     private boolean hasForbiddenObject(XWikiDocument doc, List<DocumentReference> excludedObjectClasses)
     {
         for (DocumentReference classReference : excludedObjectClasses) {

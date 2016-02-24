@@ -38,6 +38,8 @@ import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 
 /**
+ * Script service to create or execute migration plan via some jobs.
+ *
  * @version $Id: $
  * @since 0.2
  */
@@ -60,7 +62,16 @@ public class NestedPagesMigratorScriptService implements ScriptService
         // User need to be admin to run this application
         authorizationManager.checkAccess(Right.ADMIN, documentAccessBridge.getCurrentUserReference(), wikiReference);
     }
-    
+
+    /**
+     * Start the creation of a migration plan in a job.
+     *
+     * @param configuration the migration configuration
+     * @return the job handling the computation of the plan
+     *
+     * @throws MigrationException if error happens
+     * @throws AccessDeniedException if the user have not the right to execute this method
+     */
     public Job startMigrationPlanCreation(MigrationConfiguration configuration)
             throws MigrationException, AccessDeniedException
     {
@@ -68,12 +79,25 @@ public class NestedPagesMigratorScriptService implements ScriptService
         
         return nestedPagesMigrator.startMigrationPlanCreation(configuration);
     }
-    
+
+    /**
+     * Create a new migration configuration.
+     *
+     * @param wikiId the id of the wiki where the migration will be done
+     *
+     * @return a new migration configuration for that wiki
+     */
     public MigrationConfiguration newMigrationConfiguration(String wikiId)
     {
         return new MigrationConfiguration(new WikiReference(wikiId));
     }
-    
+
+    /**
+     * @param wikiId the id of the wiki where the plan have been computed
+     * @return a JSON-serialized version of the computed plan for the given wiki
+     *
+     * @throws AccessDeniedException if the user have not the right to execute this method
+     */
     public String getSerializedPlan(String wikiId) throws AccessDeniedException
     {
         checkAdminAccess(new WikiReference(wikiId));
@@ -88,7 +112,7 @@ public class NestedPagesMigratorScriptService implements ScriptService
      * @return the job which executes the migration
      *
      * @throws AccessDeniedException if the current user has not ADMIN right on the wiki
-     * @throws MigrationException if error occurs
+     * @throws AccessDeniedException if the user have not the right to execute this method
      *
      * @since 0.4
      */

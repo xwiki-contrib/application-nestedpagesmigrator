@@ -27,6 +27,8 @@ import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
+ * Represent a wiki page.
+ *
  * @version $Id: $
  */
 public class Page
@@ -42,29 +44,6 @@ public class Page
     private Collection<Preference> preferences = new ArrayList<>();
 
     private Collection<Right> rights = new ArrayList<>();
-
-    public Page(DocumentReference documentReference, DocumentReference parent)
-    {
-        this.documentReference = documentReference;
-        this.parent = parent;
-        this.from = null;
-        this.isFailedToLoad = false;
-    }
-
-    public Page(DocumentReference documentReference, DocumentReference parent, DocumentReference from)
-    {
-        this.documentReference = documentReference;
-        this.parent = parent;
-        this.from = from;
-        this.isFailedToLoad = false;
-    }
-
-    public Page(DocumentReference documentReference, DocumentReference parent, boolean isFailedToLoad)
-    {
-        this.documentReference = documentReference;
-        this.parent = parent;
-        this.isFailedToLoad = isFailedToLoad;
-    }
 
     public Page(DocumentReference documentReference, DocumentReference parent,
             DocumentReference from, boolean isFailedToLoad)

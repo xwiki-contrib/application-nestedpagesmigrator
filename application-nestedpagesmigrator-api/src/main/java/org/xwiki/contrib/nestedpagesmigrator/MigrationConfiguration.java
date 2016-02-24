@@ -31,6 +31,8 @@ import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
 /**
+ * The different options that a the user can fill to perform a migration.
+ *
  * @version $Id: $
  */
 public class MigrationConfiguration implements Serializable
@@ -54,7 +56,11 @@ public class MigrationConfiguration implements Serializable
     private Set<String> disabledActions = new HashSet<>();
     
     private WikiReference wikiReference;
-    
+
+    /**
+     * Create a new configuration.
+     * @param wikiReference the reference of the wiki where the migration will occur
+     */
     public MigrationConfiguration(WikiReference wikiReference)
     {
         excludeHiddenPages = true;
@@ -63,52 +69,75 @@ public class MigrationConfiguration implements Serializable
         addAutoRedirect = true;
         this.wikiReference = wikiReference;
     }
-    
+
+    /**
+     * @return if the configuration has included spaces
+     */
     public boolean hasIncludedSpaces()
     {
         return !includedSpaces.isEmpty();
     }
 
+    /**
+     * @return if the configuration has excluded spaces
+     */
     public boolean hasExcludedSpaces()
     {
         return !excludedSpaces.isEmpty();
     }
 
-    public boolean hasExcludedObjectClasses()
-    {
-        return !excludedObjectClasses.isEmpty();
-    }
-
+    /**
+     * @return if the configuration has excluded pages
+     */
     public boolean hasExcludedPages()
     {
         return !excludedPages.isEmpty();
     }
 
+    /**
+     * @return if the migration should ignore hidden pages
+     */
     public boolean isExcludeHiddenPages()
     {
         return excludeHiddenPages;
     }
 
+    /**
+     * @param excludeHiddenPages if the migration should ignore hidden pages
+     */
     public void setExcludeHiddenPages(boolean excludeHiddenPages)
     {
         this.excludeHiddenPages = excludeHiddenPages;
     }
 
+    /**
+     * @return if the migration should ignore pages holding a class
+     */
     public boolean isExcludeClassPages()
     {
         return excludeClassPages;
     }
 
+    /**
+     * @param excludeClassPages if the migration should ignore pages holding a class
+     */
     public void setExcludeClassPages(boolean excludeClassPages)
     {
         this.excludeClassPages = excludeClassPages;
     }
 
+    /**
+     * @return if the migration should not move the pages under their parents but only transform them to nested pages.
+     */
     public boolean isDontMoveChildren()
     {
         return dontMoveChildren;
     }
 
+    /**
+     * @param dontMoveChildren if the migration should not move the pages under their parents but only transform them to
+     * nested pages.
+     */
     public void setDontMoveChildren(boolean dontMoveChildren)
     {
         this.dontMoveChildren = dontMoveChildren;

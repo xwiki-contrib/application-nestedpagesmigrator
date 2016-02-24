@@ -35,6 +35,9 @@ import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
+ * Represents an example of wiki holding pages, rights and preferences, and the expected state at the end of the
+ * migration. This example is build by parsing an XML document located in the /resources folder.
+ *
  * @version $Id: $
  */
 public class Example

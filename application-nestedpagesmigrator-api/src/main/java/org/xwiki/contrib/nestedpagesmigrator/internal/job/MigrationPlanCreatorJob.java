@@ -35,6 +35,8 @@ import org.xwiki.job.Job;
 import org.xwiki.job.event.status.JobStatus;
 
 /**
+ * Job that computes a migration plan.
+ *
  * @version $Id: $
  */
 @Component
@@ -73,7 +75,7 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
             // Step 3: convert rights
             progressManager.startStep(this);
             logger.info("Compute the new page rights.");
-            rightsMigrationPlanCreator.convertRights(plan, request.getConfiguration());
+            rightsMigrationPlanCreator.convertRights(plan);
 
             // End
             getStatus().setPlan(plan);

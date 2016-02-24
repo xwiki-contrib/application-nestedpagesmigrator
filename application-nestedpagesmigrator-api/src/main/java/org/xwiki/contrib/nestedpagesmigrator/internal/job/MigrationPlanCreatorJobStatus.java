@@ -26,6 +26,8 @@ import org.xwiki.logging.LoggerManager;
 import org.xwiki.observation.ObservationManager;
 
 /**
+ * Custom Job Status holding a migration plan.
+ *
  * @version $Id: $
  */
 public class MigrationPlanCreatorJobStatus extends DefaultJobStatus<MigrationPlanRequest>
@@ -45,11 +47,19 @@ public class MigrationPlanCreatorJobStatus extends DefaultJobStatus<MigrationPla
         super(request, parentJobStatus, observationManager, loggerManager);
     }
 
+    /**
+     * @return the computed plan
+     */
     public MigrationPlanTree getPlan()
     {
         return plan;
     }
 
+    /**
+     * Save the computed migration plan.
+     *
+     * @param plan the computed plan
+     */
     public void setPlan(MigrationPlanTree plan)
     {
         this.plan = plan;

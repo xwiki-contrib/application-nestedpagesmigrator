@@ -41,6 +41,8 @@ import org.xwiki.job.JobExecutor;
 import org.xwiki.job.JobStatusStore;
 
 /**
+ * Default implementation of {@link NestedPagesMigrator}.
+ *
  * @version $Id: $
  */
 @Component

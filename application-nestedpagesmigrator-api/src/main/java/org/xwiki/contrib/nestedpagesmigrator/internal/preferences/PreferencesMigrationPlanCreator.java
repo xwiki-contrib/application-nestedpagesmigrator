@@ -40,7 +40,8 @@ import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.text.StringUtils;
 
 /**
- * Not thread safe.
+ * Add the actions concerning the preferences into a computed plan. Not thread safe.
+ *
  * @version $Id: $
  */
 @Component(roles = PreferencesMigrationPlanCreator.class)
@@ -62,6 +63,14 @@ public class PreferencesMigrationPlanCreator
 
     private MigrationPlanTree plan;
 
+    /**
+     * Handle the conversion of the preferences.
+     *
+     * @param plan the computed plan
+     * @param configuration the configuration
+     *
+     * @throws MigrationException if error happens
+     */
     public void convertPreferences(MigrationPlanTree plan, MigrationConfiguration configuration)
             throws MigrationException
     {
@@ -76,25 +85,39 @@ public class PreferencesMigrationPlanCreator
         progressManager.popLevelProgress(this);
     }
 
+    /**
+     * Make sure that the preferences concerning a document will remain the same after the execution of a migration
+     * action. Handle the children actions too.
+     *
+     * @param action the action to convert
+     */
     private void convertPreferences(MigrationAction action)
     {
         progressManager.startStep(this);
 
+        // For each property, the inherited value should be the same after the action than before.
         for (String property : properties) {
             Preference valueBefore = getPreferenceValue(action.getSourceDocument(), property);
             Object valueAfter = getPreferenceValueAfter(action, property);
             boolean hasProperty = hasProperty(action.getSourceDocument(), property);
             if (valueBefore.getValue() != null && (!valueBefore.getValue().equals(valueAfter) || hasProperty)) {
-                // Do something here
+                // If the value is different or if the value was manually set on the source document (even if the
+                // inherited preference is the same), we add the preference to this action.
                 action.addPreference(valueBefore);
             }
         }
 
+        // Also handle children actions
         for (MigrationAction child : action.getChildren()) {
             convertPreferences(child);
         }
     }
 
+    /**
+     * @param documentReference the "WebPreferences" document containing the preferences
+     * @param property the preference property yo check
+     * @return either or not the property was set on this document, whatever is the value
+     */
     private boolean hasProperty(DocumentReference documentReference, String property)
     {
         if (!"WebHome".equals(documentReference.getName())) {
@@ -105,11 +128,27 @@ public class PreferencesMigrationPlanCreator
         return !isNull(documentAccessBridge.getProperty(webPreferences, classReference, property));
     }
 
+    /**
+     * Get the preference value of a property in the WebPreferences document related to a document.
+     *
+     * @param document the document from where to get the value
+     * @param propertyName the name of the property to look at
+     *
+     * @return the property value
+     */
     private Preference getPreferenceValue(DocumentReference document, String propertyName)
     {
         return getPreferenceValue(document.getLastSpaceReference(), propertyName);
     }
 
+    /**
+     * Get the preference value of a property in the WebPreferences document in a given space.
+     *
+     * @param space the space to look at
+     * @param propertyName the name of the property to look at
+     *
+     * @return the property value
+     */
     private Preference getPreferenceValue(SpaceReference space, String propertyName)
     {
         DocumentReference webPreferences = new DocumentReference("WebPreferences", space);
@@ -129,36 +168,55 @@ public class PreferencesMigrationPlanCreator
         return new Preference(propertyName, value, webPreferences);
     }
 
+    /**
+     * Get the preference value of a property after a migration has been done.
+     *
+     * @param action the action that will be executed
+     * @param propertyName the name of the property to look at
+     *
+     * @return the property value
+     */
     private Object getPreferenceValueAfter(MigrationAction action, String propertyName)
     {
+        // First: look if the action have a preference set
         for (Preference preference : action.getPreferences()) {
+            // If the preference's name of the action match the property name
             if (StringUtils.equals(preference.getName(), propertyName)) {
+                // It's this value which will be applied, so we return it
                 return preference.getValue();
             }
         }
 
+        // Get the value for the WebPreferences page of the target document
         DocumentReference webPreferences
                 = new DocumentReference("WebPreferences", action.getTargetDocument().getLastSpaceReference());
         Object value = documentAccessBridge.getProperty(webPreferences, classReference, propertyName);
 
+        // If the value is null, we must explore the parents, to get inherited preferences
         if (isNull(value)) {
             // Fallback to the parent
             EntityReference spaceParent = webPreferences.getLastSpaceReference().getParent();
             if (spaceParent.getType() == EntityType.SPACE) {
-                // Parent document
+                // If the parent is a space, we get the document parent
                 DocumentReference parent = new DocumentReference("WebHome", new SpaceReference(spaceParent));
-                // Get action concerning this document
+                // We get action concerning this document
                 MigrationAction parentAction = plan.getActionWithTarget(parent);
-                // Get the value from there
+                // And wet the value from this action
                 value = getPreferenceValueAfter(parentAction, propertyName);
             } else if (spaceParent.getType() == EntityType.WIKI) {
+                // If the parent is the wiki, we het the wiki preferences
                 value = documentAccessBridge.getProperty(classReference, classReference, propertyName);
+                //TODO: look at the main wiki preferences too
             }
         }
 
         return value;
     }
 
+    /**
+     * @param value the value to check
+     * @return if the value is considered as "null" (could be null, blank, or "--")
+     */
     private boolean isNull(Object value)
     {
         if (value == null) {

@@ -29,7 +29,10 @@ import org.xwiki.job.AbstractJob;
 import org.xwiki.job.DefaultJobStatus;
 
 /**
+ * Jobs that executes a migration.
+ *
  * @version $Id: $
+ * @since 0.4
  */
 @Component
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
@@ -44,6 +47,7 @@ public class MigrationPlanExecutorJob extends AbstractJob<MigrationPlanExecutorR
     @Override
     protected void runInternal() throws Exception
     {
+        // Create an instance of the MigrationPlanExecutor component and perform the action
         MigrationPlanExecutorRequest request = getRequest();
         MigrationPlanExecutor executor = componentManager.getInstance(MigrationPlanExecutor.class);
         executor.performMigration(request.getPlan(), request.getConfiguration());

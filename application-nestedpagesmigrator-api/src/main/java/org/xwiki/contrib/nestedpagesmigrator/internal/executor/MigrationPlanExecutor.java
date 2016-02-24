@@ -55,7 +55,11 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 
 /**
+ * Component that execute a plan, according to the configuration.
+ * This component is not thread-safe.
+ *
  * @version $Id: $
+ * @since 0.4
  */
 @Component(roles = MigrationPlanExecutor.class)
 @InstantiationStrategy(ComponentInstantiationStrategy.PER_LOOKUP)
@@ -85,6 +89,13 @@ public class MigrationPlanExecutor
 
     private DocumentReference preferencesClassReference;
 
+    /**
+     * Perform the migration described on the given plan.
+     *
+     * @param plan the plan to execute
+     * @param configuration the configuration
+     * @throws MigrationException if error happens
+     */
     public void performMigration(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException
     {
         this.configuration = configuration;
@@ -104,6 +115,11 @@ public class MigrationPlanExecutor
         logger.info("Plan have been executed.");
     }
 
+    /**
+     * Perform a migration action and all its children.
+     *
+     * @param action the action to perform
+     */
     private void performAction(MigrationAction action)
     {
         progressManager.startStep(this);
@@ -113,10 +129,8 @@ public class MigrationPlanExecutor
         logger.info("Converting [{}] to [{}].", sourceDocument, targetDocument);
 
         try {
-            // Move the document
-            if (!action.isIdentity()
-                    && configuration.isActionEnabled(
-                        String.format("%s_page", sourceDocument))) {
+            // Move the document (if this action is enabled by the user)
+            if (!action.isIdentity() && configuration.isActionEnabled(String.format("%s_page", sourceDocument))) {
                 moveDocument(action);
             }
 
@@ -135,6 +149,13 @@ public class MigrationPlanExecutor
         }
     }
 
+    /**
+     * Apply the rights and the preferences described in the given action.
+     *
+     * @param action the action containing the preferences and the rights to set
+     *
+     * @throws XWikiException if error happens
+     */
     private void applyRightsAndPreferences(MigrationAction action) throws XWikiException
     {
         XWikiContext context = contextProvider.get();
@@ -152,12 +173,21 @@ public class MigrationPlanExecutor
             applyPreferences(action, preferencesPage, context);
         }
 
+        // Save the document
         xwiki.saveDocument(preferencesPage,
                 "Rights and/or preferences set by the Nested Pages Migrator Application.", context);
     }
 
+    /**
+     * Move a document according to a migration action, and update its parent field.
+     *
+     * @param action the action to perform
+     *
+     * @throws Exception if error happens
+     */
     private void moveDocument(MigrationAction action) throws Exception
     {
+        // Create a MoveRequest from the Refactoring API
         MoveRequest request = new MoveRequest();
 
         // Source, target
@@ -188,12 +218,20 @@ public class MigrationPlanExecutor
         }
     }
 
+    /**
+     * Apply the preferences of the given action on the given document.
+     *
+     * @param action the action holding the preferences to set
+     * @param document the "WebPreferences" document corresponding to the target document
+     * @param context the XWiki Context
+     */
     private void applyPreferences(MigrationAction action, XWikiDocument document, XWikiContext context)
     {
         String sourceDocument = serializer.serialize(action.getSourceDocument());
         BaseObject obj = document.getXObject(preferencesClassReference, true, context);
         int iter = 0;
         for (Preference preference : action.getPreferences()) {
+            // Check that this preference migration is enabled by the user
             if (configuration.isActionEnabled(String.format("%s_preference_%d", sourceDocument, iter))) {
                 obj.set(preference.getName(), preference.getValue(), context);
             }
@@ -201,11 +239,22 @@ public class MigrationPlanExecutor
         }
     }
 
+    /**
+     * Apply the rights of the given action on the given document.
+     *
+     * @param action the action holding the rights to set
+     * @param document the "WebPreferences" document corresponding to the target document
+     * @param context the XWiki Context
+     *
+     * @throws XWikiException if error happens
+     */
     private void applyRights(MigrationAction action, XWikiDocument document, XWikiContext context) throws XWikiException
     {
         String sourceDocument = serializer.serialize(action.getSourceDocument());
         int iter = 0;
+        // Create one XWikiGlobalRights object per right
         for (Right right : action.getRights()) {
+            // Check that this right migration is enabled by the user
             if (configuration.isActionEnabled(String.format("%s_right_%d", sourceDocument, iter))) {
                 BaseObject obj = document.newXObject(rightsClassReference, context);
                 if (right.getUser() != null) {

@@ -23,7 +23,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
@@ -34,7 +33,6 @@ import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.PlanCreator;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import static org.junit.Assert.assertEquals;
@@ -134,8 +132,7 @@ public class RightsMigrationPlanCreatorTest
         MigrationPlanTree plan = setUpExample(example);
 
         // Run the component
-        mocker.getComponentUnderTest().convertRights(plan,
-                new MigrationConfiguration(new WikiReference("xwiki")));
+        mocker.getComponentUnderTest().convertRights(plan);
 
         // Verify
         verifyRights(example, plan);

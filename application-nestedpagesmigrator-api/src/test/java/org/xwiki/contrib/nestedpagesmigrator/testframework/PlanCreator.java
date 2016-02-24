@@ -20,6 +20,7 @@
 package org.xwiki.contrib.nestedpagesmigrator.testframework;
 
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
@@ -27,11 +28,19 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 
 /**
+ * Create a plan according to an {@link Example}.
+ *
  * @version $Id: $
  */
 public class PlanCreator
 {
-    public static MigrationPlanTree createPlan(Example example) throws Exception
+    /**
+     * @param example the example to build
+     * @return the plan according to the example
+     *
+     * @throws MigrationException if error happens
+     */
+    public static MigrationPlanTree createPlan(Example example) throws MigrationException
     {
         // Create a plan tree corresponding to the XML.
         // Note: the order of the page in the XML is important (parent must be declared before children) otherwise this

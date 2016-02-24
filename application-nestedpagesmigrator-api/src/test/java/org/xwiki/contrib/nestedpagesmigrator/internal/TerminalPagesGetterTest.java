@@ -67,6 +67,7 @@ public class TerminalPagesGetterTest
         when(context.getWiki()).thenReturn(xwiki);
         query = mock(Query.class);
         when(queryManager.createQuery(anyString(), anyString())).thenReturn(query);
-        
     }
+
+    //TODO: write tests
 }

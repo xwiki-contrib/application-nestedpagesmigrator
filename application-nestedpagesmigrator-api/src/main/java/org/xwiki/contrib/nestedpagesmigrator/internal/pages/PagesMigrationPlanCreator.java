@@ -47,6 +47,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
  * A migration plan creator which computes ALL required actions to convert a wiki to Nested Pages. Not thread-safe!
+ * Note: the rights and the preferences are not handled by this component.
  *
  * @version $Id: $
  */

@@ -42,6 +42,8 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 
 /**
+ * Get the global rights configured on a given document.
+ *
  * @version $Id: $
  * @since 0.3
  */
@@ -55,6 +57,12 @@ public class DocumentRightsBridge
     @Inject
     private DocumentReferenceResolver<String> documentReferenceResolver;
 
+    /**
+     * @param document document to check
+     * @return the list of global rights that are present in the "WebPreferences" page related to the document
+     *
+     * @throws MigrationException if error happens
+     */
     public Collection<Right> getRights(DocumentReference document) throws MigrationException
     {
         DocumentReference classReference = new DocumentReference(document.getWikiReference().getName(), "XWiki",

@@ -29,7 +29,6 @@ import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
@@ -40,6 +39,8 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 
 /**
+ * Add the actions concerning the rights into a computed plan. Thread safe!
+ *
  * @version $Id: $
  * @since 0.3
  */
@@ -53,7 +54,14 @@ public class RightsMigrationPlanCreator
     @Inject
     private DocumentRightsBridge documentRightsBridge;
 
-    public void convertRights(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException
+    /**
+     * Handle the conversion of the rights.
+     *
+     * @param plan the computed plan
+     *
+     * @throws MigrationException if error happens
+     */
+    public void convertRights(MigrationPlanTree plan) throws MigrationException
     {
         // TODO: when "allow" is given to some people, it denies all the others!!!!!
 

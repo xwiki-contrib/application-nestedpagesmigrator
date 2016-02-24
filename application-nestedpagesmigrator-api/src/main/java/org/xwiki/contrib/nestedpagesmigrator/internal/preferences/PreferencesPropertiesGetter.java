@@ -37,6 +37,8 @@ import com.xpn.xwiki.objects.classes.BaseClass;
 import com.xpn.xwiki.objects.classes.PropertyClass;
 
 /**
+ * Get the list of property that the XWiki.XWikiPreferences class handles.
+ *
  * @version $Id: $
  * @since 0.3
  */
@@ -47,6 +49,11 @@ public class PreferencesPropertiesGetter
     @Inject
     private Provider<XWikiContext> contextProvider;
 
+    /**
+     * @return the list of properties that XWiki.Preferences handles
+     *
+     * @throws MigrationException if error happens
+     */
     public Collection<String> getPreferencesProperties() throws MigrationException
     {
         XWikiContext context = contextProvider.get();

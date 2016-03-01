@@ -201,7 +201,7 @@ public class PreferencesMigrationPlanCreator
                 DocumentReference parent = new DocumentReference("WebHome", new SpaceReference(spaceParent));
                 // We get action concerning this document
                 MigrationAction parentAction = plan.getActionWithTarget(parent);
-                // And wet the value from this action
+                // And we get the value from this action
                 value = getPreferenceValueAfter(parentAction, propertyName);
             } else if (spaceParent.getType() == EntityType.WIKI) {
                 // If the parent is the wiki, we get the wiki preferences

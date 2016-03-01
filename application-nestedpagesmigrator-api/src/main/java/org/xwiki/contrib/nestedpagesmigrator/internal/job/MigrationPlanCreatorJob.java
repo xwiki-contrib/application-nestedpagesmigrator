@@ -26,7 +26,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator;
 import org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMigrationPlanCreator;
@@ -96,8 +95,9 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
             getStatus().setPlan(plan);
             progressManager.popLevelProgress(this);
             logger.info("Plan is computed.");
-        } catch (MigrationException e) {
+        } catch (Exception e) {
             logger.error("Failed to compute the migration plan.", e);
+            e.printStackTrace();
         }
     }
 

@@ -40,11 +40,10 @@ import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.job.JobExecutor;
 import org.xwiki.job.event.status.JobProgressManager;
-import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
-import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.observation.ObservationManager;
 import org.xwiki.refactoring.job.MoveRequest;
 import org.xwiki.refactoring.job.RefactoringJobs;
 
@@ -83,6 +82,9 @@ public class MigrationPlanExecutor
     @Inject
     private Logger logger;
 
+    @Inject
+    private ObservationManager observationManager;
+
     private MigrationConfiguration configuration;
 
     private DocumentReference rightsClassReference;
@@ -98,21 +100,27 @@ public class MigrationPlanExecutor
      */
     public void performMigration(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException
     {
-        this.configuration = configuration;
-        this.rightsClassReference =
-                new DocumentReference(configuration.getWikiReference().getName(), "XWiki", "XWikiGlobalRights");
-        this.preferencesClassReference =
-                new DocumentReference(configuration.getWikiReference().getName(), "XWiki", "XWikiPreferences");
+        observationManager.notify(new BeginMigrationEvent(configuration.getWikiReference().getName()), this);
 
-        progressManager.pushLevelProgress(plan.getActions().size(), this);
-        logger.info("Start the execution of the plan.");
+        try {
+            this.configuration = configuration;
+            this.rightsClassReference =
+                    new DocumentReference(configuration.getWikiReference().getName(), "XWiki", "XWikiGlobalRights");
+            this.preferencesClassReference =
+                    new DocumentReference(configuration.getWikiReference().getName(), "XWiki", "XWikiPreferences");
 
-        for (MigrationAction action: plan.getTopLevelAction().getChildren()) {
-            performAction(action);
+            progressManager.pushLevelProgress(plan.getActions().size(), this);
+            logger.info("Start the execution of the plan.");
+
+            for (MigrationAction action : plan.getTopLevelAction().getChildren()) {
+                performAction(action);
+            }
+
+            progressManager.popLevelProgress(this);
+            logger.info("Plan have been executed.");
+        } finally {
+            observationManager.notify(new EndMigrationEvent(configuration.getWikiReference().getName()), this);
         }
-
-        progressManager.popLevelProgress(this);
-        logger.info("Plan have been executed.");
     }
 
     /**
@@ -200,6 +208,9 @@ public class MigrationPlanExecutor
         request.setDeep(false);
         request.setInteractive(false);
         request.setUpdateLinks(true);
+        request.setUserReference(
+                documentAccessBridge.getDocument(action.getSourceDocument()).getContentAuthorReference());
+        request.setUpdateParentField(true);
 
         // Job type, id
         request.setJobType(RefactoringJobs.MOVE);
@@ -211,11 +222,12 @@ public class MigrationPlanExecutor
         jobExecutor.execute(RefactoringJobs.MOVE, request).join();
 
         // Update the "parent" field of the target document to point to the new parent
+        /*
         EntityReference spaceParent = action.getTargetDocument().getLastSpaceReference().getParent();
         if (spaceParent.getType() == EntityType.SPACE) {
             documentAccessBridge.setDocumentParentReference(action.getTargetDocument(), new DocumentReference("WebHome",
                     new SpaceReference(spaceParent)));
-        }
+        }*/
     }
 
     /**

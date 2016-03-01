@@ -40,9 +40,11 @@ import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.job.JobExecutor;
 import org.xwiki.job.event.status.JobProgressManager;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.observation.ObservationManager;
 import org.xwiki.refactoring.job.MoveRequest;
 import org.xwiki.refactoring.job.RefactoringJobs;
@@ -210,24 +212,22 @@ public class MigrationPlanExecutor
         request.setUpdateLinks(true);
         request.setUserReference(
                 documentAccessBridge.getDocument(action.getSourceDocument()).getContentAuthorReference());
-        request.setUpdateParentField(true);
 
         // Job type, id
-        request.setJobType(RefactoringJobs.MOVE);
+        request.setJobType(RefactoringJobs.RENAME);
         String suffix = new Date().getTime() + "-" + ThreadLocalRandom.current().nextInt(100, 1000);
         request.setId(Arrays.asList(RefactoringJobs.GROUP,
-                StringUtils.removeStart(RefactoringJobs.MOVE, RefactoringJobs.GROUP_PREFIX), suffix));
+                StringUtils.removeStart(RefactoringJobs.RENAME, RefactoringJobs.GROUP_PREFIX), suffix));
 
         // Run the job synchronously
-        jobExecutor.execute(RefactoringJobs.MOVE, request).join();
+        jobExecutor.execute(RefactoringJobs.RENAME, request).join();
 
         // Update the "parent" field of the target document to point to the new parent
-        /*
         EntityReference spaceParent = action.getTargetDocument().getLastSpaceReference().getParent();
         if (spaceParent.getType() == EntityType.SPACE) {
             documentAccessBridge.setDocumentParentReference(action.getTargetDocument(), new DocumentReference("WebHome",
                     new SpaceReference(spaceParent)));
-        }*/
+        }
     }
 
     /**

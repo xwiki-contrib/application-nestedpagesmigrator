@@ -140,6 +140,12 @@
       &lt;!-- Add redirection --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="addRedirection" data-bind="checked: configuration.addRedirection"&gt; &lt;label for="addRedirection"&gt;Add redirection&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;&lt;span class="xHint"&gt;Add a redirection in the old location.&lt;/span&gt;&lt;/dd&gt;
+      &lt;!-- Convert preferences --&gt;
+      &lt;dt&gt;&lt;input type="checkbox" id="convertPreferences" data-bind="checked: configuration.convertPreferences"&gt; &lt;label for="convertPreferences"&gt;Convert preferences&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the preferences applied on the page remain the same after the move, by dupplicating the preferences on the target document.&lt;/span&gt;&lt;/dd&gt;
+      &lt;!-- Convert rights --&gt;
+      &lt;dt&gt;&lt;input type="checkbox" id="convertRights" data-bind="checked: configuration.convertRights"&gt; &lt;label for="convertRights"&gt;Convert rights (experimental)&lt;/label&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the rights applied on the page remain the same after the move &lt;span class="text-danger"&gt;(Currently bugged)&lt;/span&gt;.&lt;/span&gt;&lt;/dd&gt;
     &lt;/dl&gt;
   &lt;/div&gt;
   &lt;div class="col-xs-12 col-md-6"&gt;
@@ -553,6 +559,8 @@
     this.excludeClassPages     = ko.observable(true);
     this.dontMoveChildren      = ko.observable(false);
     this.addRedirection        = ko.observable(true);
+    this.convertPreferences    = ko.observable(true);
+    this.convertRights         = ko.observable(false);
     this.excludedPages         = ko.observable('');
     this.excludedSpaces        = ko.observable('XWiki,Admin,NestedPagesMigration');
     this.includedSpaces        = ko.observable('');
@@ -721,6 +729,8 @@
           'excludeClassPages'    : self.configuration.excludeClassPages(),
           'dontMoveChildren'     : self.configuration.dontMoveChildren(),
           'addRedirection'       : self.configuration.addRedirection(),
+          'convertPreferences'   : self.configuration.convertPreferences(),
+          'convertRights'        : self.configuration.convertRights(),
           'excludedPages'        : self.configuration.excludedPages(),
           'excludedSpaces'       : self.configuration.excludedSpaces(),
           'includedSpaces'       : self.configuration.includedSpaces(),

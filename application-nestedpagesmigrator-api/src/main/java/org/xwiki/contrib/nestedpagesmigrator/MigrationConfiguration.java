@@ -44,6 +44,10 @@ public class MigrationConfiguration implements Serializable
     private boolean dontMoveChildren;
     
     private boolean addAutoRedirect;
+
+    private boolean convertPreferences;
+
+    private boolean convertRights;
     
     private List<SpaceReference> excludedSpaces = new ArrayList<>();
     
@@ -67,6 +71,8 @@ public class MigrationConfiguration implements Serializable
         excludeClassPages = true;
         dontMoveChildren = false;
         addAutoRedirect = true;
+        convertPreferences = true;
+        convertRights = false;
         this.wikiReference = wikiReference;
     }
 
@@ -141,6 +147,38 @@ public class MigrationConfiguration implements Serializable
     public void setDontMoveChildren(boolean dontMoveChildren)
     {
         this.dontMoveChildren = dontMoveChildren;
+    }
+
+    /**
+     * @return if the preferences must be converted
+     */
+    public boolean isConvertPreferences()
+    {
+        return convertPreferences;
+    }
+
+    /**
+     *  @param convertPreferences if the preferences must be converted
+     */
+    public void setConvertPreferences(boolean convertPreferences)
+    {
+        this.convertPreferences = convertPreferences;
+    }
+
+    /**
+     * @return if the rights must be converted
+     */
+    public boolean isConvertRights()
+    {
+        return convertRights;
+    }
+
+    /**
+     * @param convertRights if rights must be converted
+     */
+    public void setConvertRights(boolean convertRights)
+    {
+        this.convertRights = convertRights;
     }
 
     public List<SpaceReference> getExcludedSpaces()

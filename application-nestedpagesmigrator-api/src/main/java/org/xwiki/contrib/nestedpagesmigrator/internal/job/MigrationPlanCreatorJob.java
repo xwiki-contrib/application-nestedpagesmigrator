@@ -25,6 +25,7 @@ import javax.inject.Named;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator;
@@ -56,26 +57,40 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
     protected void runInternal() throws Exception
     {
         try {
-            progressManager.pushLevelProgress(3, this);
+            MigrationConfiguration configuration = request.getConfiguration();
+
+            // Announce the number of steps
+            int numberOfSteps = 1;
+            if (configuration.isConvertPreferences()) {
+                numberOfSteps++;
+            }
+            if (configuration.isConvertRights()) {
+                numberOfSteps++;
+            }
+            progressManager.pushLevelProgress(numberOfSteps, this);
 
             // Step 1: convert pages
             progressManager.startStep(this);
             logger.info("Compute the new page hierarchy.");
             PagesMigrationPlanCreator pagesMigrationPlanCreator
                     = componentManager.getInstance(PagesMigrationPlanCreator.class);
-            MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(request.getConfiguration());
+            MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(configuration);
 
             // Step 2: convert preferences
-            progressManager.startStep(this);
-            logger.info("Compute the new page preferences.");
-            PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
-                    = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
-            preferencesMigrationPlanCreator.convertPreferences(plan, request.getConfiguration());
+            if (configuration.isConvertPreferences()) {
+                progressManager.startStep(this);
+                logger.info("Compute the new page preferences.");
+                PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
+                        = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
+                preferencesMigrationPlanCreator.convertPreferences(plan, configuration);
+            }
 
             // Step 3: convert rights
-            progressManager.startStep(this);
-            logger.info("Compute the new page rights.");
-            rightsMigrationPlanCreator.convertRights(plan);
+            if (configuration.isConvertRights()) {
+                progressManager.startStep(this);
+                logger.info("Compute the new page rights.");
+                rightsMigrationPlanCreator.convertRights(plan);
+            }
 
             // End
             getStatus().setPlan(plan);

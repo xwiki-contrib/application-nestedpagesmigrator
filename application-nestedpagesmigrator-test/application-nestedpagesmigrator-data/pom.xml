@@ -24,51 +24,12 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.xwiki.contrib</groupId>
-    <artifactId>application-nestedpagesmigrator</artifactId>
+    <artifactId>application-nestedpagesmigrator-test</artifactId>
     <version>0.4-SNAPSHOT</version>
   </parent>
-  <artifactId>application-nestedpagesmigrator-ui</artifactId>
+  <artifactId>application-nestedpagesmigrator-test-data</artifactId>
   <packaging>xar</packaging>
-  <name>Nested Pages Migrator - UI</name>
-  <description>Helper to convert terminal pages into Nested Pages.</description>
-  <properties>
-    <!-- Name to display by the Extension Manager -->
-    <xwiki.extension.name>Nested Pages Migrator Application</xwiki.extension.name>
-  </properties>
-  <dependencies>
-    <dependency>
-      <groupId>org.xwiki.contrib</groupId>
-      <artifactId>application-nestedpagesmigrator-api</artifactId>
-      <version>${project.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>knockout</artifactId>
-      <version>3.4.0</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-security-script</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.rendering</groupId>
-      <artifactId>xwiki-rendering-macro-message</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.rendering</groupId>
-      <artifactId>xwiki-rendering-macro-html</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-rendering-macro-velocity</artifactId>
-      <version>${platform.version}</version>
-    </dependency>
-  </dependencies>
+  <name>Nested Pages Migrator - Tests - Data</name>
   <build>
     <!-- Needed to add support for the XAR packaging -->
     <extensions>

@@ -59,4 +59,12 @@
     <module>application-nestedpagesmigrator-api</module>
     <module>application-nestedpagesmigrator-ui</module>
   </modules>
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <modules>
+        <module>application-nestedpagesmigrator-test</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>

@@ -1,0 +1,62 @@
+<!--
+  Example with rights with "allow"
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <rights>
+      <right>
+        <group>XWiki.AllGroup</group>
+        <level>view,edit,comment,create,register</level>
+        <value>allow</value>
+      </right>
+      <right>
+        <group>XWiki.AdminGroup</group>
+        <level>admin,programing</level>
+        <value>allow</value>
+      </right>
+    </rights>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <parent>Movies.WebHome</parent>
+      <rights>
+        <right>
+          <user>XWiki.Shakespeare</user>
+          <level>view</level>
+          <value>allow</value>
+        </right>
+      </rights>
+    </page>
+    <page>
+      <fullName>Main.Hamlet</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+  </before>
+  <after>
+    <!-- The idea is that Movies.Hamlet.WebHome inherits now the right from Movies, when only
+         Shakespeare was allowed to view.
+         So, we must give back the "view" right to everybody (as it was when Hamlet was in the Main space)
+         but it has no sense to deny access "view" to Shakespeare!
+         As a member of "AllGroup", he must keep his rights!
+         -->
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <from>Movies.WebHome</from>
+    </page>
+    <page>
+      <fullName>Movies.Hamlet.WebHome</fullName>
+      <from>Main.Hamlet</from>
+      <rights>
+        <right>
+          <group>XWiki.AllGroup</group>
+          <level>view</level>
+          <value>allow</value>
+          <origin>XWiki.XWikiPreferences</origin>
+        </right>
+      </rights>
+    </page>
+  </after>
+  <plan>
+
+  </plan>
+</example>

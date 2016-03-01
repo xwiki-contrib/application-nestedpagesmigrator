@@ -27,12 +27,14 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.contrib.nestedpagesmigrator.internal.rights.DocumentRightsBridge;
+import org.xwiki.contrib.nestedpagesmigrator.internal.rights.GroupsBridge;
 import org.xwiki.contrib.nestedpagesmigrator.internal.rights.RightsMigrationPlanCreator;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Example;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.Page;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.PlanCreator;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import static org.junit.Assert.assertEquals;
@@ -52,12 +54,14 @@ public class RightsMigrationPlanCreatorTest
 
     private DocumentRightsBridge documentRightsBridge;
     private JobProgressManager progressManager;
+    private GroupsBridge groupsBridge;
     
     @Before
     public void setUp() throws Exception
     {
         documentRightsBridge = mocker.getInstance(DocumentRightsBridge.class);
         progressManager = mocker.getInstance(JobProgressManager.class);
+        groupsBridge = mocker.getInstance(GroupsBridge.class);
     }
 
 
@@ -148,5 +152,16 @@ public class RightsMigrationPlanCreatorTest
     public void testBasicExample() throws Exception
     {
         testExample("/example-rights-1.xml");
+    }
+
+    @Test
+    public void testBasicExample2() throws Exception
+    {
+        when(groupsBridge.isMemberOf(
+                eq(new DocumentReference("xwiki", "XWiki", "Shakespeare")),
+                eq(new DocumentReference("xwiki", "XWiki", "XWikiAllGroup")),
+                eq(new WikiReference("wiki")))).thenReturn(true);
+
+        testExample("/example-rights-2.xml");
     }
 }

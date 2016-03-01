@@ -54,6 +54,9 @@ public class RightsMigrationPlanCreator
     @Inject
     private DocumentRightsBridge documentRightsBridge;
 
+    @Inject
+    private GroupsBridge groupsBridge;
+
     /**
      * Handle the conversion of the rights.
      *
@@ -113,6 +116,10 @@ public class RightsMigrationPlanCreator
             }
             if (!found) {
                 // A new right have been inherited. We need to dismiss it!
+                if (newRight.isAllow()) {
+
+                }
+
                 action.addRight(newRight.getInverseRight());
             }
         }
@@ -137,7 +144,7 @@ public class RightsMigrationPlanCreator
         if (plan != null) {
             MigrationAction action = plan.getActionWithTarget(new DocumentReference("WebHome", spaceReference));
             if (action != null) {
-                addRightsIfNotSameConcern(action.getRights(), rights);
+                addRightsIfNotAlreadyDefinedInDescendants(action.getRights(), rights);
             }
         }
 
@@ -158,10 +165,11 @@ public class RightsMigrationPlanCreator
             throws MigrationException
     {
         Collection<Right> localRights = documentRightsBridge.getRights(document);
-        addRightsIfNotSameConcern(localRights, rights);
+        addRightsIfNotAlreadyDefinedInDescendants(localRights, rights);
     }
 
-    private void addRightsIfNotSameConcern(Collection<Right> rightsToAdd, Collection<Right> currentRights)
+    private void addRightsIfNotAlreadyDefinedInDescendants(Collection<Right> rightsToAdd,
+            Collection<Right> currentRights)
     {
         Collection<Right> selectedRightsToAdd = new LinkedList<>(rightsToAdd);
         Iterator<Right> it = selectedRightsToAdd.iterator();
@@ -173,8 +181,15 @@ public class RightsMigrationPlanCreator
                     it.remove();
                     break;
                 }
+                // A right (allow = true) with the same level has been configured by some descendant, so it disable all
+                // other previous "allow" rights for this level
+                if (currentRight.isAllow() && currentRight.getLevel().equals(localRight.getLevel())) {
+                    it.remove();
+                    break;
+                }
             }
         }
+
         currentRights.addAll(selectedRightsToAdd);
     }
 }

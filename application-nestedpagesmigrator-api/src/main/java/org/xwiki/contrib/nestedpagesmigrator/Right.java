@@ -73,6 +73,8 @@ public class Right implements Serializable
         return origin;
     }
 
+    public DocumentReference getTarget() { return user != null ? user : group; }
+
     @Override
     public String toString()
     {

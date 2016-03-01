@@ -186,6 +186,7 @@
   &lt;/div&gt;
   &lt;/div&gt;
   &lt;div class="clearfix"&gt;
+    &lt;h2&gt;Actions&lt;/h2&gt;
     &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: executePlan"&gt;Execute plan&lt;/button&gt;
   &lt;/div&gt;

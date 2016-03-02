@@ -46,6 +46,12 @@
       <version>${project.version}</version>
       <type>xar</type>
     </dependency>
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>application-nestedpagesmigrator-test-data</artifactId>
+      <version>${project.version}</version>
+      <type>xar</type>
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.xwiki.contrib</groupId>

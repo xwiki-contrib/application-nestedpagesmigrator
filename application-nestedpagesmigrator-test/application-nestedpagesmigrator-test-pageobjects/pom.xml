@@ -28,7 +28,7 @@
     <version>0.4-SNAPSHOT</version>
   </parent>
   <artifactId>application-nestedpagesmigrator-test-pageobjects</artifactId>
-  <name>Nested Pages Migrator - Tests - Page Objects</name>
+  <name>Nested Pages Migrator - Test - Page Objects</name>
   <dependencies>
     <dependency>
       <groupId>org.xwiki.platform</groupId>

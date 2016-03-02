@@ -29,7 +29,7 @@
   </parent>
   <artifactId>application-nestedpagesmigrator-test-data</artifactId>
   <packaging>xar</packaging>
-  <name>Nested Pages Migrator - Tests - Data</name>
+  <name>Nested Pages Migrator - Test - Data</name>
   <build>
     <!-- Needed to add support for the XAR packaging -->
     <extensions>

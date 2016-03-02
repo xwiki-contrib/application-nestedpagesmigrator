@@ -101,13 +101,13 @@
 &lt;script id="DisplayPlan" type="text/html"&gt;
   &lt;h2&gt;Plan&lt;/h2&gt;
   &lt;div class="migration-plan box"&gt;
-    &lt;div data-bind="if: isComputing()"&gt;
+    &lt;div data-bind="if: isComputing()" id="planComputing"&gt;
       &lt;p&gt;The plan is being computed and it could take some time. Please wait...&lt;/p&gt;
       &lt;div class="ui-progress-background"&gt;
         &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}" /&gt;
       &lt;/div&gt;
     &lt;/div&gt;
-    &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()"&gt;
+    &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()" id="planTree"&gt;
       &lt;!-- ko template: {name: 'MigrationActionTemplate', foreach: actions } --&gt;
       &lt;!-- /ko --&gt;
     &lt;/ul&gt;
@@ -203,7 +203,7 @@
   Execute Plan
   -------------------------------------------&gt;
 &lt;!-- ko if: isPlanExecuting() &amp;&amp; !success()--&gt;
-&lt;div class="box"&gt;
+&lt;div class="box" id="planExecuting"&gt;
   &lt;p&gt;The plan is being executed and it could take some time. Please wait...&lt;/p&gt;
   &lt;div class="ui-progress-background"&gt;
     &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}"&gt;&lt;/div&gt;
@@ -216,7 +216,7 @@
   End message
   -------------------------------------------&gt;
 &lt;!-- ko if: success() --&gt;
-  &lt;div class="box successmessage"&gt;
+  &lt;div class="box successmessage" id="planExecuted"&gt;
   The plan have been executed!
   &lt;/div&gt;
   &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;

@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
  *
  * See the NOTICE file distributed with this work for additional
@@ -25,17 +24,16 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.xwiki.contrib</groupId>
-    <artifactId>application-nestedpagesmigrator</artifactId>
+    <artifactId>application-nestedpagesmigrator-test</artifactId>
     <version>0.4-SNAPSHOT</version>
   </parent>
-  <artifactId>application-nestedpagesmigrator-test</artifactId>
-  <version>0.4-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <description>Integration tests for the Nested Pages Migrator Application.</description>
-  <name>Nested Pages Migrator - Test - Parent POM</name>
-  <modules>
-    <module>application-nestedpagesmigrator-test-data</module>
-    <module>application-nestedpagesmigrator-test-pageobjects</module>
-    <module>application-nestedpagesmigrator-test-tests</module>
-  </modules>
+  <artifactId>application-nestedpagesmigrator-test-pageobjects</artifactId>
+  <name>Nested Pages Migrator - Tests - Page Objects</name>
+  <dependencies>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-test-ui</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+  </dependencies>
 </project>

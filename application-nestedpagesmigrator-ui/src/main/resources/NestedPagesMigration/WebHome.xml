@@ -814,8 +814,10 @@
           return action;
         };
 
-        for (var i = 0; i &lt; data.length; ++i) {
-          self.actions.push(parseAction(data[i], false));
+        if (data) {
+          for (var i = 0; i &lt; data.length; ++i) {
+            self.actions.push(parseAction(data[i], false));
+          }
         }
         // Plan is loaded
         self.isComputing(false);

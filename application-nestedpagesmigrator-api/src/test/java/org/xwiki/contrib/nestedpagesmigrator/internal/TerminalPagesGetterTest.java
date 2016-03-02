@@ -106,8 +106,8 @@ public class TerminalPagesGetterTest
         WikiReference wikiReference = new WikiReference("someWiki");
 
         // Mocks
-        String expectedQuery = "where (doc.parent <> concat(doc.space, '.WebHome') or doc.name <> 'WebHome')";
-        expectedQuery += " and doc.name <> 'WebPreferences' and doc.fullName <> 'XWiki.XWikiPreferences'";
+        String expectedQuery = "where doc.name <> 'WebPreferences'";
+        expectedQuery += " and doc.fullName <> 'XWiki.XWikiPreferences'";
         expectedQuery += " and doc.space in (:includedSpaceList)";
         expectedQuery += " and doc.space not in (:excludedSpaceList)";
         expectedQuery += " and doc.fullName not in (:excludedDocList)";
@@ -139,6 +139,9 @@ public class TerminalPagesGetterTest
         when(xwiki.getDocument(r1, context)).thenReturn(rd1);
         when(xwiki.getDocument(r2, context)).thenReturn(rd2);
         when(xwiki.getDocument(r3, context)).thenReturn(rd3);
+        when(rd1.getParentReference()).thenReturn(new DocumentReference("someWiki", "Main", "WebHome"));
+        when(rd3.getParentReference()).thenReturn(new DocumentReference("someWiki", "Main", "WebHome"));
+        when(rd2.getParentReference()).thenReturn(new DocumentReference("someWiki", "Main", "WebHome"));
 
         // Rd1 is a class
         BaseClass xclass = mock(BaseClass.class);
@@ -221,6 +224,7 @@ public class TerminalPagesGetterTest
         when(documentReferenceResolver.resolve("s1.p1", wikiReference)).thenReturn(r1);
         XWikiDocument rd1 = mock(XWikiDocument.class);
         when(xwiki.getDocument(r1, context)).thenReturn(rd1);
+        when(rd1.getParentReference()).thenReturn(new DocumentReference("xwiki", "Main", "WebHome"));
 
         // Test
         MigrationConfiguration configuration = new MigrationConfiguration(wikiReference);

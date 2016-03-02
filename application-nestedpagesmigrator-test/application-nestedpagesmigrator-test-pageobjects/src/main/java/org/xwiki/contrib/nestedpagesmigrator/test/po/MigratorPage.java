@@ -20,8 +20,10 @@
 package org.xwiki.contrib.nestedpagesmigrator.test.po;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.ui.po.ViewPage;
 
@@ -31,6 +33,9 @@ import org.xwiki.test.ui.po.ViewPage;
  */
 public class MigratorPage extends ViewPage
 {
+    private static final String emptyPlanXPath = "//div[contains(@class, 'migration-plan')]" +
+            "//div[contains(@class, 'infomessage')]/p[contains(text(), 'There is nothing to do!')]";
+
     @FindBy(xpath = "//button[contains(text(), 'Compute plan')]")
     private WebElement btComputePlan;
 
@@ -46,11 +51,26 @@ public class MigratorPage extends ViewPage
     public void computePlan()
     {
         btComputePlan.click();
-        getDriver().waitUntilElementIsVisible(By.id("planTree"));
+        getDriver().waitUntilCondition(new ExpectedCondition<Boolean>()
+        {
+            @Override
+            public Boolean apply(WebDriver webDriver)
+            {
+                return Boolean.valueOf(btExecutePlan.isEnabled() || isPlanEmpty());
+            }
+        });
     }
 
-    public void executePlan()
+    public boolean isPlanEmpty()
     {
+        return getDriver().hasElementWithoutWaiting(By.xpath(emptyPlanXPath));
+    }
+
+    public void executePlan() throws Exception
+    {
+        if (!btExecutePlan.isEnabled()) {
+            throw new Exception("Cannot execute a plan that have not be computed first!");
+        }
         getDriver().makeConfirmDialogSilent(true);
         btExecutePlan.click();
         getDriver().waitUntilElementIsVisible(By.id("planExecuted"));

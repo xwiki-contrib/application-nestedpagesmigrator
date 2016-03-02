@@ -33,8 +33,10 @@ import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.job.event.status.JobProgressManager;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.query.Query;
@@ -98,6 +100,7 @@ public class PagesToTransformGetter
             // First: perform the query
             progressManager.startStep(this);
             List<String> docNames = query.execute();
+            // TODO: to scale efficiently, add a limit() and an offset()
             
             // Then load each document to see if they match the criteria
             progressManager.startStep(this);
@@ -112,10 +115,18 @@ public class PagesToTransformGetter
 
                 try {
                     XWikiDocument doc = xwiki.getDocument(documentReference, context);
+
+                    // If the document is not terminal and already under its parent, exclude it
+                    if (isNotTerminal(documentReference) && isAlreadyUnderParent(documentReference, doc)) {
+                        continue;
+                    }
+
+                    // If the document holds a class and the configuration say do not convert such a page, exclude it
                     if (configuration.isExcludeClassPages() && !doc.getXClass().getPropertyList().isEmpty()) {
                         continue;
                     }
 
+                    // If the document holds a forbidden object, exclude it
                     if (hasForbiddenObject(doc, excludedObjectClasses)) {
                         continue;
                     }
@@ -148,11 +159,8 @@ public class PagesToTransformGetter
             // Only terminal documents are concerned, and WebPreferences should not be touched
             xwql.append("where doc.name not in ('WebHome', 'WebPreferences')");
         } else {
-            // We need a different query here because in that case, we can move a non terminal page if we detect that it
-            // is not under its parent.
-            xwql.append(
-                "where (doc.parent <> concat(doc.space, '.WebHome') or doc.name <> 'WebHome') " +
-                        "and doc.name <> 'WebPreferences'");
+            // A 'WebHome' document might have a wrong parent, so we only exclude WebPreferences documents
+            xwql.append("where doc.name <> 'WebPreferences'");
         }
 
         // Exclude the preferences of the wiki!
@@ -210,6 +218,28 @@ public class PagesToTransformGetter
     }
 
     /**
+     * This method is needed because we cannot write it directly in the SQL query. It's a shame...
+     *
+     * @param documentReference the document reference
+     * @param document the corresponding XWiki document
+     * @return if the document is under its parent (so we don't need to return it)
+     */
+    private boolean isAlreadyUnderParent(DocumentReference documentReference, XWikiDocument document)
+    {
+        EntityReference spaceParent = documentReference.getLastSpaceReference().getParent();
+        if (spaceParent.getType() == EntityType.SPACE) {
+            // Return if the WebHome page of the parent space of the space is the parent set in the document
+            // [A.B.WebHome must have A.WebHome as parent].
+            DocumentReference expectedParent = new DocumentReference("WebHome", new SpaceReference(spaceParent));
+            return expectedParent.equals(document.getParentReference());
+        } else {
+            // The document is a top-level document [A.WebHome], so its parent must be itself or null
+            DocumentReference parent = document.getParentReference();
+            return parent == null || parent.equals(documentReference);
+        }
+    }
+
+    /**
      * @param doc the document to verify
      * @param excludedObjectClasses the list of forbidden classes
      * @return either or not the document contains an instance of a forbidden class
@@ -222,5 +252,14 @@ public class PagesToTransformGetter
             }
         }
         return false;
+    }
+
+    /**
+     * @param documentReference a reference to a document
+     * @return if the document is not terminal
+     */
+    private boolean isNotTerminal(DocumentReference documentReference)
+    {
+        return documentReference.getName().equals("WebHome");
     }
 }

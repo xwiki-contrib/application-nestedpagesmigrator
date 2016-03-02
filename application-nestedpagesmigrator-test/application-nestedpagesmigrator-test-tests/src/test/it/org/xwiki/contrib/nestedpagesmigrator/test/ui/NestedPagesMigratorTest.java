@@ -35,6 +35,7 @@ import org.xwiki.test.ui.po.editor.ObjectEditPage;
 import org.xwiki.test.ui.po.editor.ObjectEditPane;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -51,7 +52,11 @@ public class NestedPagesMigratorTest extends AbstractTest
     {
         MigratorPage migratorPage = MigratorPage.gotoPage();
 
+        // Compute a plan
         migratorPage.computePlan();
+        assertFalse(migratorPage.isPlanEmpty());
+
+        // Execute it
         migratorPage.executePlan();
 
         // Go to the main page
@@ -77,6 +82,11 @@ public class NestedPagesMigratorTest extends AbstractTest
         assertEquals("0", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_showLeftPanels")));
         assertEquals("1", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_showRightPanels")));
         assertEquals("Large", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_rightPanelsWidth")));
+
+        // Go back to the migrator, the compited plan must be empty now
+        migratorPage = MigratorPage.gotoPage();
+        migratorPage.computePlan();
+        assertTrue(migratorPage.isPlanEmpty());
 
         // That's all!
     }

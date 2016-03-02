@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.test.ui;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.openqa.selenium.By;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.MigratorPage;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.MyViewPage;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.rest.model.jaxb.Page;
 import org.xwiki.test.ui.AbstractTest;
 import org.xwiki.test.ui.SuperAdminAuthenticationRule;
 import org.xwiki.test.ui.po.editor.ObjectEditPage;
@@ -50,6 +52,10 @@ public class NestedPagesMigratorTest extends AbstractTest
     @Test
     public void testMigration() throws Exception
     {
+        // We need to import the XAR manually to keep the pages creator and author
+        getUtil().importXar(new File(getClass().
+                getResource("/application-nestedpagesmigrator-test-data.xar").toURI()));
+
         MigratorPage migratorPage = MigratorPage.gotoPage();
 
         // Compute a plan
@@ -73,6 +79,12 @@ public class NestedPagesMigratorTest extends AbstractTest
         assertTrue(children.contains("Main.Movies.DancesWithWolves.WebHome"));
         assertTrue(children.contains("Main.Movies.StarTrek.WebHome"));
 
+        // Verify the creator and the author are still good
+        Page aFishCalledWanda = getUtil().rest().get(
+                new DocumentReference("xwiki", Arrays.asList("Main", "Movies", "AFishCalledWanda"), "WebHome"));
+        assertEquals("XWiki.CharlesCrichton", aFishCalledWanda.getCreator());
+        assertEquals("XWiki.JohnCleeseAuthor", aFishCalledWanda.getAuthor());
+
         // Now check the preferences
         getUtil().gotoPage(new DocumentReference("xwiki", Arrays.asList("Main", "Movies", "AFishCalledWanda"),
                 "WebPreferences"), "edit", "editor=object");
@@ -83,7 +95,7 @@ public class NestedPagesMigratorTest extends AbstractTest
         assertEquals("1", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_showRightPanels")));
         assertEquals("Large", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_rightPanelsWidth")));
 
-        // Go back to the migrator, the compited plan must be empty now
+        // Go back to the migrator, the computed plan must be empty now
         migratorPage = MigratorPage.gotoPage();
         migratorPage.computePlan();
         assertTrue(migratorPage.isPlanEmpty());

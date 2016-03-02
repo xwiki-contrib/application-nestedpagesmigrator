@@ -204,14 +204,16 @@ public class MigrationPlanExecutor
         request.setEntityReferences(Arrays.asList((EntityReference) action.getSourceDocument()));
         request.setDestination(action.getTargetDocument());
 
+        DocumentReference author = getDocumentAuthor(action.getSourceDocument());
+
         // Configuration
         request.setAutoRedirect(configuration.isAddAutoRedirect());
         request.setCheckRights(false);
         request.setDeep(false);
         request.setInteractive(false);
         request.setUpdateLinks(true);
-        request.setUserReference(
-                documentAccessBridge.getDocument(action.getSourceDocument()).getContentAuthorReference());
+        request.setUserReference(author);
+        request.setUpdateParentField(false); // we do it manually because of a bug
 
         // Job type, id
         request.setJobType(RefactoringJobs.RENAME);
@@ -225,9 +227,26 @@ public class MigrationPlanExecutor
         // Update the "parent" field of the target document to point to the new parent
         EntityReference spaceParent = action.getTargetDocument().getLastSpaceReference().getParent();
         if (spaceParent.getType() == EntityType.SPACE) {
-            documentAccessBridge.setDocumentParentReference(action.getTargetDocument(), new DocumentReference("WebHome",
-                    new SpaceReference(spaceParent)));
+            // To avoid giving admin right to the document, save it with the same author
+            XWikiContext context = contextProvider.get();
+            DocumentReference currentUser = context.getUserReference();
+            try {
+                context.setUserReference(author);
+                // Update the parent using the bridge
+                documentAccessBridge.setDocumentParentReference(action.getTargetDocument(),
+                        new DocumentReference("WebHome", new SpaceReference(spaceParent)));
+            } finally {
+                context.setUserReference(currentUser);
+            }
         }
+    }
+
+    private DocumentReference getDocumentAuthor(DocumentReference documentReference) throws XWikiException
+    {
+        XWikiContext context = contextProvider.get();
+        XWiki xwiki = context.getWiki();
+        XWikiDocument doc = xwiki.getDocument(documentReference, context);
+        return doc.getAuthorReference();
     }
 
     /**

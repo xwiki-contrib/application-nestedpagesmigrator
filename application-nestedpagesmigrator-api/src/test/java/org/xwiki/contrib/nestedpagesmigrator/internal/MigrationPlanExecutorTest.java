@@ -106,6 +106,10 @@ public class MigrationPlanExecutorTest
 
         DocumentModelBridge documentModelBridge = mock(DocumentModelBridge.class);
         when(documentAccessBridge.getDocument(any(DocumentReference.class))).thenReturn(documentModelBridge);
+
+        XWikiDocument doc = mock(XWikiDocument.class);
+        when(xwiki.getDocument(any(DocumentReference.class), eq(context))).thenReturn(doc);
+        when(doc.getAuthorReference()).thenReturn(new DocumentReference("xwiki", "XWiki", "Author"));
     }
 
     @Test
@@ -245,7 +249,6 @@ public class MigrationPlanExecutorTest
         verify(progressManager).popLevelProgress(any(MigrationPlanExecutor.class));
 
         // Verify parent fields have been updated
-        /*
         verify(documentAccessBridge).setDocumentParentReference(eq(action1.getTargetDocument()),
                 eq(new DocumentReference("xwiki", "Main", "WebHome")));
         verify(documentAccessBridge).setDocumentParentReference(eq(action2.getTargetDocument()),
@@ -257,7 +260,7 @@ public class MigrationPlanExecutorTest
         verify(documentAccessBridge).setDocumentParentReference(eq(action5.getTargetDocument()),
                 eq(new DocumentReference("xwiki", Arrays.asList("Main", "Dramas", "Titanic"), "WebHome")));
         verify(documentAccessBridge, never()).setDocumentParentReference(eq(action6.getTargetDocument()),
-                any(DocumentReference.class));*/
+                any(DocumentReference.class));
 
         // Verify disabled actions have not been executed
         verify(objRebbeccaPreferences, never()).set(eq("iconTheme"), any(), eq(context));

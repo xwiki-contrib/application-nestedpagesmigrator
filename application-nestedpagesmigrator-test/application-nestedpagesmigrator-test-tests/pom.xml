@@ -46,13 +46,6 @@
       <version>${project.version}</version>
       <type>xar</type>
     </dependency>
-    <!-- The data that will help the test-->
-    <dependency>
-      <groupId>org.xwiki.contrib</groupId>
-      <artifactId>application-nestedpagesmigrator-test-data</artifactId>
-      <version>${project.version}</version>
-      <type>xar</type>
-    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
@@ -92,6 +85,26 @@
   <build>
     <testSourceDirectory>src/test/it</testSourceDirectory>
     <plugins>
+      <!-- Get the XAR of application-nestedpagesmigrator-test-data in the resources directory, so the test will be able
+           to import it in the wiki.
+           We need to import the XAR afterwards because otherwise the page author is not preserved, and we do tests
+           about the it... -->
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.testSourceDirectory}/../resources/</outputDirectory>
+              <includeArtifactIds>application-nestedpagesmigrator-test-data</includeArtifactIds>
+              <stripVersion>true</stripVersion>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.xwiki.platform</groupId>
         <artifactId>xwiki-platform-tool-packager-plugin</artifactId>

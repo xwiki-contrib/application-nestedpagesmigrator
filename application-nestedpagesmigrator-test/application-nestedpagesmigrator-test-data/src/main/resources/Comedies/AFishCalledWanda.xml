@@ -26,11 +26,11 @@
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
-  <creator>xwiki:XWiki.Admin</creator>
+  <creator>xwiki:XWiki.CharlesCrichton</creator>
   <creationDate>1456911798000</creationDate>
   <parent>Movies.WebHome</parent>
-  <author>xwiki:XWiki.Admin</author>
-  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <author>xwiki:XWiki.JohnCleeseAuthor</author>
+  <contentAuthor>xwiki:XWiki.JohnCleeseContentAuthor</contentAuthor>
   <date>1456911848000</date>
   <contentUpdateDate>1456911827000</contentUpdateDate>
   <version>1.1</version>

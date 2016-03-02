@@ -30,6 +30,10 @@
   <artifactId>application-nestedpagesmigrator-test-data</artifactId>
   <packaging>xar</packaging>
   <name>Nested Pages Migrator - Test - Data</name>
+  <!-- These data don't need to be checked, it actually blocks us to have a custom page author for example -->
+  <properties>
+    <xar.verify.skip>true</xar.verify.skip>
+  </properties>
   <build>
     <!-- Needed to add support for the XAR packaging -->
     <extensions>

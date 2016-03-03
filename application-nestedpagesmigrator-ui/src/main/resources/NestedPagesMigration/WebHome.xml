@@ -646,6 +646,11 @@
     self.isPlanExecuting   = ko.observable(false);
     self.success           = ko.observable(false);
     
+    // Do not refresh logs and actions too often (to get better performances, because a lot of actions and logs
+    // are pushed in the same time, so it is better to no refresh the UI at every push).
+    self.logs.extend({ rateLimit: 200});
+    self.actions.extend({ rateLimit: 200});
+    
     self.toggleXClassList = function () {
       self.xclassListVisible(!self.xclassListVisible());
     }
@@ -739,6 +744,7 @@
         }).done(function (data) {
           self.jobId = data.jobId;
           self.getJobStatus(function() { self.getMigrationPlan(); });
+          self.logs.removeAll();
           self.getJobLogs();
         }).fail(function () {
           console.log('ERROR: Failed to start a new plan computation.');
@@ -775,8 +781,7 @@
       var jobURL = restURLPrefix + 'joblog/' + self.jobId + '?media=json';
       $.getJSON(jobURL).done(function (data) {
         var logs = data.logEvents;
-        self.logs.removeAll();
-        for (var i = 0; i &lt; logs.length; ++i) {
+        for (var i = self.logs().length; i &lt; logs.length; ++i) {
           self.logs.push(new Log(logs[i].formattedMessage, logs[i].level));
         }
         if (self.progress() &lt; 100) {

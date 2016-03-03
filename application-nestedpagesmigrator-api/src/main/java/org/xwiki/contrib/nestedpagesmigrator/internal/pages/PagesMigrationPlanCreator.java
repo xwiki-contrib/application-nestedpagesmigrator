@@ -19,7 +19,9 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.internal.pages;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -76,6 +78,8 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
     private MigrationPlanTree plan;
 
     private List<DocumentReference> concernedDocuments;
+
+    private Set<DocumentReference> visitedDocuments = new HashSet<>();
 
     private MigrationConfiguration configuration;
 
@@ -192,6 +196,13 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             // Note that this action is added as child of the top-level action, because we want to have it in the plan 
             // tree.
             return IdentityMigrationAction.createInstance(documentReference, plan.getTopLevelAction(), plan);
+        }
+
+        // If the document have already been visited, we are probably experiencing a cyclic parent/child relationship:
+        // A -> B -> C -> A
+        if (!visitedDocuments.add(documentReference)) {
+            // In that case, we put the document at the top level
+            return plan.getTopLevelAction();
         }
 
         // Now we are sure that the document needs to be converted, so let's start the real job.

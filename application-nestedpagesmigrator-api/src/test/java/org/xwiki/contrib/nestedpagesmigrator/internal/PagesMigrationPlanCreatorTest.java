@@ -210,4 +210,10 @@ public class PagesMigrationPlanCreatorTest
     {
         testExample("/example7.xml");
     }
+
+    @Test
+    public void testWithCycle() throws Exception
+    {
+        testExample("/example8.xml");
+    }
 }

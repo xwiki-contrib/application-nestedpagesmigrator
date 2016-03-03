@@ -1,0 +1,69 @@
+<!--
+  Basic example with a cyclic parent/child relationship.
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>A.WebHome</fullName>
+      <parent>B.WebHome</parent>
+    </page>
+    <page>
+      <fullName>B.WebHome</fullName>
+      <parent>C.WebHome</parent>
+    </page>
+    <page>
+      <fullName>C.WebHome</fullName>
+      <parent>A.WebHome</parent>
+    </page>
+    <!-- A page having itself as parent -->
+    <page>
+      <fullName>D.WebHome</fullName>
+      <parent>D.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>C.WebHome</fullName>
+      <from>C.WebHome</from>
+    </page>
+    <page>
+      <fullName>C.B.WebHome</fullName>
+      <from>B.WebHome</from>
+    </page>
+    <page>
+      <fullName>C.B.A.WebHome</fullName>
+      <from>A.WebHome</from>
+    </page>
+    <page>
+      <fullName>D.WebHome</fullName>
+      <from>D.WebHome</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:C.WebHome",
+    "targetDocument": "xwiki:C.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:B.WebHome",
+        "targetDocument": "xwiki:C.B.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:A.WebHome",
+            "targetDocument": "xwiki:C.B.A.WebHome"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "sourceDocument": "xwiki:D.WebHome",
+    "targetDocument": "xwiki:D.WebHome"
+  }
+]
+]]></plan>
+</example>

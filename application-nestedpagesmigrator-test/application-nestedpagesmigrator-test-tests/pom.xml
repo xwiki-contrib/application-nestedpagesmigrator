@@ -26,10 +26,10 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-nestedpagesmigrator-test</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>0.4.1</version>
   </parent>
   <artifactId>application-nestedpagesmigrator-test-tests</artifactId>
-  <version>0.5-SNAPSHOT</version>
+  <version>0.4.1</version>
   <description>Integration tests for the Nested Pages Migrator Application.</description>
   <name>Nested Pages Migrator - Test - Functional Tests</name>
   <properties>

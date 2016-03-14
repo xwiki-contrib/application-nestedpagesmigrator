@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -91,6 +90,9 @@
     &lt;!-- ko foreach: logs --&gt;
     &lt;li class="log-item" data-bind="css: getClass()"&gt;
       &lt;div data-bind="text: message" /&gt;
+      &lt;!-- ko if: stackTrace --&gt;
+      &lt;pre data-bind="text: stackTrace"/&gt;
+      &lt;!--  /ko --&gt;
     &lt;/li&gt;
     &lt;!-- /ko --&gt;
   &lt;/ul&gt;
@@ -616,12 +618,13 @@
   /**
    * Represents a log entry.
    */
-  function Log(message, level) {
+  function Log(message, level, stackTrace) {
     var self = this;
     
-    self.message = message;
-    self.level   = level;
-    
+    self.message    = message;
+    self.level      = level;
+    self.stackTrace = stackTrace;
+
     self.getClass = function () {
       return 'log-item-' + self.level.toLowerCase();
     }
@@ -743,21 +746,26 @@
           'excludedObjectClasses': self.configuration.excludedObjectClasses()
         }).done(function (data) {
           self.jobId = data.jobId;
-          self.getJobStatus(function() { self.getMigrationPlan(); });
           self.logs.removeAll();
-          self.getJobLogs();
+          self.getJobStatusAndLogs('createmigrationplan', function() { self.getMigrationPlan(); });
         }).fail(function () {
           console.log('ERROR: Failed to start a new plan computation.');
         });
     };
-
+    
     /**
-     * Perform an AJAX request to get the current job status, so we can update progress the bar.
+     * Perform an AJAX request to get the current job status and its logs, so we can update the progress bar and the 
+     * logs UI.
      */
-    self.getJobStatus = function (successCallback) {
-      var restURLPrefix = xm.restURL.substring(0, xm.restURL.indexOf('/rest/') + 6);
-      var jobURL = restURLPrefix + 'jobstatus/' + self.jobId + '?media=json';
-      $.getJSON(jobURL).done(function (data) {
+    self.getJobStatusAndLogs = function (jobAction, successCallback) {
+      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+        'action' : 'printStatusAndLogs',
+        'jobAction' : jobAction
+      }).done(function (data) {
+        var logs = data.logs;
+        for (var i = self.logs().length; i &lt; logs.length; ++i) {
+          self.logs.push(new Log(logs[i].message, logs[i].level, logs[i].stackTrace));
+        }
         var state = data.state;
         if (state == 'FINISHED') {
           self.progress(100);
@@ -765,31 +773,12 @@
             successCallback();
           }
         } else if (state == 'RUNNING' || state == 'NONE') {
-          self.progress(data.progress.offset * 100);
-          // retry in 0.5 seconds
-          setTimeout(function() { self.getJobStatus(successCallback) }, 500);
+          self.progress(data.offset * 100);
+          // retry in 0.8 seconds
+          setTimeout(function() { self.getJobStatusAndLogs(jobAction, successCallback); }, 800);
         }
       });
     };
-
-    /**
-     * Perform an AJAX request to get the logs of the current job status.
-     * Note: this is currently not used.
-     */
-    self.getJobLogs = function () {
-      var restURLPrefix = xm.restURL.substring(0, xm.restURL.indexOf('/rest/') + 6);
-      var jobURL = restURLPrefix + 'joblog/' + self.jobId + '?media=json';
-      $.getJSON(jobURL).done(function (data) {
-        var logs = data.logEvents;
-        for (var i = self.logs().length; i &lt; logs.length; ++i) {
-          self.logs.push(new Log(logs[i].formattedMessage, logs[i].level));
-        }
-        if (self.progress() &lt; 100) {
-          // retry in 0.5 seconds
-          setTimeout(self.getJobLogs, 500);
-        }
-      });
-    }
 
     /**
      * Get the migration plan that have been computed, in order to display it.
@@ -950,9 +939,8 @@
         'data-type': 'json'
       }).done(function (data) {
         self.jobId = data.jobId;
-        self.getJobStatus(function() { self.success(true); });
         self.logs.removeAll();
-        self.getJobLogs();
+        self.getJobStatusAndLogs('executemigrationplan', function() { self.getMigrationPlan(); });
       }).fail(function () {
         console.log('ERROR: Failed to execute the plan.');
       });

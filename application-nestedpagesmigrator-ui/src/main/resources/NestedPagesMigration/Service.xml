@@ -50,6 +50,8 @@
   #printPlan()
 #elseif ($action == 'executePlan')
   #executePlan()
+#elseif ($action == 'printStatusAndLogs')
+  #printStatusAndLogs()
 #end
 #************************************************************************
  * Create Plan
@@ -126,6 +128,7 @@
  * Display the plan
  ************************************************************************#
 #macro(printPlan)
+  #set ($discard = $response.setContentType('application/json'))
   $services.nestedpagesmigrator.getSerializedPlan($services.wiki.currentWikiId)
 #end
 #************************************************************************
@@ -153,6 +156,14 @@
   #set ($map = {'jobId': $stringtool.join($job.request.id, '/')})
   #set ($discard = $response.setContentType('application/json'))
   $jsontool.serialize($map)
+#end
+#************************************************************************
+ * Print the job status and its logs (because the REST service is not that
+ * good in XWiki 7.4.2).
+ ************************************************************************#
+#macro(printStatusAndLogs)
+  #set ($discard = $response.setContentType('application/json'))
+  $services.nestedpagesmigrator.getStatusAndLog($services.wiki.currentWikiId, $request.jobAction)
 #end
 {{/velocity}}
 </content>

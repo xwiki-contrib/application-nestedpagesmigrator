@@ -39,6 +39,7 @@ import org.xwiki.job.Job;
 import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
 import org.xwiki.job.JobStatusStore;
+import org.xwiki.job.event.status.JobStatus;
 
 /**
  * Default implementation of {@link NestedPagesMigrator}.
@@ -98,6 +99,23 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
         } catch (JobException e) {
             throw new MigrationException("Failed to execute the migration plan.", e);
         }
+    }
+
+    @Override
+    public JobStatus getStatus(String wikiId, String action)
+    {
+        MigrationPlanCreatorJobStatus jobStatus;
+
+        List<String> jobId = getJobId(wikiId, action);
+
+        Job job = jobExecutor.getJob(jobId);
+        if (job != null) {
+            jobStatus = (MigrationPlanCreatorJobStatus) job.getStatus();
+        } else {
+            jobStatus = (MigrationPlanCreatorJobStatus) jobStatusStore.getJobStatus(jobId);
+        }
+
+        return jobStatus;
     }
 
     private List<String> getJobId(String wikiId, String action)

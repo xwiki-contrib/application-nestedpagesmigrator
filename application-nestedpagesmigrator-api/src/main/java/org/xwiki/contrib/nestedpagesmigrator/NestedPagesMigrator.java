@@ -21,6 +21,7 @@ package org.xwiki.contrib.nestedpagesmigrator;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.job.Job;
+import org.xwiki.job.event.status.JobStatus;
 
 /**
  * @version $Id: $
@@ -33,4 +34,9 @@ public interface NestedPagesMigrator
     MigrationPlanTree getPlan(String wikiId);
 
     Job startMigration(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException;
+
+    /**
+     * @since 0.4.2
+     */
+    JobStatus getStatus(String wikiId, String action);
 }

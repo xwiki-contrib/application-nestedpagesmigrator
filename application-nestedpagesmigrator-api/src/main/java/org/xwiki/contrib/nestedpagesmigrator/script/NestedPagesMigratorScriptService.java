@@ -56,6 +56,9 @@ public class NestedPagesMigratorScriptService implements ScriptService
 
     @Inject
     private DocumentAccessBridge documentAccessBridge;
+
+    @Inject
+    private StatusAndLogSerializer statusAndLogSerializer;
     
     private void checkAdminAccess(WikiReference wikiReference) throws AccessDeniedException
     {
@@ -123,5 +126,23 @@ public class NestedPagesMigratorScriptService implements ScriptService
         MigrationPlanTree plan = nestedPagesMigrator.getPlan(configuration.getWikiReference().getName());
 
         return nestedPagesMigrator.startMigration(plan, configuration);
+    }
+
+    /**
+     * Display the status and the logs of the migration action as JSON.
+     *
+     * @param wikiId id of the wiki
+     * @param action "createmigrationplan" or "executemigrationplan"
+     * @return the status and the logs as JSON
+     *
+     * @throws AccessDeniedException if the user have not the right to execute this method
+     *
+     * @since 0.4.2
+     */
+    public String getStatusAndLog(String wikiId, String action) throws AccessDeniedException
+    {
+        checkAdminAccess(new WikiReference(wikiId));
+
+        return statusAndLogSerializer.getStatusAndLogs(wikiId, action);
     }
 }

@@ -9,3 +9,4 @@ org.xwiki.contrib.nestedpagesmigrator.internal.rights.DocumentRightsBridge
 org.xwiki.contrib.nestedpagesmigrator.internal.rights.RightsMigrationPlanCreator
 org.xwiki.contrib.nestedpagesmigrator.internal.DefaultNestedPagesMigrator
 org.xwiki.contrib.nestedpagesmigrator.script.NestedPagesMigratorScriptService
+org.xwiki.contrib.nestedpagesmigrator.script.StatusAndLogSerializer

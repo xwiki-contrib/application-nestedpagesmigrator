@@ -132,7 +132,7 @@
     &lt;dl&gt;
       &lt;!-- Exclude hidden pages --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="excludeHiddenPages" data-bind="checked: configuration.excludeHiddenPages"&gt; &lt;label for="excludeHiddenPages"&gt;Exclude hidden pages&lt;/label&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;span class="xHint"&gt;Most of the hidden pages are techinal content. Moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Most of the hidden pages are technical content. Moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
       &lt;!-- Exclude class pages --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="excludeClassPages" data-bind="checked: configuration.excludeClassPages"&gt; &lt;label for="excludeClassPages"&gt;Exclude pages having a class&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;&lt;span class="xHint"&gt;The pages are technical and moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
@@ -147,7 +147,7 @@
       &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the preferences applied on the page remain the same after the move, by dupplicating the preferences on the target document.&lt;/span&gt;&lt;/dd&gt;
       &lt;!-- Convert rights --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="convertRights" data-bind="checked: configuration.convertRights"&gt; &lt;label for="convertRights"&gt;Convert rights (experimental)&lt;/label&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the rights applied on the page remain the same after the move &lt;span class="text-danger"&gt;(Currently bugged)&lt;/span&gt;.&lt;/span&gt;&lt;/dd&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the rights applied on the page remain the same after the move &lt;span class="text-danger"&gt;(Currently buggy)&lt;/span&gt;.&lt;/span&gt;&lt;/dd&gt;
     &lt;/dl&gt;
   &lt;/div&gt;
   &lt;div class="col-xs-12 col-md-6"&gt;

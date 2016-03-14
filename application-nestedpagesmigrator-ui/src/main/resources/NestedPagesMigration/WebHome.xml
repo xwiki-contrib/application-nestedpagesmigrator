@@ -941,7 +941,7 @@
       }).done(function (data) {
         self.jobId = data.jobId;
         self.logs.removeAll();
-        self.getJobStatusAndLogs('executemigrationplan', function() { self.getMigrationPlan(); });
+        self.getJobStatusAndLogs('executemigrationplan', function() { self.success(true); });
       }).fail(function () {
         console.log('ERROR: Failed to execute the plan.');
       });

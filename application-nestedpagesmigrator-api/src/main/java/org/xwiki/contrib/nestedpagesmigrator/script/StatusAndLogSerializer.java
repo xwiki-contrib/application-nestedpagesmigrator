@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
@@ -40,6 +41,7 @@ import com.google.gson.GsonBuilder;
  * @version $Id: $
  */
 @Component(roles = StatusAndLogSerializer.class)
+@Singleton
 public class StatusAndLogSerializer
 {
     @Inject

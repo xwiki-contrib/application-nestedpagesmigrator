@@ -84,6 +84,7 @@ public class StatusAndLogSerializer
         return gson.toJson(results);
     }
 
+    //TODO: replace this method by a JsonSerializer<LogEvent> object to avoid copying logEvent in the memory
     private List<Log> getLogs(JobStatus status)
     {
         List<Log> results = new ArrayList<>();

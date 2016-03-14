@@ -202,6 +202,7 @@ public class PreferencesMigrationPlanCreator
                 // If the parent is a space, we get the document parent
                 DocumentReference parent = new DocumentReference("WebHome", new SpaceReference(spaceParent));
                 // We get action concerning this document
+                //TODO: in practice, the parent action can be null
                 MigrationAction parentAction = plan.getActionWithTarget(parent);
                 // And we get the value from this action
                 value = getPreferenceValueAfter(parentAction, propertyName);

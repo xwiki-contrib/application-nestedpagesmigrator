@@ -827,6 +827,7 @@
         console.log('INFO: Plan have been parsed.');
       }).fail(function () {
         new XWiki.widgets.Notification('Failed to load the computed plan', 'error');
+        //TODO: being able to restart the computation
       });
     };
     

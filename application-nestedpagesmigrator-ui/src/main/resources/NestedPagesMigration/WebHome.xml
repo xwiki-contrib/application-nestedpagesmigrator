@@ -55,16 +55,16 @@
   Migration Action Template 
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
-  &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0"&gt;
+  &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0"&gt;
     &lt;input type="checkbox" data-bind="checked: enabled" /&gt;
-    &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || rights.length &gt; 0 || preferences.length &gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
+    &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
     &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludeSpace"&gt;exclude space&lt;/button&gt;
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
-    (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children)
+    (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children, &lt;span data-bind="text: getNumberOfPreferences()" /&gt; preferences, &lt;span data-bind="text: getNumberOfRights()" /&gt; rights)
     from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
     &lt;!-- ko if: displayChildren() --&gt;
       &lt;!-- ko if: preferences.length &gt; 0 --&gt;
@@ -493,6 +493,14 @@
       for (var i = 0; i &lt; self.children().length; ++i) {
         self.children()[i].enableWithChildren();
       }
+    }
+    
+    self.getNumberOfPreferences = function () {
+      return self.preferences.length;
+    }
+    
+    self.getNumberOfRights = function () {
+      return self.rights.length;
     }
   }
   

@@ -73,7 +73,7 @@ public class StatusAndLogSerializer
         HashMap<String, Object> results = new HashMap<>();
 
         results.put("state", status.getState());
-        results.put("offset", status.getProgress().getOffset());
+        results.put("progress", status.getProgress().getOffset());
         results.put("logs", getLogs(status));
 
         GsonBuilder gsonBuilder = new GsonBuilder();

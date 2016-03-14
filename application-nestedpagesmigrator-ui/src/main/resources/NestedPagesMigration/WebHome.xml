@@ -773,7 +773,7 @@
             successCallback();
           }
         } else if (state == 'RUNNING' || state == 'NONE') {
-          self.progress(data.offset * 100);
+          self.progress(data.progress * 100);
           // retry in 0.8 seconds
           setTimeout(function() { self.getJobStatusAndLogs(jobAction, successCallback); }, 800);
         }

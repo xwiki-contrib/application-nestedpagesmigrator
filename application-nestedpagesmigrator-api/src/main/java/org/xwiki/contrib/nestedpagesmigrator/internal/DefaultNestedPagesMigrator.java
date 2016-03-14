@@ -76,14 +76,7 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     @Override
     public MigrationPlanTree getPlan(String wikiId)
     {
-        MigrationPlanCreatorJobStatus jobStatus;
-        List<String> jobId = getJobId(wikiId, CREATE_PLAN);
-        Job job = jobExecutor.getJob(jobId);
-        if (job != null) {
-            jobStatus = (MigrationPlanCreatorJobStatus) job.getStatus();
-        } else {
-            jobStatus = (MigrationPlanCreatorJobStatus) jobStatusStore.getJobStatus(jobId);
-        }
+        MigrationPlanCreatorJobStatus jobStatus = (MigrationPlanCreatorJobStatus) getStatus(wikiId, CREATE_PLAN);
         return jobStatus.getPlan();
     }
 
@@ -104,15 +97,15 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     @Override
     public JobStatus getStatus(String wikiId, String action)
     {
-        MigrationPlanCreatorJobStatus jobStatus;
+        JobStatus jobStatus;
 
         List<String> jobId = getJobId(wikiId, action);
 
         Job job = jobExecutor.getJob(jobId);
         if (job != null) {
-            jobStatus = (MigrationPlanCreatorJobStatus) job.getStatus();
+            jobStatus = job.getStatus();
         } else {
-            jobStatus = (MigrationPlanCreatorJobStatus) jobStatusStore.getJobStatus(jobId);
+            jobStatus = jobStatusStore.getJobStatus(jobId);
         }
 
         return jobStatus;

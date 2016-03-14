@@ -179,11 +179,13 @@ public class PreferencesMigrationPlanCreator
     private Object getPreferenceValueAfter(MigrationAction action, String propertyName)
     {
         // First: look if the action have a preference set
-        for (Preference preference : action.getPreferences()) {
-            // If the preference's name of the action match the property name
-            if (StringUtils.equals(preference.getName(), propertyName)) {
-                // It's this value which will be applied, so we return it
-                return preference.getValue();
+        if (action != null) {
+            for (Preference preference : action.getPreferences()) {
+                // If the preference's name of the action match the property name
+                if (StringUtils.equals(preference.getName(), propertyName)) {
+                    // It's this value which will be applied, so we return it
+                    return preference.getValue();
+                }
             }
         }
 

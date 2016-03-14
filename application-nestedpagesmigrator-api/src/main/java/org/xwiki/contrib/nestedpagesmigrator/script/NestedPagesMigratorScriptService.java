@@ -145,4 +145,18 @@ public class NestedPagesMigratorScriptService implements ScriptService
 
         return statusAndLogSerializer.getStatusAndLogs(wikiId, action);
     }
+
+    /**
+     * Remove the plan from the memory.
+     *
+     * @param wikiId id of the wiki where there is the plan to clear
+     *
+     * @since 0.4.2
+     */
+    public void clearPlan(String wikiId) throws AccessDeniedException
+    {
+        checkAdminAccess(new WikiReference(wikiId));
+
+        nestedPagesMigrator.clearPlan(wikiId);
+    }
 }

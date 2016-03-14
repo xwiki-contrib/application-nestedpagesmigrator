@@ -52,6 +52,8 @@
   #executePlan()
 #elseif ($action == 'printStatusAndLogs')
   #printStatusAndLogs()
+#elseif ($action == 'cleanPlan')
+  #cleanPlan()
 #end
 #************************************************************************
  * Create Plan
@@ -164,6 +166,12 @@
 #macro(printStatusAndLogs)
   #set ($discard = $response.setContentType('application/json'))
   $services.nestedpagesmigrator.getStatusAndLog($services.wiki.currentWikiId, $request.jobAction)
+#end
+#************************************************************************
+ * Clean the plan
+ ************************************************************************#
+#macro(cleanPlan)
+  $services.nestedpagesmigrator.cleanPlan($services.wiki.currentWikiId)
 #end
 {{/velocity}}
 </content>

@@ -111,6 +111,13 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
         return jobStatus;
     }
 
+    @Override
+    public void clearPlan(String wikiId)
+    {
+        MigrationPlanCreatorJobStatus jobStatus = (MigrationPlanCreatorJobStatus) getStatus(wikiId, CREATE_PLAN);
+        jobStatus.setPlan(null);
+    }
+
     private List<String> getJobId(String wikiId, String action)
     {
         // One job per wiki

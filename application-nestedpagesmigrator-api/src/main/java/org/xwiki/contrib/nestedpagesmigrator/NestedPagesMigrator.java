@@ -39,4 +39,9 @@ public interface NestedPagesMigrator
      * @since 0.4.2
      */
     JobStatus getStatus(String wikiId, String action);
+
+    /**
+     * @since 0.4.2
+     */
+    void clearPlan(String wikiId);
 }

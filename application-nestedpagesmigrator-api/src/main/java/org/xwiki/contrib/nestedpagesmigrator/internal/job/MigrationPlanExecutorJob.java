@@ -24,6 +24,7 @@ import javax.inject.Named;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.internal.executor.MigrationPlanExecutor;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.job.DefaultJobStatus;
@@ -47,10 +48,14 @@ public class MigrationPlanExecutorJob extends AbstractJob<MigrationPlanExecutorR
     @Override
     protected void runInternal() throws Exception
     {
+        // Remove the plan from the job status to free the memory
+        MigrationPlanTree plan = request.getPlan();
+        request.setPlan(null);
         // Create an instance of the MigrationPlanExecutor component and perform the action
         MigrationPlanExecutorRequest request = getRequest();
         MigrationPlanExecutor executor = componentManager.getInstance(MigrationPlanExecutor.class);
-        executor.performMigration(request.getPlan(), request.getConfiguration());
+        // Perform the migration
+        executor.performMigration(plan, request.getConfiguration());
     }
 
     @Override

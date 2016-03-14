@@ -130,6 +130,10 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
         progressManager.startStep(this, new Message("Sort the plan"));
         plan.sort();
 
+        // Free the memory
+        concernedDocuments.clear();
+        visitedDocuments.clear();
+
         // End
         this.progressManager.popLevelProgress(this);
         return plan;

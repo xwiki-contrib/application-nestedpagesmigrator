@@ -36,14 +36,13 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.contrib.nestedpagesmigrator.internal.executor.MigrationPlanExecutor;
+import org.xwiki.contrib.nestedpagesmigrator.internal.executor.RenameJobExecutor;
 import org.xwiki.contrib.nestedpagesmigrator.internal.pages.IdentityMigrationAction;
 import org.xwiki.job.Job;
-import org.xwiki.job.JobExecutor;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.WikiReference;
-import org.xwiki.refactoring.job.MoveRequest;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import com.xpn.xwiki.XWiki;
@@ -53,7 +52,6 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -71,7 +69,7 @@ public class MigrationPlanExecutorTest
             new MockitoComponentMockingRule<>(MigrationPlanExecutor.class);
 
     private JobProgressManager progressManager;
-    private JobExecutor jobExecutor;
+    private RenameJobExecutor renameJobExecutor;
     private Provider<XWikiContext> contextProvider;
     private EntityReferenceSerializer<String> serializer;
     private DocumentAccessBridge documentAccessBridge;
@@ -84,7 +82,7 @@ public class MigrationPlanExecutorTest
     public void setUp() throws Exception
     {
         progressManager = mocker.getInstance(JobProgressManager.class);
-        jobExecutor = mocker.getInstance(JobExecutor.class);
+        renameJobExecutor = mocker.getInstance(RenameJobExecutor.class);
         contextProvider = mocker.registerMockComponent(XWikiContext.TYPE_PROVIDER);
         context = mock(XWikiContext.class);
         when(contextProvider.get()).thenReturn(context);
@@ -100,9 +98,6 @@ public class MigrationPlanExecutorTest
                 return invocation.getArguments()[0].toString();
             }
         });
-
-        job = mock(Job.class);
-        when(jobExecutor.execute(anyString(), any(MoveRequest.class))).thenReturn(job);
 
         DocumentModelBridge documentModelBridge = mock(DocumentModelBridge.class);
         when(documentAccessBridge.getDocument(any(DocumentReference.class))).thenReturn(documentModelBridge);
@@ -213,7 +208,8 @@ public class MigrationPlanExecutorTest
         mocker.getComponentUnderTest().performMigration(plan, configuration);
 
         // Verify jobs have been executed
-        verify(job, times(5)).join();
+        verify(renameJobExecutor, times(5)).rename(any(DocumentReference.class), any(DocumentReference.class),
+                any(DocumentReference.class), any(MigrationConfiguration.class));
         // only 5 times because action6 is identity, and action7 is disabled!
 
         // Verify document are saved

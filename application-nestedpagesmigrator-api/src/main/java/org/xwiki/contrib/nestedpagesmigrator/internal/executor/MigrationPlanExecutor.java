@@ -19,14 +19,9 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.internal.executor;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.concurrent.ThreadLocalRandom;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
@@ -38,7 +33,6 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
-import org.xwiki.job.JobExecutor;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
@@ -46,8 +40,6 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.observation.ObservationManager;
-import org.xwiki.refactoring.job.MoveRequest;
-import org.xwiki.refactoring.job.RefactoringJobs;
 
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
@@ -70,7 +62,7 @@ public class MigrationPlanExecutor
     private JobProgressManager progressManager;
 
     @Inject
-    private JobExecutor jobExecutor;
+    private RenameJobExecutor renameJobExecutor;
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -197,32 +189,10 @@ public class MigrationPlanExecutor
      */
     private void moveDocument(MigrationAction action) throws Exception
     {
-        // Create a MoveRequest from the Refactoring API
-        MoveRequest request = new MoveRequest();
+        DocumentReference author = getDocumentAuthor(action.getSourceDocument())    ;
 
-        // Source, target
-        request.setEntityReferences(Arrays.asList((EntityReference) action.getSourceDocument()));
-        request.setDestination(action.getTargetDocument());
-
-        DocumentReference author = getDocumentAuthor(action.getSourceDocument());
-
-        // Configuration
-        request.setAutoRedirect(configuration.isAddAutoRedirect());
-        request.setCheckRights(false);
-        request.setDeep(false);
-        request.setInteractive(false);
-        request.setUpdateLinks(true);
-        request.setUserReference(author);
-        request.setUpdateParentField(false); // we do it manually because of a bug
-
-        // Job type, id
-        request.setJobType(RefactoringJobs.RENAME);
-        String suffix = new Date().getTime() + "-" + ThreadLocalRandom.current().nextInt(100, 1000);
-        request.setId(Arrays.asList(RefactoringJobs.GROUP,
-                StringUtils.removeStart(RefactoringJobs.RENAME, RefactoringJobs.GROUP_PREFIX), suffix));
-
-        // Run the job synchronously
-        jobExecutor.execute(RefactoringJobs.RENAME, request).join();
+        // Rename the document
+        renameJobExecutor.rename(action.getSourceDocument(), action.getTargetDocument(), author, configuration);
 
         // Update the "parent" field of the target document to point to the new parent
         EntityReference spaceParent = action.getTargetDocument().getLastSpaceReference().getParent();

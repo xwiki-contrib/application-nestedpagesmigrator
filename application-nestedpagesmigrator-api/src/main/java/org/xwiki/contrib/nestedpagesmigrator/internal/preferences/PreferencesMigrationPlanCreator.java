@@ -171,7 +171,7 @@ public class PreferencesMigrationPlanCreator
     /**
      * Get the preference value of a property after a migration has been done.
      *
-     * @param action the action that will be executed
+     * @param targetDocument the document on which the preferences are applied
      * @param propertyName the name of the property to look at
      *
      * @return the property value

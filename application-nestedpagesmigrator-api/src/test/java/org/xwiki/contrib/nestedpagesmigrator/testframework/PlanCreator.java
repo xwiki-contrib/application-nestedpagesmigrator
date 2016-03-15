@@ -54,6 +54,9 @@ public class PlanCreator
             } else {
                 parentAction = plan.getActionWithTarget(parent);
             }
+            if (parentAction == null) {
+                parentAction = plan.getTopLevelAction();
+            }
             MigrationAction.createInstance(page.getFrom(), page.getDocumentReference(), parentAction, plan);
         }
 

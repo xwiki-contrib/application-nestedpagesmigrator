@@ -1,0 +1,57 @@
+<!--
+  Example when a parent document is not in the plan
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <preferences>
+      <preference>
+        <name>skin</name>
+        <value>XWiki.DefaultSkin</value>
+      </preference>
+    </preferences>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <preferences>
+        <preference>
+          <name>skin</name>
+          <value>XWiki.MoviesSkin</value>
+        </preference>
+      </preferences>
+    </page>
+    <page>
+      <fullName>Dramas.WebHome</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Movies.Dramas.WebHome</fullName>
+      <from>Dramas.WebHome</from>
+      <preferences>
+        <preference>
+          <name>skin</name>
+          <value>XWiki.DefaultSkin</value>
+          <origin>XWiki.XWikiPreferences</origin>
+        </preference>
+      </preferences>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Dramas.WebHome",
+    "targetDocument": "xwiki:Movies.Dramas.WebHome",
+    "preferences": [
+      {
+        "name": "skin",
+        "value": "XWiki.DefaultSkin",
+        "origin": "xwiki:XWiki.XWikiPreferences"
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

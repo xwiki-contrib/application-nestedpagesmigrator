@@ -168,4 +168,10 @@ public class PreferencesMigrationPlanCreatorTest
     {
         testExample("/example-preferences-2.xml");
     }
+
+    @Test
+    public void testExampleWithParentThatHaveNoAction() throws Exception
+    {
+        testExample("/example-preferences-3.xml");
+    }
 }

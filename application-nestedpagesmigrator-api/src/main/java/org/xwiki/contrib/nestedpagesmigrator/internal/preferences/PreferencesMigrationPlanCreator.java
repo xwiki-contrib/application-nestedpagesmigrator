@@ -98,7 +98,7 @@ public class PreferencesMigrationPlanCreator
         // For each property, the inherited value should be the same after the action than before.
         for (String property : properties) {
             Preference valueBefore = getPreferenceValue(action.getSourceDocument(), property);
-            Object valueAfter = getPreferenceValueAfter(action, property);
+            Object valueAfter = getPreferenceValueAfter(action.getTargetDocument(), property);
             boolean hasProperty = hasProperty(action.getSourceDocument(), property);
             if (valueBefore.getValue() != null && (!valueBefore.getValue().equals(valueAfter) || hasProperty)) {
                 // If the value is different or if the value was manually set on the source document (even if the
@@ -176,9 +176,10 @@ public class PreferencesMigrationPlanCreator
      *
      * @return the property value
      */
-    private Object getPreferenceValueAfter(MigrationAction action, String propertyName)
+    private Object getPreferenceValueAfter(DocumentReference targetDocument, String propertyName)
     {
         // First: look if the action have a preference set
+        MigrationAction action = plan.getActionWithTarget(targetDocument);
         if (action != null) {
             for (Preference preference : action.getPreferences()) {
                 // If the preference's name of the action match the property name
@@ -191,7 +192,7 @@ public class PreferencesMigrationPlanCreator
 
         // Get the value for the WebPreferences page of the target document
         DocumentReference webPreferences
-                = new DocumentReference("WebPreferences", action.getTargetDocument().getLastSpaceReference());
+                = new DocumentReference("WebPreferences", targetDocument.getLastSpaceReference());
         Object value = documentAccessBridge.getProperty(webPreferences, classReference, propertyName);
 
         // If the value is null, we must explore the parents, to get inherited preferences
@@ -201,11 +202,8 @@ public class PreferencesMigrationPlanCreator
             if (spaceParent.getType() == EntityType.SPACE) {
                 // If the parent is a space, we get the document parent
                 DocumentReference parent = new DocumentReference("WebHome", new SpaceReference(spaceParent));
-                // We get action concerning this document
-                //TODO: in practice, the parent action can be null
-                MigrationAction parentAction = plan.getActionWithTarget(parent);
-                // And we get the value from this action
-                value = getPreferenceValueAfter(parentAction, propertyName);
+                // And we get the value from this parent
+                value = getPreferenceValueAfter(parent, propertyName);
             } else if (spaceParent.getType() == EntityType.WIKI) {
                 // If the parent is the wiki, we get the wiki preferences
                 value = documentAccessBridge.getProperty(classReference, classReference, propertyName);

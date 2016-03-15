@@ -1,0 +1,17 @@
+{
+  "progress": 0.42,
+  "logs": [
+    {
+      "level": "INFO",
+      "message": "Some INFO message with a parameter"
+    },
+    {
+      "level": "WARN",
+      "message": "Some WARNING message"
+    },
+    {
+      "level": "ERROR",
+      "message": "Some ERROR message"
+    }
+  ]
+}

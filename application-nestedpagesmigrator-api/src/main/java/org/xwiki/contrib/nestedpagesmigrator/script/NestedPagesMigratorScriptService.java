@@ -30,6 +30,7 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
+import org.xwiki.contrib.nestedpagesmigrator.script.internal.StatusAndLogSerializer;
 import org.xwiki.job.Job;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
@@ -56,9 +57,6 @@ public class NestedPagesMigratorScriptService implements ScriptService
 
     @Inject
     private DocumentAccessBridge documentAccessBridge;
-
-    @Inject
-    private StatusAndLogSerializer statusAndLogSerializer;
     
     private void checkAdminAccess(WikiReference wikiReference) throws AccessDeniedException
     {
@@ -137,13 +135,13 @@ public class NestedPagesMigratorScriptService implements ScriptService
      *
      * @throws AccessDeniedException if the user have not the right to execute this method
      *
-     * @since 0.4.2
+     * @since 0.4.3
      */
-    public String getStatusAndLog(String wikiId, String action) throws AccessDeniedException
+    public String getStatusAndLogs(String wikiId, String action) throws AccessDeniedException
     {
         checkAdminAccess(new WikiReference(wikiId));
 
-        return statusAndLogSerializer.getStatusAndLogs(wikiId, action);
+        return StatusAndLogSerializer.serialize(nestedPagesMigrator.getStatus(wikiId, action));
     }
 
     /**

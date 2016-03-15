@@ -207,7 +207,6 @@ public class PreferencesMigrationPlanCreator
             } else if (spaceParent.getType() == EntityType.WIKI) {
                 // If the parent is the wiki, we get the wiki preferences
                 value = documentAccessBridge.getProperty(classReference, classReference, propertyName);
-                //TODO: look at the main wiki preferences too
             }
         }
 

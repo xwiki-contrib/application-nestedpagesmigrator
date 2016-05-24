@@ -46,6 +46,8 @@ public class MigrationAction implements Serializable, Comparable
     
     private List<MigrationAction> children;
 
+    private boolean deletePrevious = false;
+
     /**
      * Helper to create an instance and record it in its plan.
      *
@@ -60,6 +62,23 @@ public class MigrationAction implements Serializable, Comparable
     {
         MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
         plan.addAction(action);
+        return action;
+    }
+
+    /**
+     * Helper to create an instance and record it in its plan.
+     *
+     * @param sourceDocument the source document
+     * @param targetReference the target location
+     * @param plan the plan
+     *
+     * @return the created instance
+     */
+    public static MigrationAction createInstance(DocumentReference sourceDocument, TargetReference targetReference,
+            MigrationPlanTree plan) throws MigrationException
+    {
+        MigrationAction action = createInstance(sourceDocument, targetReference.getTargetDocument(), plan);
+        action.setDeletePrevious(targetReference.getState() == TargetState.DELETE_FIRST);
         return action;
     }
 
@@ -79,6 +98,26 @@ public class MigrationAction implements Serializable, Comparable
         MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
         parentAction.addChild(action);
         plan.addAction(action);
+        return action;
+    }
+
+    /**
+     * Helper to create an instance and record it in its parent and its plan.
+     *
+     * @param sourceDocument the source document
+     * @param targetReference the target location
+     * @param parentAction the parent action
+     * @param plan the plan
+     *
+     * @return the created instance
+     */
+    public static MigrationAction createInstance(DocumentReference sourceDocument, TargetReference targetReference,
+            MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
+    {
+        MigrationAction action = new MigrationAction(sourceDocument, targetReference.getTargetDocument());
+        parentAction.addChild(action);
+        plan.addAction(action);
+        action.setDeletePrevious(targetReference.getState() == TargetState.DELETE_FIRST);
         return action;
     }
 
@@ -113,6 +152,19 @@ public class MigrationAction implements Serializable, Comparable
         }
         
         return false;
+    }
+
+    /**
+     * @return if an existing document where the target is should be deleted before the action is performed
+     */
+    public boolean getDeletePrevious()
+    {
+        return deletePrevious;
+    }
+
+    public void setDeletePrevious(boolean deletePrevious)
+    {
+        this.deletePrevious = deletePrevious;
     }
     
     public void addChild(MigrationAction action)

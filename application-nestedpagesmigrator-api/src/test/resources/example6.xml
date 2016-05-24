@@ -45,7 +45,8 @@
 [
   {
     "sourceDocument": "xwiki:Main.WebHome",
-    "targetDocument": "xwiki:Main.WebHome"
+    "targetDocument": "xwiki:Main.WebHome",
+    "deletePrevious": false
   },
   {
     "sourceDocument": "xwiki:Movies.WebHome",
@@ -57,11 +58,14 @@
         "children": [
           {
             "sourceDocument": "xwiki:Dramas.DancesWithWolves",
-            "targetDocument": "xwiki:Movies.Dramas.DancesWithWolves.WebHome"
+            "targetDocument": "xwiki:Movies.Dramas.DancesWithWolves.WebHome",
+            "deletePrevious": false
           }
-        ]
+        ],
+        "deletePrevious": false
       }
-    ]
+    ],
+    "deletePrevious": false
   }
 ]
 ]]></plan>

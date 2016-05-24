@@ -110,6 +110,10 @@ public class PagesMigrationPlanCreatorTest
                 XWikiDocument document = mock(XWikiDocument.class);
                 when(xwiki.getDocument(eq(page.getDocumentReference()), eq(context))).thenReturn(document);
                 when(document.getParentReference()).thenReturn(page.getParent());
+                when(document.getAuthorReference()).thenReturn(page.getDocumentReference());
+                when(document.getCreatorReference()).thenReturn(page.getDocumentReference());
+                when(document.getContentAuthorReference()).thenReturn(page.getDocumentReference());
+                when(document.getContent()).thenReturn(page.getDocumentReference().toString());
             }
             when(xwiki.exists(eq(page.getDocumentReference()), eq(context))).thenReturn(true);
         }
@@ -136,6 +140,12 @@ public class PagesMigrationPlanCreatorTest
                     String.format("The action [%s] should have the target [%s].\n%s", action, page.getDocumentReference(),
                             MigrationPlanSerializer.serialize(plan)),
                     page.getDocumentReference(), action.getTargetDocument());
+
+            // The action has the expected "deletePrevious" field
+            assertEquals(
+                    String.format("The action [%s] should have the deletePrevious field [%b].\n%s", action,
+                            page.shouldDeletePrevious(), MigrationPlanSerializer.serialize(plan)),
+                    page.shouldDeletePrevious(), action.getDeletePrevious());
         }
 
         // The plan should be the exact same
@@ -215,5 +225,11 @@ public class PagesMigrationPlanCreatorTest
     public void testWithCycle() throws Exception
     {
         testExample("/example8.xml");
+    }
+
+    @Test
+    public void testWithDuplicate() throws Exception
+    {
+        testExample("/example9.xml");
     }
 }

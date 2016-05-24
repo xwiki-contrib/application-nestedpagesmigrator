@@ -117,8 +117,12 @@ public class Example
         DocumentReference from = 
                 element.getChild("from") != null ? resolveDocument(element.getChild("from").getText()) : null;
         boolean isFailedToLoad = "true".equals(element.getAttributeValue("errorOnLoad"));
+        DocumentReference duplicateOf =
+                element.getChild("duplicateOf") != null ? resolveDocument(element.getChildTextTrim("duplicateOf")) :
+                        null;
+        boolean deletePrevious = "true".equals(element.getAttributeValue("deletePrevious"));
 
-        Page page = new Page(reference, parent, from, isFailedToLoad);
+        Page page = new Page(reference, parent, from, isFailedToLoad, duplicateOf, deletePrevious);
 
         Element preferences = element.getChild("preferences");
         if (preferences != null) {

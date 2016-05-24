@@ -41,17 +41,23 @@ public class Page
     
     private boolean isFailedToLoad;
 
+    private boolean deletePrevious;
+
+    private DocumentReference duplicateOf;
+
     private Collection<Preference> preferences = new ArrayList<>();
 
     private Collection<Right> rights = new ArrayList<>();
 
     public Page(DocumentReference documentReference, DocumentReference parent,
-            DocumentReference from, boolean isFailedToLoad)
+            DocumentReference from, boolean isFailedToLoad, DocumentReference duplicateOf, boolean deletePrevious)
     {
         this.documentReference = documentReference;
         this.parent = parent;
         this.from = from;
         this.isFailedToLoad = isFailedToLoad;
+        this.duplicateOf = duplicateOf;
+        this.deletePrevious = deletePrevious;
     }
 
     public DocumentReference getDocumentReference()
@@ -72,6 +78,16 @@ public class Page
     public boolean isFailedToLoad()
     {
         return isFailedToLoad;
+    }
+
+    public boolean shouldDeletePrevious()
+    {
+        return deletePrevious;
+    }
+
+    public DocumentReference getDuplicateOf()
+    {
+        return duplicateOf;
     }
 
     public Collection<Preference> getPreferences()

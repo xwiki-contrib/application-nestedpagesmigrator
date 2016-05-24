@@ -1,0 +1,55 @@
+<!--
+  Example where a page has been duplicated by mistake (see: http://jira.xwiki.org/browse/NPMIG-43).
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+    </page>
+    <!-- Movies.WebHome have been duplicated -->
+    <page>
+      <fullName>Main.Movies.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+      <duplicateOf>Movies.WebHome</duplicateOf>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Main.WebHome</fullName>
+      <from>Main.WebHome</from>
+    </page>
+    <page deletePrevious="true">
+      <fullName>Main.Movies.WebHome</fullName>
+      <from>Movies.WebHome</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Main.Movies.WebHome",
+        "targetDocument": "xwiki:Main.Movies.WebHome",
+        "deletePrevious": false
+      },
+      {
+        "sourceDocument": "xwiki:Movies.WebHome",
+        "targetDocument": "xwiki:Main.Movies_2.WebHome",
+        "deletePrevious": true
+      }
+    ],
+    "deletePrevious": false
+  }
+]
+]]></plan>
+</example>

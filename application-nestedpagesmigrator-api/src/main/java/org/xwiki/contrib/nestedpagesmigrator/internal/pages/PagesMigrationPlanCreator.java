@@ -37,10 +37,13 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTreeListener;
+import org.xwiki.contrib.nestedpagesmigrator.TargetReference;
+import org.xwiki.contrib.nestedpagesmigrator.TargetState;
 import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.logging.Message;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
+import org.xwiki.text.StringUtils;
 
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
@@ -170,9 +173,9 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             throws MigrationException
     {
         SpaceReference parentSpace = new SpaceReference(terminalDoc.getName(), terminalDoc.getLastSpaceReference());
-        DocumentReference targetDoc = computeFreeTarget(terminalDoc, parentSpace, null);
+        TargetReference targetReference = computeFreeTarget(terminalDoc, parentSpace, null);
         
-        return MigrationAction.createInstance(terminalDoc, targetDoc, plan);
+        return MigrationAction.createInstance(terminalDoc, targetReference, plan);
     }
 
     /**
@@ -292,9 +295,8 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
                 // [Space.WebHome, Path.To.Parent.WebHome] => [Path.To.Parent.Space.WebHome].
                 SpaceReference spaceReference = new SpaceReference(documentReference.getLastSpaceReference().getName(),
                         parentAction.getTargetDocument().getLastSpaceReference());
-                DocumentReference targetDocument = computeFreeTarget(documentReference, spaceReference, null);
-                
-                action = MigrationAction.createInstance(documentReference, targetDocument, parentAction, plan);
+                TargetReference targetReference = computeFreeTarget(documentReference, spaceReference, null);
+                action = MigrationAction.createInstance(documentReference, targetReference, parentAction, plan);
             }
         } else {
             // The parent is the top level action, ie. the document is orphan
@@ -331,42 +333,108 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
         // Not that the original space name is lost in the process.
         SpaceReference parentSpace = new SpaceReference(documentReference.getName(),
                 parentAction.getTargetDocument().getLastSpaceReference());
-        DocumentReference targetDocument = computeFreeTarget(documentReference, parentSpace, parentAction);
+        TargetReference targetReference = computeFreeTarget(documentReference, parentSpace, parentAction);
 
         // Because of computeFreeTarget(), the target document might have a different level of nesting. In that case,
         // the parent is a virtual document that must be present in the plan.
         // [Dramas.List, Movies.WebHome] -> [Movies.Dramas.List, Movies.Dramas.WebHome]
         // --> Movies.Dramas.WebHome must be created!
-        if (!targetDocument.getLastSpaceReference().getParent().equals(
+        if (!targetReference.getTargetDocument().getLastSpaceReference().getParent().equals(
                 parentAction.getTargetDocument().getLastSpaceReference())) {
             parentAction = convertDocumentAndParents(new DocumentReference(SPACE_HOME_PAGE, 
-                    (SpaceReference) targetDocument.getLastSpaceReference().getParent()));
+                    (SpaceReference) targetReference.getTargetDocument().getLastSpaceReference().getParent()));
         }
 
-        return MigrationAction.createInstance(documentReference, targetDocument, parentAction, plan);
+        return MigrationAction.createInstance(documentReference, targetReference, parentAction, plan);
     }
 
     /**
      * Verify that the target document is not already used by a previous action or already existing in the wiki.
      */
-    private boolean isTargetFree(DocumentReference documentReference, DocumentReference targetDocument)
+    private TargetState isTargetFree(DocumentReference documentReference, DocumentReference targetDocument)
     {
         MigrationAction conflictingAction = plan.getActionWithTarget(targetDocument);
-        // Note: it's ok to have a target document that exists if the target document is the source document too.
-        // ie: if the action do not move the document (identity action).
-        return conflictingAction == null
-                && (!xwiki.exists(targetDocument, context) || documentReference.equals(targetDocument));
+        if (conflictingAction != null) {
+            return TargetState.USED;
+        }
+
+        // Problem: the target document already exist.
+        if (xwiki.exists(targetDocument, context)) {
+            // But it's ok to have a target document that exists if the target document is the source document too.
+            // ie: if the action do not move the document (identity action).
+            if (documentReference.equals(targetDocument)) {
+                return TargetState.FREE;
+            }
+
+            // Check that the existing document is not the result of a failed attempt to run the migrator.
+            //
+            // Explanation: when a document A is rename to B, the action is divided in 2 steps:
+            // 1 - A is copied to B
+            // 2 - A is deleted
+            //
+            // Problem: in some occasions, XWiki crashes during the first step (out of memory). Results: A is duplicated
+            // by B. But B might not be a perfect copy of A, because of the crash (the whole history or all the
+            // attachments might have been not copied).
+            //
+            // In such a case, we could consider B as free, as soon as we remove it before the rename operation.
+            //
+            // For more information, see: http://jira.xwiki.org/browse/NPMIG-43
+            //
+            // All we need is to check that the document B is a copy of A, and not a legitimate document!
+            return isTargetDuplicate(documentReference, targetDocument);
+        }
+
+        // No conflicting action, no existing document, the target is free
+        return TargetState.FREE;
+    }
+
+    private TargetState isTargetDuplicate(DocumentReference documentReference, DocumentReference targetDocument)
+    {
+        try {
+            XWikiDocument sourceDoc = xwiki.getDocument(documentReference, context);
+            XWikiDocument targetDoc = xwiki.getDocument(targetDocument, context);
+
+            // Not the same author: obviously not a duplicate
+            if (!sourceDoc.getAuthorReference().equals(targetDoc.getAuthorReference())) {
+                return TargetState.USED;
+            }
+
+            // Not the same creator: same measure
+            if (!sourceDoc.getCreatorReference().equals(targetDoc.getCreatorReference())) {
+                return TargetState.USED;
+            }
+
+            // Same for the content author
+            if (sourceDoc.getContentAuthorReference().equals(targetDoc.getContentAuthorReference())) {
+                return TargetState.USED;
+            }
+
+            // If the target is a duplicate, the content should be the same.
+            // Even if the "rename backlinks" can modify the content, the content should be the same because the
+            // migration must have failed during this rename operation (so no other modification should have been made
+            // since).
+            return StringUtils.equals(sourceDoc.getContent(), targetDoc.getContent()) ?
+                    TargetState.DELETE_FIRST : TargetState.USED;
+
+        } catch (XWikiException e) {
+            // This exception shows that one of the documents is not readable for some technical reasons.
+            // The more prudent is to not consider it as free and to log the error properly.
+            // In practice, it should not happen.
+            logger.error("Failed to open a document.", e);
+            return TargetState.USED;
+        }
     }
 
     /**
      * Generate a target document that is not already used by a previous action or already existing in the wiki.
      */
-    private DocumentReference computeFreeTarget(DocumentReference documentReference,
+    private TargetReference computeFreeTarget(DocumentReference documentReference,
             SpaceReference parentSpace, MigrationAction parentAction)
     {
         DocumentReference targetDocument = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
         int iteration = 0;
-        while (!isTargetFree(documentReference, targetDocument)) {
+        TargetState targetState = isTargetFree(documentReference, targetDocument);
+        while (targetState == TargetState.USED) {
             SpaceReference newParentSpace = parentSpace;
             
             // Best effort: we could add an interesting information by adding the name of the space of the old
@@ -389,8 +457,11 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             
             // Create the new reference
             targetDocument = new DocumentReference(SPACE_HOME_PAGE, newParentSpace);
+
+            // Check the state for the next iteration
+            targetState = isTargetFree(documentReference, targetDocument);
         }
-        return targetDocument;
+        return new TargetReference(targetDocument, targetState);
     }
 
     /** 

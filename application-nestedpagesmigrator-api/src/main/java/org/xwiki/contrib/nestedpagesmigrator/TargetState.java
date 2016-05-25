@@ -26,5 +26,5 @@ public enum TargetState
 {
     FREE, // the target is free
     USED, // the target is not free: an other document is or will be already there
-    DELETE_FIRST // the target is considered as free as long as we remove the previous document of that path
+    DUPLICATE // the target is considered as free as long as we remove the previous document of that path
 }

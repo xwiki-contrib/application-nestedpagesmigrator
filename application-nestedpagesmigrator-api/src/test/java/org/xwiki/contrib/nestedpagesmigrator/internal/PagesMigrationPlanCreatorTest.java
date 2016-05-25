@@ -110,10 +110,12 @@ public class PagesMigrationPlanCreatorTest
                 XWikiDocument document = mock(XWikiDocument.class);
                 when(xwiki.getDocument(eq(page.getDocumentReference()), eq(context))).thenReturn(document);
                 when(document.getParentReference()).thenReturn(page.getParent());
-                when(document.getAuthorReference()).thenReturn(page.getDocumentReference());
-                when(document.getCreatorReference()).thenReturn(page.getDocumentReference());
-                when(document.getContentAuthorReference()).thenReturn(page.getDocumentReference());
-                when(document.getContent()).thenReturn(page.getDocumentReference().toString());
+                DocumentReference ref =
+                        page.getDuplicateOf() != null ? page.getDuplicateOf() : page.getDocumentReference();
+                when(document.getAuthorReference()).thenReturn(ref);
+                when(document.getCreatorReference()).thenReturn(ref);
+                when(document.getContentAuthorReference()).thenReturn(ref);
+                when(document.getContent()).thenReturn(ref.toString());
             }
             when(xwiki.exists(eq(page.getDocumentReference()), eq(context))).thenReturn(true);
         }
@@ -145,7 +147,7 @@ public class PagesMigrationPlanCreatorTest
             assertEquals(
                     String.format("The action [%s] should have the deletePrevious field [%b].\n%s", action,
                             page.shouldDeletePrevious(), MigrationPlanSerializer.serialize(plan)),
-                    page.shouldDeletePrevious(), action.getDeletePrevious());
+                    page.shouldDeletePrevious(), action.shouldDeletePrevious());
         }
 
         // The plan should be the exact same

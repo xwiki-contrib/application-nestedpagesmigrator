@@ -133,6 +133,9 @@ public class MigrationPlanExecutor
         try {
             // Move the document (if this action is enabled by the user)
             if (!action.isIdentity() && configuration.isActionEnabled(String.format("%s_page", sourceDocument))) {
+                if (action.shouldDeletePrevious()) {
+                    deleteDocument(action);
+                }
                 moveDocument(action);
             }
 
@@ -178,6 +181,24 @@ public class MigrationPlanExecutor
         // Save the document
         xwiki.saveDocument(preferencesPage,
                 "Rights and/or preferences set by the Nested Pages Migrator Application.", context);
+    }
+
+    /**
+     * Delete a document according to a migration action.
+     *
+     * @param action the action to perform
+     *
+     * @throws Exception if error happens
+     */
+    private void deleteDocument(MigrationAction action) throws Exception
+    {
+        logger.info("Delete document [{}] detected as a duplicate of [{}].", action.getTargetDocument(),
+                action.getSourceDocument());
+
+        XWikiContext  context  = contextProvider.get();
+        XWiki         xwiki    = context.getWiki();
+        XWikiDocument document = xwiki.getDocument(action.getTargetDocument(), context);
+        context.getWiki().deleteDocument(document, true, context);
     }
 
     /**

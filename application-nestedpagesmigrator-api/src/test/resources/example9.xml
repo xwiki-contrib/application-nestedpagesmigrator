@@ -18,6 +18,11 @@
       <parent>Main.WebHome</parent>
       <duplicateOf>Movies.WebHome</duplicateOf>
     </page>
+    <!-- Test with a conflict -->
+    <page>
+      <fullName>WrongPlace.Movies</fullName>
+      <parent>Main.WebHome</parent>
+    </page>
   </before>
   <!-- Expected state after the migration -->
   <after>
@@ -29,6 +34,10 @@
       <fullName>Main.Movies.WebHome</fullName>
       <from>Movies.WebHome</from>
     </page>
+    <page>
+      <fullName>Main.WrongPlace.Movies.WebHome</fullName>
+      <from>WrongPlace.Movies</from>
+    </page>
   </after>
   <!-- Plan as JSON -->
   <plan><![CDATA[
@@ -38,17 +47,21 @@
     "targetDocument": "xwiki:Main.WebHome",
     "children": [
       {
-        "sourceDocument": "xwiki:Main.Movies.WebHome",
+        "sourceDocument": "xwiki:Movies.WebHome",
         "targetDocument": "xwiki:Main.Movies.WebHome",
-        "deletePrevious": false
+        "deletePrevious": true
       },
       {
-        "sourceDocument": "xwiki:Movies.WebHome",
-        "targetDocument": "xwiki:Main.Movies_2.WebHome",
-        "deletePrevious": true
+        "sourceDocument": "xwiki:Main.WrongPlace.WebHome",
+        "targetDocument": "xwiki:Main.WrongPlace.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:WrongPlace.Movies",
+            "targetDocument": "xwiki:Main.WrongPlace.Movies.WebHome"
+          }
+        ]
       }
-    ],
-    "deletePrevious": false
+    ]
   }
 ]
 ]]></plan>

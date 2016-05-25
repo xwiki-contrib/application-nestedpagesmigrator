@@ -33,11 +33,9 @@
     "children": [
       {
         "sourceDocument": "xwiki:Main.Orphan",
-        "targetDocument": "xwiki:Main.Orphan.WebHome",
-        "deletePrevious": false
+        "targetDocument": "xwiki:Main.Orphan.WebHome"
       }
-    ],
-    "deletePrevious": false
+    ]
   }
 ]
 ]]></plan>

@@ -28,6 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -69,6 +70,27 @@ public class MigrationPlanSerializer
     }
 
     /**
+     * Needed to not add the property "deletePrevious" when the value is false (to not pollute the plan too much)
+     */
+    private static class MigrationActionSerializer implements JsonSerializer<MigrationAction>
+    {
+        @Override
+        public JsonElement serialize(MigrationAction src, Type typeOfSrc, JsonSerializationContext context)
+        {
+            JsonObject action = new JsonObject();
+            action.add("sourceDocument", context.serialize(src.getSourceDocument()));
+            action.add("targetDocument", context.serialize(src.getTargetDocument()));
+            if (src.shouldDeletePrevious()) {
+                action.addProperty("deletePrevious", Boolean.TRUE);
+            }
+            action.add("preferences", context.serialize(src.getPreferences()));
+            action.add("rights", context.serialize(src.getRights()));
+            action.add("children", context.serialize(src.getChildren()));
+            return action;
+        }
+    }
+
+    /**
      * Serialize the migration plan to a JSON tree (as string).
      * @param planTree plan to serialize
      * @return the JSON tree as string
@@ -78,6 +100,7 @@ public class MigrationPlanSerializer
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder = gsonBuilder.registerTypeAdapter(DocumentReference.class, new DocumentReferenceSerializer());
         gsonBuilder = gsonBuilder.registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter());
+        gsonBuilder = gsonBuilder.registerTypeHierarchyAdapter(MigrationAction.class, new MigrationActionSerializer());
         gsonBuilder = gsonBuilder.setPrettyPrinting();
         Gson gson = gsonBuilder.create();
         return gson.toJson(planTree.getTopLevelAction().getChildren());

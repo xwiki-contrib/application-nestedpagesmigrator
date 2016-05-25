@@ -351,11 +351,13 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
     /**
      * Verify that the target document is not already used by a previous action or already existing in the wiki.
      */
-    private TargetState isTargetFree(DocumentReference documentReference, DocumentReference targetDocument)
+    private TargetState getTargetState(DocumentReference documentReference, DocumentReference targetDocument)
     {
         MigrationAction conflictingAction = plan.getActionWithTarget(targetDocument);
         if (conflictingAction != null) {
-            return TargetState.USED;
+            // The conflicting action may concern the duplicate of the current document
+            return isTargetDuplicate(documentReference, conflictingAction.getSourceDocument()) ?
+                    TargetState.DUPLICATE : TargetState.USED;
         }
 
         // Problem: the target document already exist.
@@ -366,29 +368,35 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
                 return TargetState.FREE;
             }
 
-            // Check that the existing document is not the result of a failed attempt to run the migrator.
-            //
-            // Explanation: when a document A is rename to B, the action is divided in 2 steps:
-            // 1 - A is copied to B
-            // 2 - A is deleted
-            //
-            // Problem: in some occasions, XWiki crashes during the first step (out of memory). Results: A is duplicated
-            // by B. But B might not be a perfect copy of A, because of the crash (the whole history or all the
-            // attachments might have been not copied).
-            //
-            // In such a case, we could consider B as free, as soon as we remove it before the rename operation.
-            //
-            // For more information, see: http://jira.xwiki.org/browse/NPMIG-43
-            //
-            // All we need is to check that the document B is a copy of A, and not a legitimate document!
-            return isTargetDuplicate(documentReference, targetDocument);
+            return isTargetDuplicate(documentReference, targetDocument) ? TargetState.DUPLICATE : TargetState.USED;
         }
 
         // No conflicting action, no existing document, the target is free
         return TargetState.FREE;
     }
 
-    private TargetState isTargetDuplicate(DocumentReference documentReference, DocumentReference targetDocument)
+    /**
+     * Check that the existing target document is not the result of a failed attempt to run the migrator.
+     *
+     * Explanation: when a document A is rename to B, the action is divided in 2 steps:
+     * 1 - A is copied to B
+     * 2 - A is deleted
+     *
+     * Problem: in some occasions, XWiki crashes during the first step (out of memory). Results: A is duplicated
+     * by B. But B might not be a perfect copy of A, because of the crash (the whole history or all the
+     * attachments might have been not copied).
+     *
+     * In such a case, we could consider B as free, as soon as we remove it before the rename operation.
+     *
+     * For more information, see: http://jira.xwiki.org/browse/NPMIG-43
+     *
+     * All we need is to check that the document B is a copy of A, and not a legitimate document!
+     *
+     * @param documentReference the document to convert
+     * @param targetDocument the candidate target
+     * @return the state of the target
+     */
+    private boolean isTargetDuplicate(DocumentReference documentReference, DocumentReference targetDocument)
     {
         try {
             XWikiDocument sourceDoc = xwiki.getDocument(documentReference, context);
@@ -396,32 +404,31 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
 
             // Not the same author: obviously not a duplicate
             if (!sourceDoc.getAuthorReference().equals(targetDoc.getAuthorReference())) {
-                return TargetState.USED;
+                return false;
             }
 
             // Not the same creator: same measure
             if (!sourceDoc.getCreatorReference().equals(targetDoc.getCreatorReference())) {
-                return TargetState.USED;
+                return false;
             }
 
             // Same for the content author
-            if (sourceDoc.getContentAuthorReference().equals(targetDoc.getContentAuthorReference())) {
-                return TargetState.USED;
+            if (!sourceDoc.getContentAuthorReference().equals(targetDoc.getContentAuthorReference())) {
+                return false;
             }
 
             // If the target is a duplicate, the content should be the same.
             // Even if the "rename backlinks" can modify the content, the content should be the same because the
             // migration must have failed during this rename operation (so no other modification should have been made
             // since).
-            return StringUtils.equals(sourceDoc.getContent(), targetDoc.getContent()) ?
-                    TargetState.DELETE_FIRST : TargetState.USED;
+            return StringUtils.equals(sourceDoc.getContent(), targetDoc.getContent());
 
         } catch (XWikiException e) {
             // This exception shows that one of the documents is not readable for some technical reasons.
             // The more prudent is to not consider it as free and to log the error properly.
             // In practice, it should not happen.
             logger.error("Failed to open a document.", e);
-            return TargetState.USED;
+            return false;
         }
     }
 
@@ -433,7 +440,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
     {
         DocumentReference targetDocument = new DocumentReference(SPACE_HOME_PAGE, parentSpace);
         int iteration = 0;
-        TargetState targetState = isTargetFree(documentReference, targetDocument);
+        TargetState targetState = getTargetState(documentReference, targetDocument);
         while (targetState == TargetState.USED) {
             SpaceReference newParentSpace = parentSpace;
             
@@ -459,7 +466,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             targetDocument = new DocumentReference(SPACE_HOME_PAGE, newParentSpace);
 
             // Check the state for the next iteration
-            targetState = isTargetFree(documentReference, targetDocument);
+            targetState = getTargetState(documentReference, targetDocument);
         }
         return new TargetReference(targetDocument, targetState);
     }

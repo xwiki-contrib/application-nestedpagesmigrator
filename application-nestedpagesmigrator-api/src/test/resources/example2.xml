@@ -41,16 +41,13 @@
     "children": [
       {
         "sourceDocument": "xwiki:Movies.DancesWithWolves",
-        "targetDocument": "xwiki:Movies.DancesWithWolves.WebHome",
-        "deletePrevious": false
+        "targetDocument": "xwiki:Movies.DancesWithWolves.WebHome"
       },
       {
         "sourceDocument": "xwiki:Movies.StarTrek",
-        "targetDocument": "xwiki:Movies.StarTrek.WebHome",
-        "deletePrevious": false
+        "targetDocument": "xwiki:Movies.StarTrek.WebHome"
       }
-    ],
-    "deletePrevious": false
+    ]
   }
 ]
 ]]></plan>

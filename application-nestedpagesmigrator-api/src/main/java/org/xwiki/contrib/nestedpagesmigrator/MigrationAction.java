@@ -46,6 +46,9 @@ public class MigrationAction implements Serializable, Comparable
     
     private List<MigrationAction> children;
 
+    /**
+     * {@see shouldDeletePrevious()}
+     */
     private boolean deletePrevious = false;
 
     /**
@@ -78,7 +81,7 @@ public class MigrationAction implements Serializable, Comparable
             MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = createInstance(sourceDocument, targetReference.getTargetDocument(), plan);
-        action.setDeletePrevious(targetReference.getState() == TargetState.DELETE_FIRST);
+        action.setDeletePrevious(targetReference.getState() == TargetState.DUPLICATE);
         return action;
     }
 
@@ -117,7 +120,7 @@ public class MigrationAction implements Serializable, Comparable
         MigrationAction action = new MigrationAction(sourceDocument, targetReference.getTargetDocument());
         parentAction.addChild(action);
         plan.addAction(action);
-        action.setDeletePrevious(targetReference.getState() == TargetState.DELETE_FIRST);
+        action.setDeletePrevious(targetReference.getState() == TargetState.DUPLICATE);
         return action;
     }
 
@@ -155,9 +158,9 @@ public class MigrationAction implements Serializable, Comparable
     }
 
     /**
-     * @return if an existing document where the target is should be deleted before the action is performed
+     * @return if the target must be removed before the action is performed
      */
-    public boolean getDeletePrevious()
+    public boolean shouldDeletePrevious()
     {
         return deletePrevious;
     }

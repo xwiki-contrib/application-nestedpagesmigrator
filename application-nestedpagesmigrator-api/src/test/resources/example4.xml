@@ -39,11 +39,9 @@
     "children": [
       {
         "sourceDocument": "xwiki:Movies.DancesWithWolves",
-        "targetDocument": "xwiki:Movies.DancesWithWolves_2.WebHome",
-        "deletePrevious": false
+        "targetDocument": "xwiki:Movies.DancesWithWolves_2.WebHome"
       }
-    ],
-    "deletePrevious": false
+    ]
   }
 ]
 ]]></plan>

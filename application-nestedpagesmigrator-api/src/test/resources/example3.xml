@@ -84,13 +84,11 @@
         "children": [
           {
             "sourceDocument": "xwiki:Main.Movies.Comedy.WebHome",
-            "targetDocument": "xwiki:Main.Movies.Comedy.WebHome",
-            "deletePrevious": false
+            "targetDocument": "xwiki:Main.Movies.Comedy.WebHome"
           },
           {
             "sourceDocument": "xwiki:Comedy.WebHome",
-            "targetDocument": "xwiki:Main.Movies.Comedy_2.WebHome",
-            "deletePrevious": false
+            "targetDocument": "xwiki:Main.Movies.Comedy_2.WebHome"
           },
           {
             "sourceDocument": "xwiki:Main.Movies.Dramas.WebHome",
@@ -98,16 +96,13 @@
             "children": [
               {
                 "sourceDocument": "xwiki:Dramas.List",
-                "targetDocument": "xwiki:Main.Movies.Dramas.List.WebHome",
-                "deletePrevious": false
+                "targetDocument": "xwiki:Main.Movies.Dramas.List.WebHome"
               }
-            ],
-            "deletePrevious": false
+            ]
           },
           {
             "sourceDocument": "xwiki:SciFi.List",
-            "targetDocument": "xwiki:Main.Movies.List.WebHome",
-            "deletePrevious": false
+            "targetDocument": "xwiki:Main.Movies.List.WebHome"
           },
           {
             "sourceDocument": "xwiki:Main.Movies.Western.WebHome",
@@ -115,22 +110,17 @@
             "children": [
               {
                 "sourceDocument": "xwiki:Main.Movies.Western.List.WebHome",
-                "targetDocument": "xwiki:Main.Movies.Western.List.WebHome",
-                "deletePrevious": false
+                "targetDocument": "xwiki:Main.Movies.Western.List.WebHome"
               },
               {
                 "sourceDocument": "xwiki:Western.List",
-                "targetDocument": "xwiki:Main.Movies.Western.List_2.WebHome",
-                "deletePrevious": false
+                "targetDocument": "xwiki:Main.Movies.Western.List_2.WebHome"
               }
-            ],
-            "deletePrevious": false
+            ]
           }
-        ],
-        "deletePrevious": false
+        ]
       }
-    ],
-    "deletePrevious": false
+    ]
   }
 ]
 ]]></plan>

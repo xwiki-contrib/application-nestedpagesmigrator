@@ -54,19 +54,15 @@
         "children": [
           {
             "sourceDocument": "xwiki:A.WebHome",
-            "targetDocument": "xwiki:C.B.A.WebHome",
-            "deletePrevious": false
+            "targetDocument": "xwiki:C.B.A.WebHome"
           }
-        ],
-        "deletePrevious": false
+        ]
       }
-    ],
-    "deletePrevious": false
+    ]
   },
   {
     "sourceDocument": "xwiki:D.WebHome",
-    "targetDocument": "xwiki:D.WebHome",
-    "deletePrevious": false
+    "targetDocument": "xwiki:D.WebHome"
   }
 ]
 ]]></plan>

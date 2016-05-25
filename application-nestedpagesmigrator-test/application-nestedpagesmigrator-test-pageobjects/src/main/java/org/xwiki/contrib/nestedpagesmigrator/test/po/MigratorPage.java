@@ -51,6 +51,11 @@ public class MigratorPage extends ViewPage
     public void computePlan()
     {
         btComputePlan.click();
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+
+        }
         getDriver().waitUntilCondition(new ExpectedCondition<Boolean>()
         {
             @Override

@@ -54,6 +54,10 @@
     <url>https://github.com/xwiki-contrib/application-nestedpagesmigrator/tree/master</url>
     <tag>HEAD</tag>
   </scm>
+  <issueManagement>
+    <system>jira</system>
+    <url>http://jira.xwiki.org/jira/browse/NPMIG</url>
+  </issueManagement>
   <modules>
     <!-- Sorted Alphabetically -->
     <module>application-nestedpagesmigrator-api</module>

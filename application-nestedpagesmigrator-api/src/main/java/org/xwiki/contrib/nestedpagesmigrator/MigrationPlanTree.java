@@ -55,8 +55,8 @@ public class MigrationPlanTree
                     action.getSourceDocument()));
         }
         if (actionsByTarget.containsKey(action.getTargetDocument()) && !action.shouldDeletePrevious()) {
-            throw new MigrationException(String.format("An action with target [%s] already exists.",
-                    action.getTargetDocument()));
+            throw new MigrationException(String.format("An action with target [%s] already exists. It's [%s].",
+                    action.getTargetDocument(), actionsByTarget.get(action.getTargetDocument())));
         }
         actions.put(action.getSourceDocument(), action);
         actionsByTarget.put(action.getTargetDocument(), action);

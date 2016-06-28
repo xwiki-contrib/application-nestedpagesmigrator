@@ -58,7 +58,7 @@
   &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0"&gt;
     &lt;input type="checkbox" data-bind="checked: enabled" /&gt;
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
-    &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren" /&gt;
+    &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren, css: { 'bg-danger': isTooLong() }" /&gt;
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     &lt;strong data-bind="visible: deletePrevious"&gt;(duplicated document will be deleted)&lt;/strong&gt;
@@ -118,6 +118,13 @@
         &lt;li data-bind="text: doc"&gt;&lt;/li&gt;
       &lt;/ul&gt;
       &lt;p&gt;If you are ok with it, just run the migrator and these documents will be overwritten.&lt;/p&gt;
+    &lt;/div&gt;
+     &lt;div class="box errormessage" data-bind="visible: tooLongs().length &gt; 0"&gt;
+      &lt;p&gt;We have detected some pages that will have too long path after the migration (limit is 255). You should rename them (or rename one of their parents) before computing a new plan.&lt;/p&gt;
+      &lt;p&gt;Theses pages are:&lt;/p&gt;
+      &lt;ul data-bind="foreach: {data: tooLongs(), as: 'action'}"&gt;
+        &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()" /&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"/&gt;&lt;/li&gt;
+      &lt;/ul&gt;
     &lt;/div&gt;
     &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()" id="planTree"&gt;
       &lt;!-- ko template: {name: 'MigrationActionTemplate', foreach: actions } --&gt;
@@ -200,7 +207,7 @@
   &lt;div class="clearfix"&gt;
     &lt;h2&gt;Actions&lt;/h2&gt;
     &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
-    &lt;button class="btn btn-primary" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: executePlan"&gt;Execute plan&lt;/button&gt;
+    &lt;button class="btn btn-primary" data-bind="disable: actions().length == 0 || isPlanExecuting() || tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
@@ -467,6 +474,10 @@
       return self.targetDocument.getName() == 'WebHome' ? self.targetDocument.parent.getName() : self.targetDocument.getName();
     }
     
+    self.isTooLong = function () {
+      return self.serializedTargetDocument().length &gt; 255;
+    }
+    
     self.getSourceLink = function () {
       return new XWiki.Document(self.sourceDocument).getURL();
     }
@@ -669,6 +680,7 @@
     self.isPlanExecuting   = ko.observable(false);
     self.success           = ko.observable(false);
     self.duplicates        = ko.observableArray();
+    self.tooLongs          = ko.observableArray();
     
     // Do not refresh logs and actions too often (to get better performances, because a lot of actions and logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
@@ -754,6 +766,7 @@
       self.isComputing(true);
       self.actions.removeAll();
       self.duplicates.removeAll();
+      self.tooLongs.removeAll();
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
           'action'               : 'createPlan',
           'excludeHiddenPages'   : self.configuration.excludeHiddenPages(),
@@ -830,6 +843,9 @@
           if (data.deletePrevious) {
             action.deletePrevious = true;
             self.duplicates.push(action.serializedTargetDocument());
+          }
+          if (action.isTooLong()) {
+            self.tooLongs.push(action);
           }
           return action;
         };
@@ -984,6 +1000,7 @@
       }).done(function() {
         self.actions.removeAll();
         self.duplicates.removeAll();
+        self.tooLongs.removeAll();
         self.isPlanRequested(false);
         self.logs.removeAll();
       });

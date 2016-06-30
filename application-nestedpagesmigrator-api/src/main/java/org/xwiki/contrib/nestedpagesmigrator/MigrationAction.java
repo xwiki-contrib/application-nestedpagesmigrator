@@ -118,9 +118,9 @@ public class MigrationAction implements Serializable, Comparable
             MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = new MigrationAction(sourceDocument, targetReference.getTargetDocument());
+        action.setDeletePrevious(targetReference.getState() == TargetState.DUPLICATE);
         parentAction.addChild(action);
         plan.addAction(action);
-        action.setDeletePrevious(targetReference.getState() == TargetState.DUPLICATE);
         return action;
     }
 

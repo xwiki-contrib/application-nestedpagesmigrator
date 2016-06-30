@@ -234,4 +234,10 @@ public class PagesMigrationPlanCreatorTest
     {
         testExample("/example9.xml");
     }
+
+    @Test
+    public void testWithIntentionalDuplicates() throws Exception
+    {
+        testExample("/example10.xml");
+    }
 }

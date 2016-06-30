@@ -355,9 +355,13 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
     {
         MigrationAction conflictingAction = plan.getActionWithTarget(targetDocument);
         if (conflictingAction != null) {
-            // The conflicting action may concern the duplicate of the current document
-            return isTargetDuplicate(documentReference, conflictingAction.getSourceDocument()) ?
-                    TargetState.DUPLICATE : TargetState.USED;
+            // The conflicting action should not concern the duplicate of the current document since it would have been
+            // already on the right place and would not be part of this migration plan.
+            //
+            // By the past, we did this check and it produced http://jira.xwiki.org/browse/NPMIG-44
+            // ie: we can confuse an intentionally duplicated document with a document that was duplicated by the
+            // migrator because of a crash (see isTargetDuplicate() for more information).
+            return TargetState.USED;
         }
 
         // Problem: the target document already exist.

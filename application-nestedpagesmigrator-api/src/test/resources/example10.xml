@@ -1,0 +1,39 @@
+<!--
+  Example with an intentional duplicate (raised by http://jira.xwiki.org/browse/NPMIG-44)
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>A.B.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+      <duplicateOf>B.WebHome</duplicateOf>
+    </page>
+    <page>
+      <fullName>B.WebHome</fullName>
+      <parent>Main.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:A.B.WebHome",
+        "targetDocument": "xwiki:Main.B.WebHome"
+      },
+      {
+        "sourceDocument": "xwiki:B.WebHome",
+        "targetDocument": "xwiki:Main.B_2.WebHome"
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

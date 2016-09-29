@@ -1109,9 +1109,7 @@
     <property>
       <code>require(['jquery'], function ($) {
   $(document).ready(function() {
-    if ($(".edit_section")) {
-      $(".edit_section").remove()
-    }
+    $(".edit_section").remove();
   });
 });
 </code>

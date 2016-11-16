@@ -914,7 +914,7 @@
         notification.hide();
         // Now ask the new parent to set
         var parent = prompt("Enter the fullName of the parent that you want to set: (this will be applied immediatly)", data.parent);
-        if (parent) {
+        if (parent != null) {
           notification = new XWiki.widgets.Notification('Saving...', 'inprogress');
           // Set the new parent using the REST API
           $.ajax(restURL, {
@@ -924,6 +924,7 @@
           }).done(function(data) {
             // TODO: put something here, and handle error;
             self.computePlan();
+            notification.replace(new XWiki.widgets.Notification('New parent was set, computing the new plan.', 'done'));
           }).fail(function() {
             notification.replace(new XWiki.widgets.Notification('Failed to save the page.', 'error'));
           });

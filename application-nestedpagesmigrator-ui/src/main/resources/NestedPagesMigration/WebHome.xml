@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -50,37 +51,75 @@
 #set ($discard = $xwiki.ssfx.use('uicomponents/job/job.css', true))
 #set ($discard = $xwiki.ssfx.use('uicomponents/extension/extension.css', true))
 #set ($discard = $xwiki.ssfx.use('uicomponents/logging/logging.css', true))
+#set ($discard = $xwiki.linkx.use($services.webjars.url('org.xwiki.platform:xwiki-platform-tree-webjar', 'tree.min.css',
+    {'evaluate': true}), {'type': 'text/css', 'rel': 'stylesheet'}))
 {{html clean="false"}}
 &lt;!------------------------------------------
   Migration Action Template 
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
-  &lt;li data-bind="visible: !targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0"&gt;
+  &lt;!-- ko foreach: ${escapetool.d}data.actions --&gt;
+  &lt;li class="jstree-node" data-bind="
+    visible: (!targetDocument.equals(sourceDocument) || getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0),
+    css: {
+      'jstree-closed': !displayChildren(),
+      'jstree-open'  : displayChildren(),
+      'jstree-leaf'  : getNumberOfChildren() == 0 &amp;&amp; getNumberOfPreferences() == 0,
+      'jstree-last'  : ${escapetool.d}index() == ${escapetool.d}parent.actions.length - 1
+    }"&gt;
+    ## Display the tree branch
+    &lt;i class="jstree-icon jstree-ocl" role="presentation" data-bind="click: toggleDisplayChildren"&gt;&lt;/i&gt;
+    ##  Display the checbox
     &lt;input type="checkbox" data-bind="checked: enabled" /&gt;
+    ## Display the 'all' link
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
+    ## Display the document name
     &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren, css: { 'bg-danger': isTooLong() }" /&gt;
+    ## Display the target location
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
+    ## Display if the action is a change or not
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
+    ## Display if a previous document will be deleted
     &lt;strong data-bind="visible: deletePrevious"&gt;(duplicated document will be deleted)&lt;/strong&gt;
+    ## Display the exclude page button
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
+    ## Display the exclude space button
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludeSpace"&gt;exclude space&lt;/button&gt;
+    ## Display th button to change the parent of ht document
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
-    (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children, &lt;span data-bind="text: getNumberOfPreferences()" /&gt; preferences, &lt;span data-bind="text: getNumberOfRights()" /&gt; rights)
+    ## Display the number of children
+    (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children,
+    ## Display the number of preferences
+    &lt;span data-bind="text: getNumberOfPreferences()" /&gt; preferences,
+    ## Display the number of rights
+    &lt;span data-bind="text: getNumberOfRights()" /&gt; rights)
+    ## Display the original location
     from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
+    ## Display all children
     &lt;!-- ko if: displayChildren() --&gt;
+      ## Display preferences
       &lt;!-- ko if: preferences.length &gt; 0 --&gt;
-        &lt;ul  data-bind="foreach: preferences"&gt;
-          &lt;li class="text-warning"&gt;&lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
+        &lt;ul  data-bind="foreach: preferences" class="jstree-children"&gt;
+          &lt;li class="text-warning jstree-node jstree-leaf"&gt;
+            &lt;i class="jstree-icon jstree-ocl" role="presentation"&gt;&lt;/i&gt;
+            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)
+          &lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
+      ## Display rights
       &lt;!-- ko if: rights.length &gt; 0 --&gt;
-        &lt;ul  data-bind="foreach: rights"&gt;
-          &lt;li class="text-danger"&gt;&lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)&lt;/li&gt;
+        &lt;ul   data-bind="foreach: rights" class="jstree-children"&gt;
+          &lt;li class="text-danger jstree-node jstree-leaf"&gt;
+            &lt;i class="jstree-icon jstree-ocl" role="presentation"&gt;&lt;/i&gt;
+            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)
+          &lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
-      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', foreach: children }" /&gt;
+      ## Display children documents
+      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', data: {'actions': children()} }" class="jstree-children"/&gt;
     &lt;!-- /ko --&gt;
   &lt;/li&gt;
+  &lt;!-- /ko --&gt;
 &lt;/script&gt;
 &lt;!------------------------------------------
   Display Logs
@@ -126,8 +165,8 @@
         &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()" /&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"/&gt;&lt;/li&gt;
       &lt;/ul&gt;
     &lt;/div&gt;
-    &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()" id="planTree"&gt;
-      &lt;!-- ko template: {name: 'MigrationActionTemplate', foreach: actions } --&gt;
+    &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()" id="planTree" class="jstree jstree-xwiki jstree-xwiki-responsive jstree-container-ul"&gt;
+      &lt;!-- ko template: {name: 'MigrationActionTemplate', data: {'actions': actions() }} --&gt;
       &lt;!-- /ko --&gt;
     &lt;/ul&gt;
     &lt;!-- ko if: !isComputing() &amp;&amp; isPlanEmpty() --&gt;

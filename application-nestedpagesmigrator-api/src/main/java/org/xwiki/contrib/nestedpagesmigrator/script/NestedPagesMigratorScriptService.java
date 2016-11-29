@@ -157,4 +157,38 @@ public class NestedPagesMigratorScriptService implements ScriptService
 
         nestedPagesMigrator.clearPlan(wikiId);
     }
+
+    /**
+     * Start the breakage detection in a job.
+     *
+     * @param configuration the migration configuration
+     * @return the job handling the detection
+     *
+     * @throws MigrationException if error happens
+     * @throws AccessDeniedException if the user have not the right to execute this method
+     *
+     * @since 0.7
+     */
+    public Job startBreakageDetection(MigrationConfiguration configuration) throws AccessDeniedException,
+            MigrationException
+    {
+        checkAdminAccess(configuration.getWikiReference());
+
+        return nestedPagesMigrator.startBreakageDetection(configuration);
+    }
+
+    /**
+     * @param wikiId the id of the wiki where the plan have been computed
+     * @return a JSON-serialized version of the breakage list for the given wiki
+     *
+     * @throws AccessDeniedException if the user have not the right to execute this method
+     *
+     * @since 0.7
+     */
+    public String getSerializedBreakages(String wikiId) throws AccessDeniedException
+    {
+        checkAdminAccess(new WikiReference(wikiId));
+
+        return MigrationPlanSerializer.serialize(nestedPagesMigrator.getBreakages(wikiId));
+    }
 }

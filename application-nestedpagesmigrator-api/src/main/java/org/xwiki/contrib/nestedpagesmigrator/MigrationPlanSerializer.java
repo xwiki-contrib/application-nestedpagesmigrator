@@ -90,6 +90,16 @@ public class MigrationPlanSerializer
         }
     }
 
+    private static Gson createSerializer()
+    {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder = gsonBuilder.registerTypeAdapter(DocumentReference.class, new DocumentReferenceSerializer());
+        gsonBuilder = gsonBuilder.registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter());
+        gsonBuilder = gsonBuilder.registerTypeHierarchyAdapter(MigrationAction.class, new MigrationActionSerializer());
+        gsonBuilder = gsonBuilder.setPrettyPrinting();
+        return gsonBuilder.create();
+    }
+
     /**
      * Serialize the migration plan to a JSON tree (as string).
      * @param planTree plan to serialize
@@ -97,13 +107,16 @@ public class MigrationPlanSerializer
      */
     public static String serialize(MigrationPlanTree planTree)
     {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder = gsonBuilder.registerTypeAdapter(DocumentReference.class, new DocumentReferenceSerializer());
-        gsonBuilder = gsonBuilder.registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter());
-        gsonBuilder = gsonBuilder.registerTypeHierarchyAdapter(MigrationAction.class, new MigrationActionSerializer());
-        gsonBuilder = gsonBuilder.setPrettyPrinting();
-        Gson gson = gsonBuilder.create();
-        return gson.toJson(planTree.getTopLevelAction().getChildren());
+        return createSerializer().toJson(planTree.getTopLevelAction().getChildren());
     }
 
+    /**
+     * Serialize an arbitrary object to a JSON tree (as string).
+     * @param object plan to serialize
+     * @return the JSON tree as string
+     */
+    public static String serialize(Object object)
+    {
+        return createSerializer().toJson(object);
+    }
 }

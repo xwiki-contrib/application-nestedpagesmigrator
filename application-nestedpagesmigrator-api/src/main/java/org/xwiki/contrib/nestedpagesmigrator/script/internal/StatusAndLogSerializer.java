@@ -39,7 +39,9 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 /**
- * Serialize a Job Status with only some required informations and the logs.
+ * Serialize a Job Status with only some required information and the logs.
+ *
+ * TODO: replace GsonBuilder with Jackson Object Mapper, which is the API used by XWiki.
  *
  * @version $Id: $
  * @since 0.4.3

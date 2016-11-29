@@ -46,8 +46,12 @@
 #set ($action = "$!request.action")
 #if ($action == 'createPlan')
   #createPlan()
+#elseif ($action == 'startBreakageDetection')
+  #startBreakageDetection()
 #elseif ($action == 'printPlan')
   #printPlan()
+#elseif ($action == 'printBreakages')
+  #printBreakages()
 #elseif ($action == 'executePlan')
   #executePlan()
 #elseif ($action == 'printStatusAndLogs')
@@ -56,9 +60,9 @@
   #cleanPlan()
 #end
 #************************************************************************
- * Create Plan
+ * Load configuration
  ************************************************************************#
-#macro(createPlan)
+#macro(loadConfiguration $configuration)
   #**
    * Transform the string parameter to a list of document references
    *#
@@ -92,7 +96,7 @@
     #setVariable("$result" $references)
   #end
   ###
-  ### Create the configuration
+  ### Load the configuration
   ###
   #set ($configuration = $services.nestedpagesmigrator.newMigrationConfiguration($services.wiki.currentWikiId))
   #set ($excludeHiddenPages = "$!request.excludeHiddenPages" == 'true')
@@ -115,10 +119,40 @@
   #set ($discard = $configuration.addExcludedPages($excludedPages))
   #set ($discard = $configuration.addExcludedSpaces($excludedSpaces))
   #set ($discard = $configuration.addIncludedSpaces($includedSpaces))
+#end
+#************************************************************************
+ * Create Plan
+ ************************************************************************#
+#macro(createPlan)
+  ###
+  ### Load the configuration
+  ###
+  #set ($configuration = $services.nestedpagesmigrator.newMigrationConfiguration($services.wiki.currentWikiId))
+  #loadConfiguration($configuration)
   ###
   ### Start the job
   ###
   #set ($job = $services.nestedpagesmigrator.startMigrationPlanCreation($configuration))
+  ###
+  ### Print the job id
+  ###
+  #set ($map = {'jobId': $stringtool.join($job.request.id, '/')})
+  #set ($discard = $response.setContentType('application/json'))
+  $jsontool.serialize($map)
+#end
+#************************************************************************
+ * Start Breakage Detection
+ ************************************************************************#
+#macro(startBreakageDetection)
+  ###
+  ### Load the configuration
+  ###
+  #set ($configuration = $services.nestedpagesmigrator.newMigrationConfiguration($services.wiki.currentWikiId))
+  #loadConfiguration($configuration)
+  ###
+  ### Start the job
+  ###
+  #set ($job = $services.nestedpagesmigrator.startBreakageDetection($configuration))
   ###
   ### Print the job id
   ###
@@ -132,6 +166,13 @@
 #macro(printPlan)
   #set ($discard = $response.setContentType('application/json'))
   $services.nestedpagesmigrator.getSerializedPlan($services.wiki.currentWikiId)
+#end
+#************************************************************************
+ * Display the breakage list
+ ************************************************************************#
+#macro(printBreakages)
+  #set ($discard = $response.setContentType('application/json'))
+  $services.nestedpagesmigrator.getSerializedBreakages($services.wiki.currentWikiId)
 #end
 #************************************************************************
  * Execute the plan

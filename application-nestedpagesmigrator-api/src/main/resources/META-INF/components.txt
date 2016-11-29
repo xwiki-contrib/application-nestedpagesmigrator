@@ -1,5 +1,7 @@
+org.xwiki.contrib.nestedpagesmigrator.internal.breakage.HierarchyBreakageDetector
 org.xwiki.contrib.nestedpagesmigrator.internal.executor.MigrationPlanExecutor
 org.xwiki.contrib.nestedpagesmigrator.internal.executor.RenameJobExecutor
+org.xwiki.contrib.nestedpagesmigrator.internal.job.HierarchyBreakageDetectorJob
 org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJob
 org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorJob
 org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator

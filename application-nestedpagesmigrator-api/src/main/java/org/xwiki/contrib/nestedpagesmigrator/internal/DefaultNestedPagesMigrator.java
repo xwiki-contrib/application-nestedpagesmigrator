@@ -30,6 +30,9 @@ import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
+import org.xwiki.contrib.nestedpagesmigrator.internal.breakage.Breakage;
+import org.xwiki.contrib.nestedpagesmigrator.internal.job.HierarchyBreakageDetectorJob;
+import org.xwiki.contrib.nestedpagesmigrator.internal.job.HierarchyBreakageDetectorJobStatus;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJob;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanCreatorJobStatus;
 import org.xwiki.contrib.nestedpagesmigrator.internal.job.MigrationPlanExecutorJob;
@@ -50,9 +53,11 @@ import org.xwiki.job.event.status.JobStatus;
 @Singleton
 public class DefaultNestedPagesMigrator implements NestedPagesMigrator
 {
-    private static final String CREATE_PLAN = "createmigrationplan";
+    public static final String CREATE_PLAN = "createmigrationplan";
 
-    private static final String EXECUTE_PLAN = "executemigrationplan";
+    public static final String EXECUTE_PLAN = "executemigrationplan";
+
+    public static final String BREAKAGE_DETECTION = "breakagedetection";
 
     @Inject
     private JobExecutor jobExecutor;
@@ -116,6 +121,27 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     {
         MigrationPlanCreatorJobStatus jobStatus = (MigrationPlanCreatorJobStatus) getStatus(wikiId, CREATE_PLAN);
         jobStatus.setPlan(null);
+    }
+
+    @Override
+    public Job startBreakageDetection(MigrationConfiguration configuration) throws MigrationException
+    {
+        try {
+            MigrationPlanRequest request = new MigrationPlanRequest();
+            request.setId(getJobId(configuration.getWikiReference().getName(), BREAKAGE_DETECTION));
+            request.setConfiguration(configuration);
+            return jobExecutor.execute(HierarchyBreakageDetectorJob.JOB_TYPE, request);
+        } catch (JobException e) {
+            throw new MigrationException("Failed to execute the breakage detection.", e);
+        }
+    }
+
+    @Override
+    public List<Breakage> getBreakages(String wikiId)
+    {
+        HierarchyBreakageDetectorJobStatus jobStatus =
+                (HierarchyBreakageDetectorJobStatus) getStatus(wikiId, BREAKAGE_DETECTION);
+        return jobStatus.getBreakages();
     }
 
     private List<String> getJobId(String wikiId, String action)

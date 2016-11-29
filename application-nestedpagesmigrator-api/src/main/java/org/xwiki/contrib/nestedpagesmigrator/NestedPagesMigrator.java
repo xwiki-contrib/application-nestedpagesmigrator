@@ -19,7 +19,10 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator;
 
+import java.util.List;
+
 import org.xwiki.component.annotation.Role;
+import org.xwiki.contrib.nestedpagesmigrator.internal.breakage.Breakage;
 import org.xwiki.job.Job;
 import org.xwiki.job.event.status.JobStatus;
 
@@ -44,4 +47,14 @@ public interface NestedPagesMigrator
      * @since 0.4.2
      */
     void clearPlan(String wikiId);
+
+    /**
+     * @since 0.7
+     */
+    Job startBreakageDetection(MigrationConfiguration configuration) throws MigrationException;
+
+    /**
+     * @since 0.7
+     */
+    List<Breakage> getBreakages(String wikiId);
 }

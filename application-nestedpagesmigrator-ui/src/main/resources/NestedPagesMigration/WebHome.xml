@@ -74,9 +74,9 @@
     ## Display the 'all' link
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
     ## Display the document name
-    &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren, css: { 'bg-danger': isTooLong() }" /&gt;
+    &lt;strong class="documentName" data-bind="text: getTargetName(), click: toggleDisplayChildren, css: { 'bg-danger': isTooLong() }"&gt;&lt;/strong&gt;
     ## Display the target location
-    [&lt;span data-bind="text: serializedTargetDocument()" class="monospace" /&gt;]
+    [&lt;span data-bind="text: serializedTargetDocument()" class="monospace"&gt;&lt;/span&gt;]
     ## Display if the action is a change or not
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     ## Display if a previous document will be deleted
@@ -88,30 +88,30 @@
     ## Display th button to change the parent of ht document
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
     ## Display the number of children
-    (&lt;span data-bind="text: getNumberOfChildren()" /&gt; children,
+    (&lt;span data-bind="text: getNumberOfChildren()"&gt;&lt;/span&gt; children,
     ## Display the number of preferences
-    &lt;span data-bind="text: getNumberOfPreferences()" /&gt; preferences,
+    &lt;span data-bind="text: getNumberOfPreferences()"&gt;&lt;/span&gt; preferences,
     ## Display the number of rights
-    &lt;span data-bind="text: getNumberOfRights()" /&gt; rights)
+    &lt;span data-bind="text: getNumberOfRights()"&gt;&lt;/span&gt; rights)
     ## Display the original location
-    from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}" /&gt;
+    from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}"&lt;/a&gt;
     ## Display all children
     &lt;!-- ko if: displayChildren() --&gt;
       ## Display preferences
       &lt;!-- ko if: preferences.length &gt; 0 --&gt;
-        &lt;ul  data-bind="foreach: preferences" class="jstree-children"&gt;
+        &lt;ul data-bind="foreach: preferences" class="jstree-children"&gt;
           &lt;li class="text-warning jstree-node jstree-leaf"&gt;
             &lt;i class="jstree-icon jstree-ocl" role="presentation"&gt;&lt;/i&gt;
-            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" /&gt; : &lt;span data-bind="text: value" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)
+            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property"&gt;&lt;/span&gt; : &lt;span data-bind="text: value"&gt;&lt;/span&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}"&gt;&lt;/a&gt;)
           &lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       ## Display rights
       &lt;!-- ko if: rights.length &gt; 0 --&gt;
-        &lt;ul   data-bind="foreach: rights" class="jstree-children"&gt;
+        &lt;ul data-bind="foreach: rights" class="jstree-children"&gt;
           &lt;li class="text-danger jstree-node jstree-leaf"&gt;
             &lt;i class="jstree-icon jstree-ocl" role="presentation"&gt;&lt;/i&gt;
-            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()" /&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}" /&gt;)
+            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Right] &lt;span data-bind="text: toString()"&gt;&lt;/span&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}"&gt;&lt;/a&gt;)
           &lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
@@ -129,9 +129,9 @@
   &lt;ul class="log" data-bind="if: logs().length &gt; 0"&gt;
     &lt;!-- ko foreach: logs --&gt;
     &lt;li class="log-item" data-bind="css: getClass()"&gt;
-      &lt;div data-bind="text: message" /&gt;
+      &lt;div data-bind="text: message"&gt;&lt;/div&gt;
       &lt;!-- ko if: stackTrace --&gt;
-      &lt;pre data-bind="text: stackTrace"/&gt;
+      &lt;pre data-bind="text: stackTrace"&gt;&lt;/pre&gt;
       &lt;!--  /ko --&gt;
     &lt;/li&gt;
     &lt;!-- /ko --&gt;
@@ -146,7 +146,7 @@
     &lt;div data-bind="if: isComputing()" id="planComputing"&gt;
       &lt;p&gt;The plan is being computed and it could take some time. Please wait...&lt;/p&gt;
       &lt;div class="ui-progress-background"&gt;
-        &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}" /&gt;
+        &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}"&gt;&lt;/div&gt;
       &lt;/div&gt;
     &lt;/div&gt;
     &lt;div class="box warningmessage" data-bind="visible: duplicates().length &gt; 0"&gt;
@@ -162,7 +162,7 @@
       &lt;p&gt;We have detected some pages that will have too long path after the migration (limit is 255). You should rename them (or rename one of their parents) before computing a new plan.&lt;/p&gt;
       &lt;p&gt;Theses pages are:&lt;/p&gt;
       &lt;ul data-bind="foreach: {data: tooLongs(), as: 'action'}"&gt;
-        &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()" /&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"/&gt;&lt;/li&gt;
+        &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()"&gt;&lt;/span&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"&gt;&lt;/span&gt;&lt;/li&gt;
       &lt;/ul&gt;
     &lt;/div&gt;
     &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty()" id="planTree" class="jstree jstree-xwiki jstree-xwiki-responsive jstree-container-ul"&gt;
@@ -235,7 +235,7 @@
         &lt;div data-bind="visible: xclassListVisible"&gt;
           &lt;a data-bind="click: hideXClassList" href="#"&gt;$services.icon.renderHTML('remove') Hide&lt;/a&gt;
           &lt;ul data-bind="foreach: {data: xclasses, as: 'xclass'}" style="list-style-type: none; padding: 0;"&gt;
-            &lt;li&gt;&lt;label&gt;&lt;input type="checkbox" data-bind="checked: xclass.selected"/&gt; &lt;span data-bind="text: xclass.name" /&gt;&lt;/label&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;label&gt;&lt;input type="checkbox" data-bind="checked: xclass.selected"/&gt; &lt;span data-bind="text: xclass.name"&lt;/span&gt;&lt;/label&gt;&lt;/li&gt;
           &lt;/ul&gt;
         &lt;/div&gt;
       &lt;/dd&gt;
@@ -244,6 +244,7 @@
   &lt;/div&gt;
   &lt;div class="clearfix"&gt;
     &lt;h2&gt;Actions&lt;/h2&gt;
+    &lt;button class="btn btn-success" data-bind="click: startBreakageDetection, disable: isComputing() || isPlanExecuting()"&gt;Detect breakages&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: actions().length == 0 || isPlanExecuting() || tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
@@ -268,6 +269,28 @@
   &lt;/div&gt;
   &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
+&lt;/div&gt;
+&lt;!-- /ko --&gt;
+&lt;!------------------------------------------
+  Display breakages
+  -------------------------------------------&gt;
+&lt;!-- ko if: isBreakageListRequested--&gt;
+&lt;h2&gt;Breakages&lt;/h2&gt;
+&lt;div class="box"&gt;
+  &lt;div data-bind="if: isComputing"&gt;
+    &lt;p&gt;The list of broken pages is being computed, please wait...&lt;/p&gt;
+    &lt;div class="ui-progress-background"&gt;
+      &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
+    &lt;!-- /ko --&gt;
+  &lt;/div&gt;
+  &lt;div data-bind="ifnot: isComputing"&gt;
+    &lt;p&gt;If you don't migrate your pages, &lt;strong data-bind="text: breakageList().size()"&gt;&lt;/strong&gt; documents will lose their current parent.&lt;/p&gt;
+    &lt;ul data-bind="foreach: breakageList"&gt;
+      &lt;li&gt;Page &lt;span data-bind="text: document" class="monospace box infomessage" &gt;&lt;/span&gt; will lose its current parent &lt;span data-bind="text: actualParent" class="monospace box infomessage"&gt;&lt;/span&gt; because its location parent is &lt;span data-bind="text: locationParent" class="monospace box infomessage"&gt;&lt;/span&gt;.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
 &lt;/div&gt;
 &lt;!-- /ko --&gt;
 &lt;!------------------------------------------
@@ -622,6 +645,16 @@
       return new XWiki.Document(ref).getURL('admin', ref.name == 'WebPreferences' ? 'section=PageAndChildrenRights' : 'section=Rights');
     };
   }
+  
+  /**
+   * Represent a breakage between location parent and actual parent
+   */
+  function Breakage(document, locationParent, actualParent) {
+    var self = this;
+    self.document       = document;
+    self.locationParent = locationParent;
+    self.actualParent   = actualParent;
+  }
 
   /**
    * Class holding the configuration used to compute the plan.
@@ -709,6 +742,7 @@
     self.configuration     = new AppConfiguration();
     self.actions           = ko.observableArray();
     self.isPlanRequested   = ko.observable(false);
+    self.isBreakageListRequested = ko.observable(false);
     self.isComputing       = ko.observable(false);
     self.xclasses          = ko.observableArray();
     self.xclassListVisible = ko.observable(false);
@@ -719,6 +753,7 @@
     self.success           = ko.observable(false);
     self.duplicates        = ko.observableArray();
     self.tooLongs          = ko.observableArray();
+    self.breakageList      = ko.observableArray();
     
     // Do not refresh logs and actions too often (to get better performances, because a lot of actions and logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
@@ -794,19 +829,19 @@
     self.isPlanEmpty = ko.computed(function () {
       return self.actions().length == 0;
     });
-
+    
     /**
-     * Send an ajax request to start a new job for the creation of a plan.
+     * Send an ajax request to start a new job for the creation of a plan or the breakage detection
      */
-    self.computePlan = function() {
+    self.startComputationJob = function (action, callback) {
       self.progress(0);
-      self.isPlanRequested(true);
       self.isComputing(true);
       self.actions.removeAll();
       self.duplicates.removeAll();
       self.tooLongs.removeAll();
+      self.breakageList.removeAll();
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
-          'action'               : 'createPlan',
+          'action'               : action,
           'excludeHiddenPages'   : self.configuration.excludeHiddenPages(),
           'excludeClassPages'    : self.configuration.excludeClassPages(),
           'dontMoveChildren'     : self.configuration.dontMoveChildren(),
@@ -817,13 +852,25 @@
           'excludedSpaces'       : self.configuration.excludedSpaces(),
           'includedSpaces'       : self.configuration.includedSpaces(),
           'excludedObjectClasses': self.configuration.excludedObjectClasses()
-        }).done(function (data) {
-          self.jobId = data.jobId;
-          self.logs.removeAll();
-          self.getJobStatusAndLogs('createmigrationplan', function() { self.getMigrationPlan(); });
-        }).fail(function () {
-          console.log('ERROR: Failed to start a new plan computation.');
+        })
+        .done(callback)
+        .fail(function () {
+          console.log(action == 'startBreakageDetection' ? 'ERROR: Failed to start the breakage detection.'
+            : 'ERROR: Failed to start a new plan computation.' );
         });
+    }
+
+    /**
+     * Send an ajax request to start a new job for the creation of a plan.
+     */
+    self.computePlan = function() {
+      self.isPlanRequested(true);
+      self.isBreakageListRequested(false);
+      self.startComputationJob('createPlan', function (data) {
+        self.jobId = data.jobId;
+        self.logs.removeAll();
+        self.getJobStatusAndLogs('createmigrationplan', function() { self.getMigrationPlan(); });
+      });
     };
     
     /**
@@ -898,6 +945,34 @@
         console.log('INFO: Plan have been parsed.');
       }).fail(function () {
         new XWiki.widgets.Notification('Failed to load the computed plan', 'error');
+        //TODO: being able to restart the computation
+      });
+    };
+    
+    self.startBreakageDetection = function () {
+      self.isPlanRequested(false);
+      self.isBreakageListRequested(true);
+      self.startComputationJob('startBreakageDetection', function (data) {
+        self.jobId = data.jobId;
+        self.logs.removeAll();
+        self.getJobStatusAndLogs('breakagedetection', function() { self.getBreakages(); });
+      });
+    };
+    
+    /**
+     * Get breakage list that have been computed, in order to display it.
+     */
+    self.getBreakages = function () {
+      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+        'action': 'printBreakages'
+      }).done(function (data) {
+        for (var i = 0; i &lt; data.length; ++i) {
+          self.breakageList.push(new Breakage(data[i].documentReference, data[i].locationParent, data[i].actualParent));
+        }
+        // Plan is loaded
+        self.isComputing(false);
+      }).fail(function () {
+        new XWiki.widgets.Notification('Failed to load the breakages', 'error');
         //TODO: being able to restart the computation
       });
     };

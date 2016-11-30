@@ -94,7 +94,7 @@
     ## Display the number of rights
     &lt;span data-bind="text: getNumberOfRights()"&gt;&lt;/span&gt; rights)
     ## Display the original location
-    from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}"&lt;/a&gt;
+    from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}"&gt;&lt;/a&gt;
     ## Display all children
     &lt;!-- ko if: displayChildren() --&gt;
       ## Display preferences

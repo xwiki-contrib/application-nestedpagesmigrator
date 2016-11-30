@@ -51,24 +51,36 @@ public class MigratorPage extends ViewPage
     public void computePlan()
     {
         btComputePlan.click();
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-
-        }
+        getDriver().waitUntilElementIsVisible(By.className("migration-plan"));
         getDriver().waitUntilCondition(new ExpectedCondition<Boolean>()
         {
             @Override
             public Boolean apply(WebDriver webDriver)
             {
-                return Boolean.valueOf(btExecutePlan.isEnabled() || isPlanEmpty());
+                return Boolean.valueOf(isPlanDisplayed() || isPlanEmpty());
             }
         });
+
+        // Quite ugly but sometimes knockout displays a thing for a millisecond before hiding it again and so we cannot
+        // rely on the visibility of an element to check if the plan is empty or displayed.
+        // By waiting "a bit", we make sure knockout really ends its work.
+        try {
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            // Don't care
+        }
+    }
+
+    public boolean isPlanDisplayed()
+    {
+        return getDriver().hasElementWithoutWaiting(By.id("planTree"))
+                && getDriver().findElement(By.id("planTree")).isDisplayed();
     }
 
     public boolean isPlanEmpty()
     {
-        return getDriver().hasElementWithoutWaiting(By.xpath(emptyPlanXPath));
+        return getDriver().hasElementWithoutWaiting(By.xpath(emptyPlanXPath))
+                && getDriver().findElement(By.xpath(emptyPlanXPath)).isDisplayed();
     }
 
     public void executePlan() throws Exception

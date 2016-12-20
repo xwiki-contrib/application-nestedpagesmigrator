@@ -19,12 +19,14 @@
               {
                 "name": "skin",
                 "value": "XWiki.MoviesSkin",
-                "origin": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences",
+                "enabled": true
               },
               {
                 "name": "showLeftPanels",
                 "value": "true",
-                "origin": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences",
+                "enabled": true
               }
             ],
             "rights": [
@@ -32,13 +34,15 @@
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "create",
                 "allow": false,
-                "origin": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences",
+                "enabled": true
               },
               {
                 "user": "xwiki:XWiki.Dostoievski",
                 "level": "comment",
                 "allow": true,
-                "origin": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences",
+                "enabled": true
               }
             ]
           }

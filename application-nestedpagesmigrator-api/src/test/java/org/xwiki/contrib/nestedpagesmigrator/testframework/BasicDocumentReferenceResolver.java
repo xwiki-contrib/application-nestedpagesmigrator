@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.WikiReference;
 
 /**
  * A dependency-free document resolver used by tests.
@@ -48,6 +49,11 @@ public class BasicDocumentReferenceResolver implements DocumentReferenceResolver
         String spacePart = fullName.substring(0, index);
 
         String wiki = "xwiki";
+        for (Object object : objects) {
+            if (object instanceof WikiReference) {
+                wiki = ((WikiReference) object).getName();
+            }
+        }
 
         if (spacePart.contains(":")) {
             int wikiPart = spacePart.indexOf(":");

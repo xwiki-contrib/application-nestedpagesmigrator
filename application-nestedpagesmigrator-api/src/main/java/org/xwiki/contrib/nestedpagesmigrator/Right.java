@@ -39,6 +39,8 @@ public class Right implements Serializable
 
     private DocumentReference origin;
 
+    private boolean enabled = true;
+
     public Right(DocumentReference user, DocumentReference group, String level, boolean allow, DocumentReference origin)
     {
         this.user = user;
@@ -71,6 +73,16 @@ public class Right implements Serializable
     public DocumentReference getOrigin()
     {
         return origin;
+    }
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
     }
 
     @Override

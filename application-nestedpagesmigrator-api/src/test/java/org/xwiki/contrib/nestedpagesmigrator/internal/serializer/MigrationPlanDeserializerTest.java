@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.testframework.BasicDocumentReferenceResolver;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.mockito.MockitoComponentMockingRule;
 
 import static org.junit.Assert.assertEquals;
@@ -53,11 +54,10 @@ public class MigrationPlanDeserializerTest
     {
         String example = IOUtils.toString(getClass().getResourceAsStream("/plan.json"));
 
-        MigrationPlanTree plan = mocker.getComponentUnderTest().deserialize(example);
+        MigrationPlanTree plan = mocker.getComponentUnderTest().deserialize(example, new WikiReference("xwiki"));
 
         String result = MigrationPlanSerializer.serialize(plan);
 
         assertEquals(example, result);
-
     }
 }

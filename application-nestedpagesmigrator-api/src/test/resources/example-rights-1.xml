@@ -201,13 +201,15 @@
             "group": "xwiki:XWiki.AllGroup",
             "level": "comment",
             "allow": false,
-            "origin": "xwiki:Movies.WebPreferences"
+            "origin": "xwiki:Movies.WebPreferences",
+            "enabled": true
           },
           {
             "group": "xwiki:XWiki.AllGroup",
             "level": "delete",
             "allow": true,
-            "origin": "xwiki:Movies.WebPreferences"
+            "origin": "xwiki:Movies.WebPreferences",
+            "enabled": true
           }
         ],
         "children": [
@@ -223,13 +225,15 @@
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "comment",
                 "allow": true,
-                "origin": "xwiki:XWiki.XWikiPreferences"
+                "origin": "xwiki:XWiki.XWikiPreferences",
+                "enabled": true
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "delete",
                 "allow": false,
-                "origin": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences",
+                "enabled": true
               }
             ]
           },
@@ -241,25 +245,29 @@
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "create",
                 "allow": false,
-                "origin": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences",
+                "enabled": true
               },
               {
                 "user": "xwiki:XWiki.Dostoievski",
                 "level": "comment",
                 "allow": true,
-                "origin": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences",
+                "enabled": true
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "comment",
                 "allow": true,
-                "origin": "xwiki:XWiki.XWikiPreferences"
+                "origin": "xwiki:XWiki.XWikiPreferences",
+                "enabled": true
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "delete",
                 "allow": false,
-                "origin": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences",
+                "enabled": true
               }
             ]
           },
@@ -271,25 +279,29 @@
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "create",
                 "allow": false,
-                "origin": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences",
+                "enabled": true
               },
               {
                 "user": "xwiki:XWiki.Dostoievski",
                 "level": "comment",
                 "allow": true,
-                "origin": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences",
+                "enabled": true
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "comment",
                 "allow": true,
-                "origin": "xwiki:XWiki.XWikiPreferences"
+                "origin": "xwiki:XWiki.XWikiPreferences",
+                "enabled": true
               },
               {
                 "group": "xwiki:XWiki.AllGroup",
                 "level": "delete",
                 "allow": false,
-                "origin": "xwiki:Movies.WebPreferences"
+                "origin": "xwiki:Movies.WebPreferences",
+                "enabled": true
               }
             ]
           }

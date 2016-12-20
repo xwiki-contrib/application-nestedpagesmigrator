@@ -48,7 +48,8 @@
       {
         "name": "skin",
         "value": "XWiki.DefaultSkin",
-        "origin": "xwiki:XWiki.XWikiPreferences"
+        "origin": "xwiki:XWiki.XWikiPreferences",
+        "enabled": true
       }
     ]
   }

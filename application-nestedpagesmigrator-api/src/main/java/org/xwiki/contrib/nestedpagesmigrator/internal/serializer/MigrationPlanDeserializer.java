@@ -30,6 +30,7 @@ import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.Right;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.WikiReference;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -45,7 +46,7 @@ public class MigrationPlanDeserializer
     @Inject
     private DocumentReferenceResolver<String> resolver;
 
-    public MigrationPlanTree deserialize(String json) throws Exception
+    public MigrationPlanTree deserialize(String json, WikiReference wikiReference) throws Exception
     {
         MigrationPlanTree plan = new MigrationPlanTree();
 
@@ -58,19 +59,20 @@ public class MigrationPlanDeserializer
 
         for (JsonElement item : root.getAsJsonArray()) {
             JsonObject action = item.getAsJsonObject();
-            readMigrationAction(action, plan, plan.getTopLevelAction());
+            readMigrationAction(action, plan, plan.getTopLevelAction(), wikiReference);
         }
 
         return plan;
     }
 
-    private void readMigrationAction(JsonObject jsonAction, MigrationPlanTree plan, MigrationAction parent)
+    private void readMigrationAction(JsonObject jsonAction, MigrationPlanTree plan, MigrationAction parent,
+            WikiReference wikiReference)
             throws MigrationException
     {
         DocumentReference sourceDocument =
-                resolver.resolve(jsonAction.getAsJsonPrimitive("sourceDocument").getAsString());
+                resolver.resolve(jsonAction.getAsJsonPrimitive("sourceDocument").getAsString(), wikiReference);
         DocumentReference targetDocument =
-                resolver.resolve(jsonAction.getAsJsonPrimitive("targetDocument").getAsString());
+                resolver.resolve(jsonAction.getAsJsonPrimitive("targetDocument").getAsString(), wikiReference);
 
         MigrationAction action = MigrationAction.createInstance(sourceDocument, targetDocument, parent, plan);
         if (jsonAction.has("enabled") && jsonAction.getAsJsonPrimitive("enabled").getAsString().equals("false")) {
@@ -79,7 +81,7 @@ public class MigrationPlanDeserializer
 
         if (jsonAction.has("children")) {
             for (JsonElement item : jsonAction.getAsJsonArray("children")) {
-                readMigrationAction(item.getAsJsonObject(), plan, action);
+                readMigrationAction(item.getAsJsonObject(), plan, action, wikiReference);
             }
         }
 
@@ -89,7 +91,7 @@ public class MigrationPlanDeserializer
                 action.addPreference(new Preference(
                         jsonPreference.getAsJsonPrimitive("name").getAsString(),
                         jsonPreference.getAsJsonPrimitive("value").getAsString(),
-                        resolver.resolve(jsonPreference.getAsJsonPrimitive("origin").getAsString())
+                        resolver.resolve(jsonPreference.getAsJsonPrimitive("origin").getAsString(), wikiReference)
                 ));
             }
         }
@@ -102,9 +104,9 @@ public class MigrationPlanDeserializer
                 DocumentReference group = null;
 
                 if (jsonRight.has("user")) {
-                    user = resolver.resolve(jsonRight.getAsJsonPrimitive("user").getAsString());
+                    user = resolver.resolve(jsonRight.getAsJsonPrimitive("user").getAsString(), wikiReference);
                 } else if (jsonRight.has("group")) {
-                    group = resolver.resolve(jsonRight.getAsJsonPrimitive("group").getAsString());
+                    group = resolver.resolve(jsonRight.getAsJsonPrimitive("group").getAsString(), wikiReference);
                 }
 
                 action.addRight(new Right(
@@ -112,7 +114,7 @@ public class MigrationPlanDeserializer
                         group,
                         jsonRight.getAsJsonPrimitive("level").getAsString(),
                         "true".equalsIgnoreCase(jsonRight.getAsJsonPrimitive("allow").getAsString()),
-                        resolver.resolve(jsonRight.getAsJsonPrimitive("origin").getAsString())
+                        resolver.resolve(jsonRight.getAsJsonPrimitive("origin").getAsString(), wikiReference)
                 ));
             }
         }

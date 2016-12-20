@@ -35,6 +35,8 @@ public class Preference implements Serializable
 
     private DocumentReference origin;
 
+    private boolean enabled = true;
+
     public Preference(String name, Object value, DocumentReference origin)
     {
         this.name = name;
@@ -55,5 +57,15 @@ public class Preference implements Serializable
     public DocumentReference getOrigin()
     {
         return origin;
+    }
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
     }
 }

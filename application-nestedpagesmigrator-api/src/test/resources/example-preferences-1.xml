@@ -123,12 +123,14 @@
           {
             "name": "skin",
             "value": "XWiki.MoviesSkin",
-            "origin": "xwiki:Movies.WebPreferences"
+            "origin": "xwiki:Movies.WebPreferences",
+            "enabled": true
           },
           {
             "name": "showLeftPanels",
             "value": "true",
-            "origin": "xwiki:Movies.WebPreferences"
+            "origin": "xwiki:Movies.WebPreferences",
+            "enabled": true
           }
         ],
         "children": [
@@ -143,12 +145,14 @@
               {
                 "name": "skin",
                 "value": "XWiki.DefaultSkin",
-                "origin": "xwiki:XWiki.XWikiPreferences"
+                "origin": "xwiki:XWiki.XWikiPreferences",
+                "enabled": true
               },
               {
                 "name": "showLeftPanels",
                 "value": "false",
-                "origin": "xwiki:Dramas.WebPreferences"
+                "origin": "xwiki:Dramas.WebPreferences",
+                "enabled": true
               }
             ]
           }
@@ -163,7 +167,8 @@
       {
         "name": "showLeftPanels",
         "value": "false",
-        "origin": "xwiki:Dramas.WebPreferences"
+        "origin": "xwiki:Dramas.WebPreferences",
+        "enabled": true
       }
     ]
   }

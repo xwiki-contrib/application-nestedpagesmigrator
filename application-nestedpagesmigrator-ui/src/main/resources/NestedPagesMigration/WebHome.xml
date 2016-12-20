@@ -254,6 +254,7 @@
     &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: actions().length == 0 || isPlanExecuting() || tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
+    &lt;button class="btn btn-default" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: genJSON"&gt;Plan as JSON&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
 &lt;!-- 
@@ -314,6 +315,8 @@
   &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
 &lt;!-- /ko --&gt;
+&lt;pre class="box" data-bind="text: json"&gt;
+&lt;/pre&gt;
 &lt;/script&gt;
 &lt;!-- Now we just include this part thanks to the "template" binding of knockout: we make sure that this part is 
      displayed only if knockout is loaded... --&gt;
@@ -891,6 +894,7 @@
     self.duplicates        = ko.observableArray();
     self.tooLongs          = ko.observableArray();
     self.breakageList      = ko.observableArray();
+    self.json              = ko.observable();
     
     // Do not refresh logs and actions too often (to get better performances, because a lot of actions and logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
@@ -1085,6 +1089,69 @@
         //TODO: being able to restart the computation
       });
     };
+    
+    /**
+     * Generate the JSON representation of the plan.
+     */
+    self.genJSON = function() {
+      var serializeAction = function (action) {
+        var jsonAction = {
+          sourceDocument: action.serializedSourceDocument(),
+          targetDocument: action.serializedTargetDocument()
+        };
+        if (!action.enabled()) {
+          jsonAction.enabled = false;
+        }
+        
+        if (action.preferences.length &gt; 0) {
+          jsonAction.preferences = [];
+          for (var i = 0; i &lt; action.preferences.length; ++i) {
+            var preference = action.preferences[i];
+            var jsonPreference = {
+              name: preference.property,
+              value: preference.value,
+              origin: preference.getSerializedOrigin(),
+              enabled: preference.enabled()
+            }
+            jsonAction.preferences.push(jsonPreference);
+          }
+        }
+        
+        if (action.rights.length &gt; 0) {
+          jsonAction.rights = [];
+          for (var i = 0; i &lt; action.rights.length; ++i) {
+            var right = action.rights[i];
+            var jsonRight = {
+              user: right.user,
+              group: right.group,
+              level: right.level,
+              allow: right.allow,
+              origin: right.getSerializedOrigin(),
+              enabled: right.enabled()
+            };
+            jsonAction.rights.push(jsonRight);
+          }
+        }
+        
+        if (action.children().length &gt; 0) {
+          jsonAction.children = [];
+          for (var i = 0; i &lt; action.children().length; ++i) {
+            var child = serializeAction(action.children()[i]);
+            jsonAction.children.push(child);
+          }
+        }
+        
+        return jsonAction;
+      }
+      
+      var plan = [];
+      for (var i = 0; i &lt; self.actions().length; ++i) {
+        var action = self.actions()[i];
+        plan.push(serializeAction(action));
+      }
+      
+      self.json(JSON.stringify(plan, null, '  '));
+    }
     
     self.startBreakageDetection = function () {
       self.isPlanRequested(false);

@@ -17,11 +17,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.nestedpagesmigrator;
+package org.xwiki.contrib.nestedpagesmigrator.internal.serializer;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
 
+import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.google.gson.Gson;
@@ -82,6 +84,9 @@ public class MigrationPlanSerializer
             action.add("targetDocument", context.serialize(src.getTargetDocument()));
             if (src.shouldDeletePrevious()) {
                 action.addProperty("deletePrevious", Boolean.TRUE);
+            }
+            if (!src.isEnabled()) {
+                action.addProperty("enabled", Boolean.FALSE);
             }
             action.add("preferences", context.serialize(src.getPreferences()));
             action.add("rights", context.serialize(src.getRights()));

@@ -10,5 +10,6 @@ org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesProperties
 org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMigrationPlanCreator
 org.xwiki.contrib.nestedpagesmigrator.internal.rights.DocumentRightsBridge
 org.xwiki.contrib.nestedpagesmigrator.internal.rights.RightsMigrationPlanCreator
+org.xwiki.contrib.nestedpagesmigrator.internal.serializer.MigrationPlanDeserializer
 org.xwiki.contrib.nestedpagesmigrator.internal.DefaultNestedPagesMigrator
 org.xwiki.contrib.nestedpagesmigrator.script.NestedPagesMigratorScriptService

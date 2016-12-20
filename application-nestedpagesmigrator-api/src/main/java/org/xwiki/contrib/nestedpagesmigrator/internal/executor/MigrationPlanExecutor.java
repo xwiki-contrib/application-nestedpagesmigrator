@@ -132,7 +132,8 @@ public class MigrationPlanExecutor
 
         try {
             // Move the document (if this action is enabled by the user)
-            if (!action.isIdentity() && configuration.isActionEnabled(String.format("%s_page", sourceDocument))) {
+            if (action.isEnabled() && !action.isIdentity()
+                    && configuration.isActionEnabled(String.format("%s_page", sourceDocument))) {
                 if (action.shouldDeletePrevious()) {
                     deleteDocument(action);
                 }

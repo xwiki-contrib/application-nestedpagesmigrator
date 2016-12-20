@@ -27,7 +27,7 @@ import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
+import org.xwiki.contrib.nestedpagesmigrator.internal.serializer.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
 import org.xwiki.contrib.nestedpagesmigrator.script.internal.StatusAndLogSerializer;
@@ -110,16 +110,19 @@ public class NestedPagesMigratorScriptService implements ScriptService
      * Start the execution of a previously computed plan.
      *
      * @param configuration the configuration of the migration
+     * @param serializedPlan the plan to execute, JSON-serialized
      * @return the job which executes the migration
      *
      * @throws AccessDeniedException if the current user has not ADMIN right on the wiki
      * @throws AccessDeniedException if the user have not the right to execute this method
      *
-     * @since 0.4
+     * @since 0.8
      */
-    public Job startMigration(MigrationConfiguration configuration) throws AccessDeniedException, MigrationException
+    public Job startMigration(MigrationConfiguration configuration, String serializedPlan)
+            throws AccessDeniedException, MigrationException
     {
         checkAdminAccess(configuration.getWikiReference());
+
 
         MigrationPlanTree plan = nestedPagesMigrator.getPlan(configuration.getWikiReference().getName());
 

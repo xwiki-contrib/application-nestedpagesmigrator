@@ -52,6 +52,11 @@ public class MigrationAction implements Serializable, Comparable
     private boolean deletePrevious = false;
 
     /**
+     * {@see isEnabled()}
+     */
+    private boolean enabled = true;
+
+    /**
      * Helper to create an instance and record it in its plan.
      *
      * @param sourceDocument the source document
@@ -125,6 +130,25 @@ public class MigrationAction implements Serializable, Comparable
     }
 
     /**
+     * Helper to create an instance and record it in its parent and its plan.
+     *
+     * @param sourceDocument the source document
+     * @param targetReference the target location
+     * @param parentAction the parent action
+     * @param plan the plan
+     * @param enabled if the user has enabled the action
+     *
+     * @return the created instance
+     */
+    public static MigrationAction createInstance(DocumentReference sourceDocument, TargetReference targetReference,
+            MigrationAction parentAction, MigrationPlanTree plan, boolean enabled) throws MigrationException
+    {
+        MigrationAction action = createInstance(sourceDocument, targetReference, parentAction, plan);
+        action.setEnabled(enabled);
+        return action;
+    }
+
+    /**
      * Construct a new MigrationAction.
      * @param sourceDocument the source document
      * @param targetDocument the target location
@@ -169,7 +193,20 @@ public class MigrationAction implements Serializable, Comparable
     {
         this.deletePrevious = deletePrevious;
     }
-    
+
+    /**
+     * @return if the action has not be disabled by the user
+     */
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
+    }
+
     public void addChild(MigrationAction action)
     {
         if (children == null) {

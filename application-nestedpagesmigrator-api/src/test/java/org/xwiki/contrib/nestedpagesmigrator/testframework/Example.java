@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -43,6 +42,8 @@ import org.xwiki.model.reference.DocumentReference;
 public class Example
 {
     private Document xmlDocument;
+
+    private BasicDocumentReferenceResolver documentReferenceResolver = new BasicDocumentReferenceResolver();
     
     public Example(String exampleName) throws JDOMException, IOException
     {
@@ -71,28 +72,7 @@ public class Example
     
     private DocumentReference resolveDocument(String fullName)
     {
-        if (StringUtils.isBlank(fullName)) {
-            return null;
-        }
-        // This resolver is very limited, but I don't want to inject the real
-        int index = fullName.lastIndexOf(".");
-        String page = fullName.substring(index + 1);
-        String spacePart = fullName.substring(0, index);
-
-        String wiki = "xwiki";
-
-        if (spacePart.contains(":")) {
-            int wikiPart = spacePart.indexOf(":");
-            wiki = spacePart.substring(0, wikiPart);
-            spacePart = spacePart.substring(wikiPart);
-        }
-
-        String spaces[] = spacePart.split("\\.");
-        List<String> spaceList = new ArrayList<>();
-        for (String space : spaces) {
-            spaceList.add(space);
-        }
-        return new DocumentReference(wiki, spaceList, page);
+        return documentReferenceResolver.resolve(fullName);
     }
 
     private void elementToRights(Element right, Page page)

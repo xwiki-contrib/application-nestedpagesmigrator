@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
+import org.xwiki.contrib.nestedpagesmigrator.internal.serializer.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.Preference;
 import org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMigrationPlanCreator;

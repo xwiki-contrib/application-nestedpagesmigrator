@@ -1,0 +1,49 @@
+[
+  {
+    "sourceDocument": "xwiki:Main.WebHome",
+    "targetDocument": "xwiki:Main.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Movies.WebHome",
+        "targetDocument": "xwiki:Main.Movies.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:Movies.DancesWithWolves",
+            "targetDocument": "xwiki:Main.Movies.DancesWithWolves.WebHome",
+            "enabled": false
+          },
+          {
+            "sourceDocument": "xwiki:Movies.StarTrek",
+            "targetDocument": "xwiki:Main.Movies.StarTrek.WebHome",
+            "preferences": [
+              {
+                "name": "skin",
+                "value": "XWiki.MoviesSkin",
+                "origin": "xwiki:Movies.WebPreferences"
+              },
+              {
+                "name": "showLeftPanels",
+                "value": "true",
+                "origin": "xwiki:Movies.WebPreferences"
+              }
+            ],
+            "rights": [
+              {
+                "group": "xwiki:XWiki.AllGroup",
+                "level": "create",
+                "allow": false,
+                "origin": "xwiki:Dramas.WebPreferences"
+              },
+              {
+                "user": "xwiki:XWiki.Dostoievski",
+                "level": "comment",
+                "allow": true,
+                "origin": "xwiki:Dramas.WebPreferences"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

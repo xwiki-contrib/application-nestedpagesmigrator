@@ -29,7 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
-import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanSerializer;
+import org.xwiki.contrib.nestedpagesmigrator.internal.serializer.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator;
 import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesToTransformGetter;

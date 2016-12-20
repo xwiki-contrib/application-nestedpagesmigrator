@@ -256,6 +256,11 @@
     &lt;button class="btn btn-default" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
+&lt;!-- 
+  This part is contained in a script tag so that nothing is displayed until "knockout" is executed.
+  Otherwise, some incomplete plan, logs and progress bar are wrongly displayed and the user may wonder what they are.
+--&gt;
+&lt;script id="interactiveZone" type="text/html"&gt;
 &lt;!------------------------------------------
   Display plan
   -------------------------------------------&gt;
@@ -308,6 +313,11 @@
   &lt;/div&gt;
   &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
+&lt;!-- /ko --&gt;
+&lt;/script&gt;
+&lt;!-- Now we just include this part thanks to the "template" binding of knockout: we make sure that this part is 
+     displayed only if knockout is loaded... --&gt;
+&lt;!-- ko template: {name: 'interactiveZone', data: ${escapetool.d}root} --&gt;
 &lt;!-- /ko --&gt;
 {{/html}}
 #end

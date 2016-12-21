@@ -406,7 +406,9 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require.config({
+      <code>'use strict';
+
+require.config({
   paths: {
     #if ("$!request.minify" == false)
       'knockout' : "$services.webjars.url('knockout', 'knockout.debug.js')",
@@ -511,245 +513,16 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery', 'xwiki-meta', 'knockout', 'jquery-ui'], function ($, xm, ko) {
-  'use strict';
+      <code>require(['jquery', 'xwiki-meta', 'knockout', 'utils', 'MigrationAction', 'Preference', 'Right', 'Breakage', 'Log', 'AppConfiguration', 'movable-binding-handler'], function ($, xm, ko, utils, MigrationAction, Preference, Right, Breakage, Log, AppConfiguration) {
 
-  function localSerializer(document) {
-    var documentReference = XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
-    return XWiki.Model.serialize(documentReference);
-  }
-  
-  function resolveLocally(document) {
-    return XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
-  }
-  
-  /**
-   * Class representing a migration action
-   */
-  function MigrationAction(source, target, parent) {
-    var self = this;
-    
-    self.parent          = parent;
-    self.sourceDocument  = resolveLocally(source);
-    self.targetDocument  = resolveLocally(target);
-    self.children        = ko.observableArray();
-    self.displayChildren = ko.observable(false);
-    self.enabled         = ko.observable(true);
-    self.preferences     = [];
-    self.rights          = [];
-    self.deletePrevious  = false;
-    
-    self.serializedSourceDocument = function () {
-      return XWiki.Model.serialize(self.sourceDocument);
-    };
-    
-    self.serializedTargetDocument = function () {
-      return XWiki.Model.serialize(self.targetDocument);
-    };
-    
-    self.getNumberOfChildren = function () {
-      var number = self.children().length;
-      for (var i = 0; i &lt; self.children().length; ++i) {
-        number += self.children()[i].getNumberOfChildren();
-      }
-      return number;
-    };
-    
-    self.getTargetName = function () {
-      return self.targetDocument.getName() == 'WebHome' ? self.targetDocument.parent.getName() : self.targetDocument.getName();
-    }
-    
-    self.isTooLong = function () {
-      return self.serializedTargetDocument().length &gt; 255;
-    }
-    
-    self.getSourceLink = function () {
-      return new XWiki.Document(self.sourceDocument).getURL();
-    }
-    
-    self.toggleDisplayChildren = function() {
-      self.displayChildren(!self.displayChildren());
-    }
-    
-    self.disableChildren = function () {
-      for (var i = 0; i &lt; self.children().length; ++i) {
-        self.children()[i].enabled(false);
-      }
-      for (var i = 0; i &lt; self.preferences.length; ++i) {
-        self.preferences[i].enabled(false);
-      }
-      for (var i = 0; i &lt; self.rights.length; ++i) {
-        self.rights[i].enabled(false);
-      }
-    };
-    
-    self.enabled.subscribe(function (newValue) {
-      if (!newValue) {
-        self.disableChildren();
-      }
-    });
-    
-    self.enableWithChildren = function() {
-      self.enabled(true);
-      for (var i = 0; i &lt; self.preferences.length; ++i) {
-        self.preferences[i].enabled(true);
-      }
-      for (var i = 0; i &lt; self.rights.length; ++i) {
-        self.rights[i].enabled(true);
-      }
-      for (var i = 0; i &lt; self.children().length; ++i) {
-        self.children()[i].enableWithChildren();
-      }
-    }
-    
-    self.getNumberOfPreferences = function () {
-      return self.preferences.length;
-    }
-    
-    self.getNumberOfRights = function () {
-      return self.rights.length;
-    }
-    
-    /**
-     * Change the parent action of the current action, and update children actions too.
-     */
-    self.updateParent = function (newParent) {
-      self.parent = newParent;
-      if (newParent) {
-        // If the current target document is "A.B.WebHome" and the new parent is "C.D.WebHome",
-        // then the new target document should be "C.D.B.WebHome".
-        // Therefore the new space is "C.D.B".
-        var newSpace = new XWiki.EntityReference(
-          // Get the name of the space of the current target document (in our example, it's "B").
-          self.targetDocument.extractReferenceValue(XWiki.EntityType.SPACE),
-          // The entity is a space
-          XWiki.EntityType.SPACE,
-          // Extract the space of the new parent (in our example it's "C.D").
-          newParent.targetDocument.extractReference(XWiki.EntityType.SPACE)
-        );
-        // Finally compute the new target document.
-        self.targetDocument = new XWiki.EntityReference(
-          // Use the sane name (should be "WebHome")
-          self.targetDocument.name,
-          // The entity is a document
-          XWiki.EntityType.DOCUMENT,
-          // The parent is the space we have computed aboved.
-          newSpace
-        );
-      } else {
-        // If no parent, then we want to have a top-level document.
-        // For example: "A.B.WebHome" become "B.WebHome".
-        // Note: in this application we want to deal with local references only.
-        self.targetDocument = new XWiki.DocumentReference(
-          '',
-          // Extract the space name of the current target (In our example, it's "B").
-          self.targetDocument.extractReferenceValue(XWiki.EntityType.SPACE),
-          // Use the sane name (should be "WebHome")
-          self.targetDocument.name
-        ).relativeTo(new XWiki.WikiReference(''));
-      }
-      
-      // Update children too
-      for (var i = 0; i &lt; self.children().length; ++i) {
-        self.children()[i].updateParent(self);
-      }
-    };
-  }
-  
-  /**
-   * Class representing a preference.
-   */
-  function Preference(property, value, origin) {
-    var self = this;
-    
-    self.property = property;
-    self.value    = value;
-    self.origin   = origin;
-    self.enabled  = ko.observable(true);
-    
-    self.getSerializedOrigin = function () {
-      return localSerializer(self.origin);
-    };
-    
-    self.getOriginLink = function () {
-      return new XWiki.Document(resolveLocally(self.origin)).getURL('admin');
-    };
-  }
-  
-  /**
-   * Class representing a right.
-   */
-  function Right(user, group, level, allow, origin) {
-    var self = this;
-    
-    self.user   = user;
-    self.group  = group;
-    self.level  = level;
-    self.allow  = allow;
-    self.origin = origin;
-    self.enabled  = ko.observable(true);
-    
-    self.getType = function () {
-      return self.user ? 'user' : 'group';
-    };
-    
-    self.getTarget = function () {
-      return self.user ? self.user : self.group;
-    };
-    
-    self.getAllow = function () {
-      return self.allow ? 'allow' : 'deny';
-    };
-    
-    self.toString = function () {
-      return self.getType() + ' : ' + self.getTarget() + ', ' + self.level + ' : ' + self.getAllow();
-    };
-    
-    self.getSerializedOrigin = function () {
-      return localSerializer(self.origin);
-    };
-    
-    self.getOriginLink = function () {
-      var ref = resolveLocally(self.origin);
-      return new XWiki.Document(ref).getURL('admin', ref.name == 'WebPreferences' ? 'section=PageAndChildrenRights' : 'section=Rights');
-    };
-  }
-  
-  /**
-   * Represent a breakage between location parent and actual parent
-   */
-  function Breakage(document, locationParent, actualParent) {
-    var self = this;
-    self.document       = document;
-    self.locationParent = locationParent;
-    self.actualParent   = actualParent;
-  }
-
-  /**
-   * Class holding the configuration used to compute the plan.
-   */
-  function AppConfiguration() {
-    this.excludeHiddenPages    = ko.observable(true);
-    this.excludeClassPages     = ko.observable(true);
-    this.dontMoveChildren      = ko.observable(false);
-    this.addRedirection        = ko.observable(true);
-    this.convertPreferences    = ko.observable(true);
-    this.convertRights         = ko.observable(false);
-    this.excludedPages         = ko.observable('');
-    this.excludedSpaces        = ko.observable('XWiki,Admin,NestedPagesMigration');
-    this.includedSpaces        = ko.observable('');
-    this.excludedObjectClasses = ko.observable('XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass,XWiki.RedirectClass');
-    this.excludedObjectClasses.extend({ notify: 'always' });
-  }
-      
   function getExcludedClassesArray(model) {
     return model.configuration.excludedObjectClasses().split(',');
   }
-  
+
   function inExcludedClassesArray(name, model) {
     return $.inArray(name, getExcludedClassesArray(model)) &gt;= 0;
   }
-  
+
   function appendToString(string, toAppend) {
     var result = string;
     if (result.length &gt; 0) {
@@ -758,7 +531,7 @@
     result += toAppend;
     return result;
   }
-  
+
   function computeNewExcludedClassesList(name, value, model) {
     var newList = '';
     var oldList = getExcludedClassesArray(model);
@@ -773,7 +546,7 @@
     }
     model.configuration.excludedObjectClasses(newList);
   }
-  
+
   function initXClassCheckbox(name, model) {
     var selected = ko.computed({
       read: function () {
@@ -787,140 +560,54 @@
   }
 
   /**
-   * Represents a log entry.
-   */
-  function Log(message, level, stackTrace) {
-    var self = this;
-    
-    self.message    = message;
-    self.level      = level;
-    self.stackTrace = stackTrace;
-
-    self.getClass = function () {
-      return 'log-item-' + self.level.toLowerCase();
-    }
-  }
-  
-  var _getActionFromTarget = function (action, serializedTarget) {
-    if (action.serializedTargetDocument() == serializedTarget) {
-      return action;
-    }
-    var child = false;
-    for (var i = 0; i &lt; action.children().length; ++i) {
-      child = _getActionFromTarget(action.children()[i], serializedTarget);
-      if (child) {
-        return child;
-      }
-    }
-    return child;
-  }
-  
-  var getActionFromDOM = function (dom, viewModel) {
-    var serializedTarget = dom.find('&gt;span.monospace').text();
-    for (var i = 0; i &lt; viewModel.actions().length; ++i) {
-      var action = viewModel.actions()[i];
-      var result = _getActionFromTarget(action, serializedTarget);
-      if (result) {
-        return result;
-      }
-    }
-    return false;
-  }
-  
-  /**
-   * Custom binding used to enable the move of actions with a drag &amp; drop.
-   */
-  ko.bindingHandlers.movable = {
-    init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-      $(element).addClass('movable').sortable({
-        items: '&gt; li',
-        handle: '&gt;.movablePicker',
-        connectWith: '.movable',
-        start: function (event, ui) {
-          ui.item.removeClass('jstree-node');
-          ui.item.find('&gt; ul').hide();
-          ui.item.find('.jstree-icon').hide();
-        },
-        stop: function (event, ui) {
-          ui.item.addClass('jstree-node');
-          ui.item.find('&gt; ul').show();
-          ui.item.find('.jstree-icon').show();
-        },
-        /**
-         * Called when a migration action is moved unside the plan.
-         */
-        update: function (event, ui) {
-          // If we drop an action as a child of an other action, both "sortable" widget will call the update()
-          // event. To prevent performing the move in the model twice, we dismiss the update() call when the new
-          // parent of the dropped action is not the current "sortable" widget.
-          // The other "sortable" widget will do the job instead.
-          if (element != ui.item.parent('ul')[0]) {
-            return;
-          }
-          var action             = getActionFromDOM(ui.item, bindingContext.$root);
-          var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.actions;
-          var newParent          = ui.item.parents('li');
-          var newParentAction    = getActionFromDOM(newParent, bindingContext.$root);
-          var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.actions;
-          if (parentContainer != newParentContainer) {
-            action.updateParent(newParentAction);
-            parentContainer.remove(action);
-            newParentContainer.push(action);
-          }
-        }
-      });
-    }
-  };
-
-  /**
    * The model of the application. All data and functions used by the application view are stored here.
    */
   function AppViewModel() {
     var self = this;
-    
+
     // Fields
-    self.configuration     = new AppConfiguration();
-    self.actions           = ko.observableArray();
-    self.isPlanRequested   = ko.observable(false);
+    self.configuration           = new AppConfiguration();
+    self.actions                 = ko.observableArray();
+    self.isPlanRequested         = ko.observable(false);
     self.isBreakageListRequested = ko.observable(false);
-    self.isComputing       = ko.observable(false);
-    self.xclasses          = ko.observableArray();
-    self.xclassListVisible = ko.observable(false);
-    self.jobId             = false;
-    self.progress          = ko.observable(0);
-    self.logs              = ko.observableArray();
-    self.isPlanExecuting   = ko.observable(false);
-    self.success           = ko.observable(false);
-    self.duplicates        = ko.observableArray();
-    self.tooLongs          = ko.observableArray();
-    self.breakageList      = ko.observableArray();
-    self.json              = ko.observable();
-    
+    self.isComputing             = ko.observable(false);
+    self.xclasses                = ko.observableArray();
+    self.xclassListVisible       = ko.observable(false);
+    self.jobId                   = false;
+    self.progress                = ko.observable(0);
+    self.logs                    = ko.observableArray();
+    self.isPlanExecuting         = ko.observable(false);
+    self.success                 = ko.observable(false);
+    self.duplicates              = ko.observableArray();
+    self.tooLongs                = ko.observableArray();
+    self.breakageList            = ko.observableArray();
+    self.json                    = ko.observable();
+
     // Do not refresh logs and actions too often (to get better performances, because a lot of actions and logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
     self.logs.extend({ rateLimit: 200});
     self.actions.extend({ rateLimit: 200});
-    
+
     self.toggleXClassList = function () {
       self.xclassListVisible(!self.xclassListVisible());
     }
-    
+
     self.showXClassList = function () {
       self.xclassListVisible(true);
     }
-    
+
     self.hideXClassList = function () {
       self.xclassListVisible(false);
     }
-    
+
     self.getExcludedClassesArray = function () {
       return self.configuration.excludedObjectClasses().split(',');
     }
-    
+
     self.inExcludedClassesArray = function() {
       return $.inArray(name, self.getExcludedClassesArray()) &gt;= 0;
     }
-    
+
     self.computeNewExcludedClassesList = function (name, value) {
       var newList = '';
       var oldList = self.getExcludedClassesArray();
@@ -941,7 +628,7 @@
       }
       self.configuration.excludedObjectClasses(newList);
     }
-    
+
     self.initXClassCheckbox = function (name) {
       var selected = ko.computed({
         read: function () {
@@ -953,7 +640,7 @@
       });
       return {'name': name, 'selected': selected};
     }
-    
+
     /**
      * Initialize the XClasses fields.
      */
@@ -970,7 +657,7 @@
     self.isPlanEmpty = ko.computed(function () {
       return self.actions().length == 0;
     });
-    
+
     /**
      * Send an ajax request to start a new job for the creation of a plan or the breakage detection
      */
@@ -1013,9 +700,9 @@
         self.getJobStatusAndLogs('createmigrationplan', function() { self.getMigrationPlan(); });
       });
     };
-    
+
     /**
-     * Perform an AJAX request to get the current job status and its logs, so we can update the progress bar and the 
+     * Perform an AJAX request to get the current job status and its logs, so we can update the progress bar and the
      * logs UI.
      */
     self.getJobStatusAndLogs = function (jobAction, successCallback) {
@@ -1089,11 +776,13 @@
         //TODO: being able to restart the computation
       });
     };
-    
+
     /**
      * Generate the JSON representation of the plan.
      */
     self.genJSON = function() {
+      var json = "";
+
       var serializeAction = function (action) {
         var jsonAction = {
           sourceDocument: action.serializedSourceDocument(),
@@ -1102,7 +791,7 @@
         if (!action.enabled()) {
           jsonAction.enabled = false;
         }
-        
+
         if (action.preferences.length &gt; 0) {
           jsonAction.preferences = [];
           for (var i = 0; i &lt; action.preferences.length; ++i) {
@@ -1116,7 +805,7 @@
             jsonAction.preferences.push(jsonPreference);
           }
         }
-        
+
         if (action.rights.length &gt; 0) {
           jsonAction.rights = [];
           for (var i = 0; i &lt; action.rights.length; ++i) {
@@ -1132,7 +821,7 @@
             jsonAction.rights.push(jsonRight);
           }
         }
-        
+
         if (action.children().length &gt; 0) {
           jsonAction.children = [];
           for (var i = 0; i &lt; action.children().length; ++i) {
@@ -1140,19 +829,19 @@
             jsonAction.children.push(child);
           }
         }
-        
+
         return jsonAction;
       }
-      
+
       var plan = [];
       for (var i = 0; i &lt; self.actions().length; ++i) {
         var action = self.actions()[i];
         plan.push(serializeAction(action));
       }
-      
+
       self.json(JSON.stringify(plan, null, '  '));
     }
-    
+
     self.startBreakageDetection = function () {
       self.isPlanRequested(false);
       self.isBreakageListRequested(true);
@@ -1162,7 +851,7 @@
         self.getJobStatusAndLogs('breakagedetection', function() { self.getBreakages(); });
       });
     };
-    
+
     /**
      * Get breakage list that have been computed, in order to display it.
      */
@@ -1180,7 +869,7 @@
         //TODO: being able to restart the computation
       });
     };
-    
+
     /**
      * Called when the user click on the "exclude page" button.
      */
@@ -1250,7 +939,7 @@
         notification.replace(new XWiki.widgets.Notification('Failed to get the current parent of the page which may not exist.', 'error'));
       });
     };
-    
+
     /**
      * Called when the user clicks on "execute plan"
      */
@@ -1260,7 +949,7 @@
       }
       self.isPlanExecuting(true);
       self.progress(0);
-      
+
       var getDisabledActions = function (action) {
         var disabledActions = '';
         if (!action.enabled()) {
@@ -1283,13 +972,13 @@
         }
         return disabledActions;
       };
-      
+
       var disabledActions = '';
       for (var i = 0; i &lt; self.actions().length; ++i) {
         var action = self.actions()[i];
         disabledActions += getDisabledActions(action);
       }
-      
+
       $.ajax(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
         'data': {
           'action'               : 'executePlan',
@@ -1306,7 +995,7 @@
         console.log('ERROR: Failed to execute the plan.');
       });
     }
-    
+
     /**
      * Clean the plan to free the memory on the server.
      */
@@ -1323,10 +1012,10 @@
         self.logs.removeAll();
       });
     };
-    
+
     // Initialize the XClasses field.
     self.initXClasses();
-    
+
   };
 
   // Activates knockout.js
@@ -1376,7 +1065,6 @@
       </cache>
       <code>
         <disabled>0</disabled>
-        <editor>PureText</editor>
         <name>code</name>
         <number>2</number>
         <prettyName>Code</prettyName>
@@ -1433,10 +1121,1157 @@
 </code>
     </property>
     <property>
-      <name/>
+      <name>Remove edit sections</name>
     </property>
     <property>
       <parse/>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>4</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>31c3d420-1759-44bb-8f8a-6e1315564f91</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Define some utilities used by the live view.
+ * @since 0.8
+ */
+define('utils', ['xwiki-meta'], function(xm) {
+  return {
+    /**
+     * Generate the fullName of a document without the wiki part (e.g. "Main.WebHome").
+     * @param document the serialized reference of a document (e.g. "mywiki:Main.WebHome")
+     */
+    serializeLocally: function (document) {
+      var documentReference = XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
+      return XWiki.Model.serialize(documentReference);
+    },
+
+    /**
+     * @param document the serialized reference of a document (e.g. "mywiki:Main.WebHome")
+     * @return the corresponding document reference without the wiki part.
+     */
+    resolveLocally: function (document) {
+      return XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
+    }
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define Utilities tools</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>5</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>1a312b7c-da1d-49d9-ade2-01694aebbcc2</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Class that represent a single migration action.
+ * @since 0.8
+ */
+define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
+  /**
+   * Construct a MigrationAction.
+   * @param source the serialized document reference of the document to migrate
+   * @param target the serialized document reference of the destination
+   * @param parent the parent MigrationAction (can be null)
+   */
+  return function (source, target, parent) {
+    var self = this;
+
+    self.parent          = parent;
+    self.sourceDocument  = utils.resolveLocally(source);
+    self.targetDocument  = utils.resolveLocally(target);
+    self.children        = ko.observableArray();
+    self.displayChildren = ko.observable(false);
+    self.enabled         = ko.observable(true);
+    self.preferences     = [];
+    self.rights          = [];
+    self.deletePrevious  = false;
+
+    /**
+     * @return the serialized document reference of the source
+     */
+    self.serializedSourceDocument = function () {
+      return XWiki.Model.serialize(self.sourceDocument);
+    };
+
+    /**
+     * @return the serialized document reference of the target
+     */
+    self.serializedTargetDocument = function () {
+      return XWiki.Model.serialize(self.targetDocument);
+    };
+
+    /**
+     * @return the total number of children (counting the number of their own children)
+     */
+    self.getNumberOfChildren = function () {
+      var number = self.children().length;
+      for (var i = 0; i &lt; self.children().length; ++i) {
+        number += self.children()[i].getNumberOfChildren();
+      }
+      return number;
+    };
+
+    /**
+     * @return the document name of the destination
+     */
+    self.getTargetName = function () {
+      return self.targetDocument.getName() == 'WebHome' ? self.targetDocument.parent.getName() : self.targetDocument.getName();
+    }
+
+    /**
+     * @return if the document path is too long (and then cannot be saved in the database)
+     */
+    self.isTooLong = function () {
+      return self.serializedTargetDocument().length &gt; 255;
+    }
+
+    /**
+     * @return the URL of the source document
+     */
+    self.getSourceLink = function () {
+      return new XWiki.Document(self.sourceDocument).getURL();
+    }
+
+    /**
+     * Display or hide the children of this action in the UI.
+     */
+    self.toggleDisplayChildren = function() {
+      self.displayChildren(!self.displayChildren());
+    }
+
+    /**
+     * Disable the children actions (i.e. they won't be executed).
+     */
+    self.disableChildren = function () {
+      for (var i = 0; i &lt; self.children().length; ++i) {
+        self.children()[i].enabled(false);
+      }
+      for (var i = 0; i &lt; self.preferences.length; ++i) {
+        self.preferences[i].enabled(false);
+      }
+      for (var i = 0; i &lt; self.rights.length; ++i) {
+        self.rights[i].enabled(false);
+      }
+    };
+
+    /**
+     * (Internal) Listener that disable all the children if the action is disabled
+     */
+    self.enabled.subscribe(function (newValue) {
+      if (!newValue) {
+        self.disableChildren();
+      }
+    });
+
+    /**
+     * Enable the migration action and all its children as well.
+     */
+    self.enableWithChildren = function() {
+      self.enabled(true);
+      for (var i = 0; i &lt; self.preferences.length; ++i) {
+        self.preferences[i].enabled(true);
+      }
+      for (var i = 0; i &lt; self.rights.length; ++i) {
+        self.rights[i].enabled(true);
+      }
+      for (var i = 0; i &lt; self.children().length; ++i) {
+        self.children()[i].enableWithChildren();
+      }
+    }
+
+    /**
+     * @return the number if preferences action contained in this action
+     */
+    self.getNumberOfPreferences = function () {
+      return self.preferences.length;
+    }
+
+    /**
+     * @return the number if rights action contained in this action
+     */
+    self.getNumberOfRights = function () {
+      return self.rights.length;
+    }
+
+    /**
+     * Change the parent action of the current action, and update children actions too.
+     * @param newParent the new parent of the action (can be null if the new destination is a top-level document)
+     */
+    self.updateParent = function (newParent) {
+      self.parent = newParent;
+      if (newParent) {
+        // If the current target document is "A.B.WebHome" and the new parent is "C.D.WebHome",
+        // then the new target document should be "C.D.B.WebHome".
+        // Therefore the new space is "C.D.B".
+        var newSpace = new XWiki.EntityReference(
+          // Get the name of the space of the current target document (in our example, it's "B").
+          self.targetDocument.extractReferenceValue(XWiki.EntityType.SPACE),
+          // The entity is a space
+          XWiki.EntityType.SPACE,
+          // Extract the space of the new parent (in our example it's "C.D").
+          newParent.targetDocument.extractReference(XWiki.EntityType.SPACE)
+        );
+        // Finally compute the new target document.
+        self.targetDocument = new XWiki.EntityReference(
+          // Use the sane name (should be "WebHome")
+          self.targetDocument.name,
+          // The entity is a document
+          XWiki.EntityType.DOCUMENT,
+          // The parent is the space we have computed aboved.
+          newSpace
+        );
+      } else {
+        // If no parent, then we want to have a top-level document.
+        // For example: "A.B.WebHome" becomes "B.WebHome".
+        // Note: in this application we want to deal with local references only.
+        self.targetDocument = new XWiki.DocumentReference(
+          '',
+          // Extract the space name of the current target (In our example, it's "B").
+          self.targetDocument.extractReferenceValue(XWiki.EntityType.SPACE),
+          // Use the sane name (should be "WebHome")
+          self.targetDocument.name
+        ).relativeTo(new XWiki.WikiReference(''));
+      }
+
+      // Update children too
+      for (var i = 0; i &lt; self.children().length; ++i) {
+        self.children()[i].updateParent(self);
+      }
+    };
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define MigrationAction class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>6</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>3623b1a5-1d8e-4613-852e-236228b65b76</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Class representing a preference.
+ * @since 0.8
+ */
+define('Preference', ['utils', 'knockout'], function (utils, ko) {
+  /**
+   * Construct a Preference.
+   * @param property the name of the preference's property
+   * @param value the value to set
+   * @param origin the document reference of the page that initially applies this preference
+   */
+  return function(property, value, origin) {
+    var self = this;
+
+    self.property = property;
+    self.value    = value;
+    self.origin   = origin;
+    self.enabled  = ko.observable(true);
+
+    /**
+     * @return the serialized reference of the origin
+     */
+    self.getSerializedOrigin = function () {
+      return utils.serializeLocally(self.origin);
+    };
+
+    /**
+     * @return the URL of the origin document
+     */
+    self.getOriginLink = function () {
+      return new XWiki.Document(utils.resolveLocally(self.origin)).getURL('admin');
+    };
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define Preference class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>7</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>5636c052-9345-4260-9ae1-3879dd50a1e8</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Class representing a right.
+ * @since 0.8
+ */
+define('Right', ['utils', 'knockout'], function (utils, ko) {
+  /**
+   * Construct a Right class.
+   */
+  return function (user, group, level, allow, origin) {
+    var self = this;
+
+    self.user   = user;
+    self.group  = group;
+    self.level  = level;
+    self.allow  = allow;
+    self.origin = origin;
+    self.enabled  = ko.observable(true);
+
+    self.getType = function () {
+      return self.user ? 'user' : 'group';
+    };
+
+    self.getTarget = function () {
+      return self.user ? self.user : self.group;
+    };
+
+    self.getAllow = function () {
+      return self.allow ? 'allow' : 'deny';
+    };
+
+    self.toString = function () {
+      return self.getType() + ' : ' + self.getTarget() + ', ' + self.level + ' : ' + self.getAllow();
+    };
+
+    self.getSerializedOrigin = function () {
+      return utils.serializeLocally(self.origin);
+    };
+
+    self.getOriginLink = function () {
+      var ref = utils.resolveLocally(self.origin);
+      return new XWiki.Document(ref).getURL('admin', ref.name == 'WebPreferences' ? 'section=PageAndChildrenRights' : 'section=Rights');
+    };
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define Rights class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>8</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>d6c03c5d-01b4-49e8-8eb4-578f86a68666</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Represent a breakage between location parent and actual parent
+ * @since 0.8
+ */
+define('Breakage', function() {
+  /**
+   * Construct a Breakage.
+   */
+  return function (document, locationParent, actualParent) {
+    var self = this;
+    self.document       = document;
+    self.locationParent = locationParent;
+    self.actualParent   = actualParent;
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define Breakage class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>9</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>62a1be4b-9931-4a19-9afd-701f92e5890f</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Class holding the configuration used to compute the plan.
+ * @since 0.8
+ */
+define('AppConfiguration', ['utils', 'knockout'], function(utils, ko) {
+  /**
+   * Construct an AppConfiguration.
+   */
+  return function () {
+    this.excludeHiddenPages    = ko.observable(true);
+    this.excludeClassPages     = ko.observable(true);
+    this.dontMoveChildren      = ko.observable(false);
+    this.addRedirection        = ko.observable(true);
+    this.convertPreferences    = ko.observable(true);
+    this.convertRights         = ko.observable(false);
+    this.excludedPages         = ko.observable('');
+    this.excludedSpaces        = ko.observable('XWiki,Admin,NestedPagesMigration');
+    this.includedSpaces        = ko.observable('');
+    this.excludedObjectClasses = ko.observable('XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass,XWiki.RedirectClass');
+    this.excludedObjectClasses.extend({ notify: 'always' });
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define AppConfiguration class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>10</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>eaf85949-0e53-4716-8faf-3480db3acafc</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Represents a log entry.
+ * @since 0.8
+ */
+define('Log', function() {
+  /**
+   * Construct a Log.
+   */
+  return function (message, level, stackTrace) {
+    var self = this;
+
+    self.message    = message;
+    self.level      = level;
+    self.stackTrace = stackTrace;
+
+    self.getClass = function () {
+      return 'log-item-' + self.level.toLowerCase();
+    }
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define Log class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>11</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>b241c0e4-a11e-453b-aa15-9cfbe72bfa16</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Custom binding used to enable the move of actions with a drag &amp; drop.
+ * @since 0.8
+ */
+define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function (ko, $) {
+
+  var _getActionFromTarget = function (action, serializedTarget) {
+    if (action.serializedTargetDocument() == serializedTarget) {
+      return action;
+    }
+    var child = false;
+    for (var i = 0; i &lt; action.children().length; ++i) {
+      child = _getActionFromTarget(action.children()[i], serializedTarget);
+      if (child) {
+        return child;
+      }
+    }
+    return child;
+  };
+
+  var getActionFromDOM = function (dom, viewModel) {
+    var serializedTarget = dom.find('&gt;span.monospace').text();
+    for (var i = 0; i &lt; viewModel.actions().length; ++i) {
+      var action = viewModel.actions()[i];
+      var result = _getActionFromTarget(action, serializedTarget);
+      if (result) {
+        return result;
+      }
+    }
+    return false;
+  };
+
+  ko.bindingHandlers.movable = {
+    init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      $(element).addClass('movable').sortable({
+        items: '&gt; li',
+        handle: '&gt;.movablePicker',
+        connectWith: '.movable',
+        start: function (event, ui) {
+          ui.item.removeClass('jstree-node');
+          ui.item.find('&gt; ul').hide();
+          ui.item.find('.jstree-icon').hide();
+        },
+        stop: function (event, ui) {
+          ui.item.addClass('jstree-node');
+          ui.item.find('&gt; ul').show();
+          ui.item.find('.jstree-icon').show();
+        },
+        /**
+         * Called when a migration action is moved unside the plan.
+         */
+        update: function (event, ui) {
+          // If we drop an action as a child of an other action, both "sortable" widget will call the update()
+          // event. To prevent performing the move in the model twice, we dismiss the update() call when the new
+          // parent of the dropped action is not the current "sortable" widget.
+          // The other "sortable" widget will do the job instead.
+          if (element != ui.item.parent('ul')[0]) {
+            return;
+          }
+          var action             = getActionFromDOM(ui.item, bindingContext.$root);
+          var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.actions;
+          var newParent          = ui.item.parents('li');
+          var newParentAction    = getActionFromDOM(newParent, bindingContext.$root);
+          var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.actions;
+          if (parentContainer != newParentContainer) {
+            action.updateParent(newParentAction);
+            parentContainer.remove(action);
+            newParentContainer.push(action);
+          }
+        }
+      });
+    }
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define movable-binding-handler</name>
+    </property>
+    <property>
+      <parse>0</parse>
     </property>
     <property>
       <use>currentPage</use>

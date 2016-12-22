@@ -57,7 +57,7 @@
 #set ($discard = $xwiki.ssx.use('IconThemes.FontAwesome'))
 {{html clean="false"}}
 &lt;!------------------------------------------
-  Migration Action Template 
+  Migration Action Template
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;!-- ko foreach: ${escapetool.d}data.actions --&gt;
@@ -65,12 +65,12 @@
     css: {
       'jstree-closed': !displayChildren(),
       'jstree-open'  : displayChildren(),
-      'jstree-leaf'  : getNumberOfChildren() == 0 &amp;&amp; getNumberOfPreferences() == 0,
+      'jstree-leaf'  : getNumberOfChildren() == 0 &amp;&amp; getNumberOfPreferences() == 0 &amp;&amp; getNumberOfRights()&gt; 0,
       'jstree-last'  : ${escapetool.d}index() == ${escapetool.d}parent.actions.length - 1
     }"&gt;
     ## Display the tree branch
     &lt;i class="jstree-icon jstree-ocl" role="presentation" data-bind="click: toggleDisplayChildren"&gt;&lt;/i&gt;
-    ##  Display the checbox
+    ##  Display the checkbox
     &lt;input type="checkbox" data-bind="checked: enabled" /&gt;
     ## Display the 'all' link
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
@@ -155,27 +155,27 @@
         &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}"&gt;&lt;/div&gt;
       &lt;/div&gt;
     &lt;/div&gt;
-    &lt;div class="box warningmessage" data-bind="visible: duplicates().length &gt; 0"&gt;
+    &lt;div class="box warningmessage" data-bind="visible: plan.duplicates().length &gt; 0"&gt;
       &lt;p&gt;The migration have detected some duplicated documents, that are probably the consequences of a failed attempt to run the migrator.&lt;br /&gt;
       &lt;p&gt;If it's the first time you run the migrator, you might have a problem.&lt;/p&gt;
       &lt;p&gt;Theses documents are:&lt;/p&gt;
-      &lt;ul data-bind="foreach: {data: duplicates(), as: 'doc'}"&gt;
+      &lt;ul data-bind="foreach: {data: plan.duplicates(), as: 'doc'}"&gt;
         &lt;li data-bind="text: doc"&gt;&lt;/li&gt;
       &lt;/ul&gt;
       &lt;p&gt;If you are ok with it, just run the migrator and these documents will be overwritten.&lt;/p&gt;
     &lt;/div&gt;
-     &lt;div class="box errormessage" data-bind="visible: tooLongs().length &gt; 0"&gt;
+     &lt;div class="box errormessage" data-bind="visible: plan.tooLongs().length &gt; 0"&gt;
       &lt;p&gt;We have detected some pages that will have too long path after the migration (limit is 255). You should rename them (or rename one of their parents) before computing a new plan.&lt;/p&gt;
       &lt;p&gt;Theses pages are:&lt;/p&gt;
-      &lt;ul data-bind="foreach: {data: tooLongs(), as: 'action'}"&gt;
+      &lt;ul data-bind="foreach: {data: plan.tooLongs(), as: 'action'}"&gt;
         &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()"&gt;&lt;/span&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"&gt;&lt;/span&gt;&lt;/li&gt;
       &lt;/ul&gt;
     &lt;/div&gt;
-    &lt;ul data-bind="if: actions() &amp;&amp; !isComputing() &amp;&amp; !isPlanEmpty(), movable: true" id="planTree" class="jstree jstree-xwiki jstree-xwiki-responsive jstree-container-ul"&gt;
-      &lt;!-- ko template: {name: 'MigrationActionTemplate', data: {'actions': actions() }} --&gt;
+    &lt;ul data-bind="if: plan.actions() &amp;&amp; !isComputing() &amp;&amp; !plan.isEmpty(), movable: true" id="planTree" class="jstree jstree-xwiki jstree-xwiki-responsive jstree-container-ul"&gt;
+      &lt;!-- ko template: {name: 'MigrationActionTemplate', data: {'actions': plan.actions() }} --&gt;
       &lt;!-- /ko --&gt;
     &lt;/ul&gt;
-    &lt;!-- ko if: !isComputing() &amp;&amp; isPlanEmpty() --&gt;
+    &lt;!-- ko if: !isComputing() &amp;&amp; plan.isEmpty() --&gt;
     &lt;div class="box infomessage"&gt;
       &lt;p&gt;There is nothing to do!&lt;/p&gt;
     &lt;/div&gt;
@@ -187,8 +187,8 @@
 &lt;!------------------------------------------
   Display configuration
   -------------------------------------------&gt;
-&lt;h2&gt;Configuration&lt;/h2&gt;
 &lt;form class="xform"&gt;
+  &lt;h2&gt;Configuration&lt;/h2&gt;
   &lt;div class="row"&gt;
   &lt;div class="col-xs-12 col-md-6"&gt;
     &lt;dl&gt;
@@ -234,13 +234,13 @@
       &lt;dt&gt;&lt;input type="checkbox" id="convertRights" data-bind="checked: configuration.convertRights"&gt; &lt;label for="convertRights"&gt;Convert rights (experimental)&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the rights applied on the page remain the same after the move &lt;span class="text-danger"&gt;(Currently bugged)&lt;/span&gt;.&lt;/span&gt;&lt;/dd&gt;
       &lt;!-- Excluded Object Classes --&gt;
-      &lt;dt&gt;&lt;label for="excludedObjectClasses" data-bind="click: toggleXClassList"&gt;Exclude classes&lt;/label&gt;&lt;/dt&gt;
+      &lt;dt&gt;&lt;label for="excludedObjectClasses" data-bind="click: configuration.excludedXClasses.toggleCheckboxVisibility"&gt;Exclude classes&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;
-        &lt;p class="xHint" data-bind="click: toggleXClassList"&gt;Exclude pages holding an object of one of the specified classes (separated by a coma ',').&lt;/p&gt;
-        &lt;p&gt;&lt;textarea id="excludedObjectClasses" data-bind="textInput: configuration.excludedObjectClasses, click: showXClassList" data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/textarea&gt;&lt;/p&gt;
-        &lt;div data-bind="visible: xclassListVisible"&gt;
-          &lt;a data-bind="click: hideXClassList" href="#"&gt;$services.icon.renderHTML('remove') Hide&lt;/a&gt;
-          &lt;ul data-bind="foreach: {data: xclasses, as: 'xclass'}" style="list-style-type: none; padding: 0;"&gt;
+        &lt;p class="xHint" data-bind="click: configuration.excludedXClasses.toggleCheckboxVisibility"&gt;Exclude pages holding an object of one of the specified classes (separated by a coma ',').&lt;/p&gt;
+        &lt;p&gt;&lt;textarea id="excludedObjectClasses" data-bind="textInput: configuration.excludedXClasses.excludedXClasses, click: configuration.excludedXClasses.showCheckboxes" data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/textarea&gt;&lt;/p&gt;
+        &lt;div data-bind="visible: configuration.excludedXClasses.areCheckboxesDisplayed"&gt;
+          &lt;a data-bind="click: configuration.excludedXClasses.hideCheckboxes" href="#"&gt;$services.icon.renderHTML('remove') Hide&lt;/a&gt;
+          &lt;ul data-bind="foreach: {data: configuration.excludedXClasses.allXClasses, as: 'xclass'}" style="list-style-type: none; padding: 0;"&gt;
             &lt;li&gt;&lt;label&gt;&lt;input type="checkbox" data-bind="checked: xclass.selected"/&gt; &lt;span data-bind="text: xclass.name"&lt;/span&gt;&lt;/label&gt;&lt;/li&gt;
           &lt;/ul&gt;
         &lt;/div&gt;
@@ -252,12 +252,12 @@
     &lt;h2&gt;Actions&lt;/h2&gt;
     &lt;button class="btn btn-success" data-bind="click: startBreakageDetection, disable: isComputing() || isPlanExecuting()"&gt;Detect breakages&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
-    &lt;button class="btn btn-primary" data-bind="disable: actions().length == 0 || isPlanExecuting() || tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
-    &lt;button class="btn btn-default" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
-    &lt;button class="btn btn-default" data-bind="disable: actions().length == 0 || isPlanExecuting(), click: genJSON"&gt;Plan as JSON&lt;/button&gt;
+    &lt;button class="btn btn-primary" data-bind="disable: plan.actions().length == 0 || isPlanExecuting() || plan.tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
+    &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
+    &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: genJSON"&gt;Plan as JSON&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
-&lt;!-- 
+&lt;!--
   This part is contained in a script tag so that nothing is displayed until "knockout" is executed.
   Otherwise, some incomplete plan, logs and progress bar are wrongly displayed and the user may wonder what they are.
 --&gt;
@@ -318,7 +318,7 @@
 &lt;pre class="box" data-bind="text: json"&gt;
 &lt;/pre&gt;
 &lt;/script&gt;
-&lt;!-- Now we just include this part thanks to the "template" binding of knockout: we make sure that this part is 
+&lt;!-- Now we just include this part thanks to the "template" binding of knockout: we make sure that this part is
      displayed only if knockout is loaded... --&gt;
 &lt;!-- ko template: {name: 'interactiveZone', data: ${escapetool.d}root} --&gt;
 &lt;!-- /ko --&gt;
@@ -513,161 +513,50 @@ require.config({
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery', 'xwiki-meta', 'knockout', 'utils', 'MigrationAction', 'Preference', 'Right', 'Breakage', 'Log', 'AppConfiguration', 'movable-binding-handler'], function ($, xm, ko, utils, MigrationAction, Preference, Right, Breakage, Log, AppConfiguration) {
-
-  function getExcludedClassesArray(model) {
-    return model.configuration.excludedObjectClasses().split(',');
-  }
-
-  function inExcludedClassesArray(name, model) {
-    return $.inArray(name, getExcludedClassesArray(model)) &gt;= 0;
-  }
-
-  function appendToString(string, toAppend) {
-    var result = string;
-    if (result.length &gt; 0) {
-      result += ',';
-    }
-    result += toAppend;
-    return result;
-  }
-
-  function computeNewExcludedClassesList(name, value, model) {
-    var newList = '';
-    var oldList = getExcludedClassesArray(model);
-    // We walk through the old list to respect the order written in it to avoid a WTF effect
-    for (var i = 0; i &lt; oldList.length; ++i) {
-      if (oldList[i] != name) {
-        newList = appendToString(newList, oldList[i]);
-      }
-    }
-    if (value) {
-      newList = appendToString(newList, name);
-    }
-    model.configuration.excludedObjectClasses(newList);
-  }
-
-  function initXClassCheckbox(name, model) {
-    var selected = ko.computed({
-      read: function () {
-        return inExcludedClassesArray(name, model);
-      },
-      write: function (value) {
-        computeNewExcludedClassesList(name, value, model);
-      }
-    });
-    return {'name': name, 'selected': selected};
-  }
+      <code>require(['jquery', 'xwiki-meta', 'knockout', 'utils', 'MigrationAction', 'Preference', 'Right', 'Breakage', 'Log', 'AppConfiguration', 'MigrationPlan', 'movable-binding-handler'], function ($, xm, ko, utils, MigrationAction, Preference, Right, Breakage, Log, AppConfiguration, MigrationPlan, SerializerHelper) {
 
   /**
    * The model of the application. All data and functions used by the application view are stored here.
    */
-  function AppViewModel() {
+  var AppViewModel = function () {
     var self = this;
 
-    // Fields
+    // Model
     self.configuration           = new AppConfiguration();
-    self.actions                 = ko.observableArray();
+    self.plan                    = new MigrationPlan();
+    self.breakageList            = ko.observableArray();
+    self.logs                    = ko.observableArray();
+
+    // UI stuffs
     self.isPlanRequested         = ko.observable(false);
     self.isBreakageListRequested = ko.observable(false);
     self.isComputing             = ko.observable(false);
-    self.xclasses                = ko.observableArray();
-    self.xclassListVisible       = ko.observable(false);
     self.jobId                   = false;
     self.progress                = ko.observable(0);
-    self.logs                    = ko.observableArray();
     self.isPlanExecuting         = ko.observable(false);
     self.success                 = ko.observable(false);
-    self.duplicates              = ko.observableArray();
-    self.tooLongs                = ko.observableArray();
-    self.breakageList            = ko.observableArray();
     self.json                    = ko.observable();
 
-    // Do not refresh logs and actions too often (to get better performances, because a lot of actions and logs
+    // Do not refresh logs too often (to get better performances, because a lot of logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
     self.logs.extend({ rateLimit: 200});
-    self.actions.extend({ rateLimit: 200});
-
-    self.toggleXClassList = function () {
-      self.xclassListVisible(!self.xclassListVisible());
-    }
-
-    self.showXClassList = function () {
-      self.xclassListVisible(true);
-    }
-
-    self.hideXClassList = function () {
-      self.xclassListVisible(false);
-    }
-
-    self.getExcludedClassesArray = function () {
-      return self.configuration.excludedObjectClasses().split(',');
-    }
-
-    self.inExcludedClassesArray = function() {
-      return $.inArray(name, self.getExcludedClassesArray()) &gt;= 0;
-    }
-
-    self.computeNewExcludedClassesList = function (name, value) {
-      var newList = '';
-      var oldList = self.getExcludedClassesArray();
-      // We walk through the old list to respect the order written in it to avoid a WTF effect
-      for (var i = 0; i &lt; oldList.length; ++i) {
-        if (oldList[i] != name) {
-          if (newList.length &gt; 0) {
-            newList += ',';
-          }
-          newList += oldList[i];
-        }
-      }
-      if (value) {
-        if (newList.length &gt; 0) {
-          newList += ',';
-        }
-        newList += name;;
-      }
-      self.configuration.excludedObjectClasses(newList);
-    }
-
-    self.initXClassCheckbox = function (name) {
-      var selected = ko.computed({
-        read: function () {
-          return inExcludedClassesArray(name, self);
-        },
-        write: function (value) {
-          computeNewExcludedClassesList(name, value, self);
-        }
-      });
-      return {'name': name, 'selected': selected};
-    }
 
     /**
-     * Initialize the XClasses fields.
+     * Clean the plan, the logs, the breakages... everything!
      */
-    self.initXClasses = function() {
-      var xclasses = $('#excludedObjectClasses').attr('data-xclasses').split(',');
-      for (var i = 0; i &lt; xclasses.length; ++i) {
-        self.xclasses.push(initXClassCheckbox(xclasses[i], self));
-      }
-    }
-
-    /**
-     * Computed observable variable that returns if the plan is empty.
-     */
-    self.isPlanEmpty = ko.computed(function () {
-      return self.actions().length == 0;
-    });
+    self.cleanAll = function () {
+      self.plan.clean();
+      self.breakageList.removeAll();
+      self.logs.removeAll();
+      self.progress(0);
+    };
 
     /**
      * Send an ajax request to start a new job for the creation of a plan or the breakage detection
      */
-    self.startComputationJob = function (action, callback) {
-      self.progress(0);
+    self._startComputationJob = function (action, callback) {
       self.isComputing(true);
-      self.actions.removeAll();
-      self.duplicates.removeAll();
-      self.tooLongs.removeAll();
-      self.breakageList.removeAll();
+      self.cleanAll();
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
           'action'               : action,
           'excludeHiddenPages'   : self.configuration.excludeHiddenPages(),
@@ -679,7 +568,7 @@ require.config({
           'excludedPages'        : self.configuration.excludedPages(),
           'excludedSpaces'       : self.configuration.excludedSpaces(),
           'includedSpaces'       : self.configuration.includedSpaces(),
-          'excludedObjectClasses': self.configuration.excludedObjectClasses()
+          'excludedObjectClasses': self.configuration.excludedXClasses.excludedXClasses()
         })
         .done(callback)
         .fail(function () {
@@ -694,10 +583,9 @@ require.config({
     self.computePlan = function() {
       self.isPlanRequested(true);
       self.isBreakageListRequested(false);
-      self.startComputationJob('createPlan', function (data) {
+      self._startComputationJob('createPlan', function (data) {
         self.jobId = data.jobId;
-        self.logs.removeAll();
-        self.getJobStatusAndLogs('createmigrationplan', function() { self.getMigrationPlan(); });
+        self._getJobStatusAndLogs('createmigrationplan', function() { self._getMigrationPlan(); });
       });
     };
 
@@ -705,7 +593,7 @@ require.config({
      * Perform an AJAX request to get the current job status and its logs, so we can update the progress bar and the
      * logs UI.
      */
-    self.getJobStatusAndLogs = function (jobAction, successCallback) {
+    self._getJobStatusAndLogs = function (jobAction, successCallback) {
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
         'action' : 'printStatusAndLogs',
         'jobAction' : jobAction
@@ -723,7 +611,7 @@ require.config({
         } else if (state == 'RUNNING' || state == 'NONE') {
           self.progress(data.progress * 100);
           // retry in 0.8 seconds
-          setTimeout(function() { self.getJobStatusAndLogs(jobAction, successCallback); }, 800);
+          setTimeout(function() { self._getJobStatusAndLogs(jobAction, successCallback); }, 800);
         }
       });
     };
@@ -731,7 +619,7 @@ require.config({
     /**
      * Get the migration plan that have been computed, in order to display it.
      */
-    self.getMigrationPlan = function () {
+    self._getMigrationPlan = function () {
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
         'action': 'printPlan'
       }).done(function (data) {
@@ -755,17 +643,17 @@ require.config({
           }
           if (data.deletePrevious) {
             action.deletePrevious = true;
-            self.duplicates.push(action.serializedTargetDocument());
+            self.plan.duplicates.push(action.serializedTargetDocument());
           }
           if (action.isTooLong()) {
-            self.tooLongs.push(action);
+            self.plan.tooLongs.push(action);
           }
           return action;
         };
 
         if (data) {
           for (var i = 0; i &lt; data.length; ++i) {
-            self.actions.push(parseAction(data[i], false));
+            self.plan.actions.push(parseAction(data[i], false));
           }
         }
         // Plan is loaded
@@ -781,81 +669,23 @@ require.config({
      * Generate the JSON representation of the plan.
      */
     self.genJSON = function() {
-      var json = "";
-
-      var serializeAction = function (action) {
-        var jsonAction = {
-          sourceDocument: action.serializedSourceDocument(),
-          targetDocument: action.serializedTargetDocument()
-        };
-        if (!action.enabled()) {
-          jsonAction.enabled = false;
-        }
-
-        if (action.preferences.length &gt; 0) {
-          jsonAction.preferences = [];
-          for (var i = 0; i &lt; action.preferences.length; ++i) {
-            var preference = action.preferences[i];
-            var jsonPreference = {
-              name: preference.property,
-              value: preference.value,
-              origin: preference.getSerializedOrigin(),
-              enabled: preference.enabled()
-            }
-            jsonAction.preferences.push(jsonPreference);
-          }
-        }
-
-        if (action.rights.length &gt; 0) {
-          jsonAction.rights = [];
-          for (var i = 0; i &lt; action.rights.length; ++i) {
-            var right = action.rights[i];
-            var jsonRight = {
-              user: right.user,
-              group: right.group,
-              level: right.level,
-              allow: right.allow,
-              origin: right.getSerializedOrigin(),
-              enabled: right.enabled()
-            };
-            jsonAction.rights.push(jsonRight);
-          }
-        }
-
-        if (action.children().length &gt; 0) {
-          jsonAction.children = [];
-          for (var i = 0; i &lt; action.children().length; ++i) {
-            var child = serializeAction(action.children()[i]);
-            jsonAction.children.push(child);
-          }
-        }
-
-        return jsonAction;
-      }
-
-      var plan = [];
-      for (var i = 0; i &lt; self.actions().length; ++i) {
-        var action = self.actions()[i];
-        plan.push(serializeAction(action));
-      }
-
-      self.json(JSON.stringify(plan, null, '  '));
+      self.json(self.plan.getAsJSON());
     }
 
     self.startBreakageDetection = function () {
       self.isPlanRequested(false);
       self.isBreakageListRequested(true);
-      self.startComputationJob('startBreakageDetection', function (data) {
+      self._startComputationJob('startBreakageDetection', function (data) {
         self.jobId = data.jobId;
-        self.logs.removeAll();
-        self.getJobStatusAndLogs('breakagedetection', function() { self.getBreakages(); });
+        self.cleanAll();
+        self._getJobStatusAndLogs('breakagedetection', function() { self._getBreakages(); });
       });
     };
 
     /**
      * Get breakage list that have been computed, in order to display it.
      */
-    self.getBreakages = function () {
+    self._getBreakages = function () {
       $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
         'action': 'printBreakages'
       }).done(function (data) {
@@ -876,7 +706,7 @@ require.config({
     self.excludePage = function() {
       var page = this.serializedSourceDocument();
       if (confirm('Are you sure to exclude the page ['+page+'] from the migration? The plan may be recomputed.')) {
-        self.configuration.excludedPages(appendToString(self.configuration.excludedPages(), page));
+        self.configuration.excludedPages(utils.appendToString(self.configuration.excludedPages(), page));
         // Adding an exclusion can seriously change the plan (if children are moved), so we re-compute it
         if (!self.configuration.dontMoveChildren()) {
           self.computePlan();
@@ -888,7 +718,7 @@ require.config({
           if (this.parent) {
             this.parent.children.remove(detectAction);
           } else {
-            self.actions.remove(detectAction);
+            self.plan.actions.remove(detectAction);
           }
         }
       }
@@ -900,7 +730,7 @@ require.config({
     self.excludeSpace = function() {
       var space = XWiki.Model.serialize(this.sourceDocument.extractReference(XWiki.EntityType.SPACE));
       if (confirm('Are you sure to exclude the space ['+space+'] from the migration? The plan will be recomputed.')) {
-        self.configuration.excludedSpaces(appendToString(self.configuration.excludedSpaces(), space));
+        self.configuration.excludedSpaces(utils.appendToString(self.configuration.excludedSpaces(), space));
         self.computePlan();
       }
     };
@@ -974,8 +804,8 @@ require.config({
       };
 
       var disabledActions = '';
-      for (var i = 0; i &lt; self.actions().length; ++i) {
-        var action = self.actions()[i];
+      for (var i = 0; i &lt; self.plan.actions().length; ++i) {
+        var action = self.plan.actions()[i];
         disabledActions += getDisabledActions(action);
       }
 
@@ -1001,20 +831,13 @@ require.config({
      */
     self.cleanPlan = function() {
       $.ajax(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
-        'data': {
-          'action': 'cleanPlan'},
+        'data': {'action': 'cleanPlan'},
         'method': 'POST'
       }).done(function() {
-        self.actions.removeAll();
-        self.duplicates.removeAll();
-        self.tooLongs.removeAll();
         self.isPlanRequested(false);
-        self.logs.removeAll();
+        self.cleanAll();
       });
     };
-
-    // Initialize the XClasses field.
-    self.initXClasses();
 
   };
 
@@ -1231,6 +1054,21 @@ define('utils', ['xwiki-meta'], function(xm) {
      */
     resolveLocally: function (document) {
       return XWiki.Model.resolve(document, XWiki.EntityType.DOCUMENT).relativeTo(xm.documentReference.extractReference(XWiki.EntityType.WIKI));
+    },
+
+    /**
+     * Append some content to a string, separated by a comma if needed.
+     * @param string the string on which we will add some content
+     * @param toAppend the content to append to that string
+     * @return the concatenation of string and toAppend, separated by a comma if string was not empty
+     */
+    appendToString: function (string, toAppend) {
+      var result = string;
+      if (result.length &gt; 0) {
+        result += ',';
+      }
+      result += toAppend;
+      return result;
     }
   };
 });
@@ -1501,6 +1339,63 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
       for (var i = 0; i &lt; self.children().length; ++i) {
         self.children()[i].updateParent(self);
       }
+    };
+
+    /**
+     * Serialize a Migration Action.
+     */
+    var serialize = function () {
+      // Serialize source and target
+      var jsonAction = {
+        sourceDocument: action.serializedSourceDocument(),
+        targetDocument: action.serializedTargetDocument()
+      };
+
+      // Serialize enabled
+      if (!action.enabled()) {
+        jsonAction.enabled = false;
+      }
+
+      // Serialize preferences
+      if (action.preferences.length &gt; 0) {
+        jsonAction.preferences = [];
+        for (var i = 0; i &lt; action.preferences.length; ++i) {
+          var preference = action.preferences[i];
+          var jsonPreference = {
+            name: preference.property,
+            value: preference.value,
+            origin: preference.getSerializedOrigin(),
+            enabled: preference.enabled()
+          }
+          jsonAction.preferences.push(jsonPreference);
+        }
+      }
+
+      if (action.rights.length &gt; 0) {
+        jsonAction.rights = [];
+        for (var i = 0; i &lt; action.rights.length; ++i) {
+          var right = action.rights[i];
+          var jsonRight = {
+            user: right.user,
+            group: right.group,
+            level: right.level,
+            allow: right.allow,
+            origin: right.getSerializedOrigin(),
+            enabled: right.enabled()
+          };
+          jsonAction.rights.push(jsonRight);
+        }
+      }
+
+      if (action.children().length &gt; 0) {
+        jsonAction.children = [];
+        for (var i = 0; i &lt; action.children().length; ++i) {
+          var child = serializeAction(action.children()[i]);
+          jsonAction.children.push(child);
+        }
+      }
+
+      return jsonAction;
     };
   };
 });
@@ -1969,7 +1864,7 @@ define('Breakage', function() {
  * Class holding the configuration used to compute the plan.
  * @since 0.8
  */
-define('AppConfiguration', ['utils', 'knockout'], function(utils, ko) {
+define('AppConfiguration', ['utils', 'knockout', 'ExcludedXClasses'], function(utils, ko, ExcludedXClasses) {
   /**
    * Construct an AppConfiguration.
    */
@@ -1983,8 +1878,7 @@ define('AppConfiguration', ['utils', 'knockout'], function(utils, ko) {
     this.excludedPages         = ko.observable('');
     this.excludedSpaces        = ko.observable('XWiki,Admin,NestedPagesMigration');
     this.includedSpaces        = ko.observable('');
-    this.excludedObjectClasses = ko.observable('XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass,XWiki.RedirectClass');
-    this.excludedObjectClasses.extend({ notify: 'always' });
+    this.excludedXClasses      = new ExcludedXClasses();
   };
 });
 </code>
@@ -2213,8 +2107,8 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
 
   var getActionFromDOM = function (dom, viewModel) {
     var serializedTarget = dom.find('&gt;span.monospace').text();
-    for (var i = 0; i &lt; viewModel.actions().length; ++i) {
-      var action = viewModel.actions()[i];
+    for (var i = 0; i &lt; viewModel.plan.actions().length; ++i) {
+      var action = viewModel.plan.actions()[i];
       var result = _getActionFromTarget(action, serializedTarget);
       if (result) {
         return result;
@@ -2251,10 +2145,10 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
             return;
           }
           var action             = getActionFromDOM(ui.item, bindingContext.$root);
-          var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.actions;
+          var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.plan.actions;
           var newParent          = ui.item.parents('li');
           var newParentAction    = getActionFromDOM(newParent, bindingContext.$root);
-          var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.actions;
+          var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.plan.actions;
           if (parentContainer != newParentContainer) {
             action.updateParent(newParentAction);
             parentContainer.remove(action);
@@ -2272,6 +2166,529 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
     </property>
     <property>
       <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>12</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>2e82271d-7908-49fb-94b3-929b22df503e</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Represent a Migration Plan.
+ * @since 0.8
+ */
+define('MigrationPlan', ['knockout', 'SerializerHelper'], function(ko, SerializerHelper) {
+  /**
+   * Construct a Migration Plan
+   */
+  return function() {
+    var self = this;
+
+    /**
+     * Initialization
+     */
+    self.actions    = ko.observableArray();
+    self.duplicates = ko.observableArray();
+    self.tooLongs   = ko.observableArray();
+
+    // Do not refresh actions too often (to get better performances, because a lot of actions
+    // are pushed in the same time, so it is better to no refresh the UI at every push).
+    self.actions.extend({ rateLimit: 200 });
+
+    /**
+     * Clean the plan
+     */
+    self.clean = function () {
+      self.actions.removeAll();
+      self.duplicates.removeAll();
+      self.tooLongs.removeAll();
+    };
+
+    /**
+     * Computed observable variable that returns if the plan is empty.
+     */
+    self.isEmpty = ko.computed(function () {
+      return self.actions().length == 0;
+    });
+
+    /**
+     * Generate a JSON representation of a plan.
+     */
+    self.getAsJSON = function (plan) {
+      return JSON.stringify(SerializerHelper.serializePlan(self), null, '  ');
+    };
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define MigrationPlan class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>13</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>0dcd9eb5-8618-40a8-b23a-60c7301612bf</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Generates some plain objects ready to be serialized with JSON.stringify.
+ * @since 0.8
+ */
+define('SerializerHelper', function() {
+  /**
+   * Construct a Singleton SerializerHelper
+   */
+  return new function() {
+    var self = this;
+
+    /**
+     * Serialize a Preference.
+     */
+    self.serializePreference = function (preference) {
+      return {
+        name: preference.property,
+        value: preference.value,
+        origin: preference.getSerializedOrigin(),
+        enabled: preference.enabled()
+      };
+    };
+
+    /**
+     * Serialize a Right.
+     */
+    self.serializeRight = function (right) {
+      return {
+        user: right.user,
+        group: right.group,
+        level: right.level,
+        allow: right.allow,
+        origin: right.getSerializedOrigin(),
+        enabled: right.enabled()
+      };
+    };
+
+    /**
+     * Serialize a Migration Action.
+     */
+    self.serializeAction = function (action) {
+      // Serialize source and target
+      var jsonAction = {
+        sourceDocument: action.serializedSourceDocument(),
+        targetDocument: action.serializedTargetDocument()
+      };
+
+      // Serialize "enabled" field
+      if (!action.enabled()) {
+        jsonAction.enabled = false;
+      }
+
+      // Serialize preferences
+      if (action.preferences.length &gt; 0) {
+        jsonAction.preferences = [];
+        for (var i = 0; i &lt; action.preferences.length; ++i) {
+          jsonAction.preferences.push(self.serializePreference(action.preferences[i]));
+        }
+      }
+
+      // Serialize rigts
+      if (action.rights.length &gt; 0) {
+        jsonAction.rights = [];
+        for (var i = 0; i &lt; action.rights.length; ++i) {
+          jsonAction.rights.push(serializeRight(action.rights[i]));
+        }
+      }
+
+      // Serialize children
+      if (action.children().length &gt; 0) {
+        jsonAction.children = [];
+        for (var i = 0; i &lt; action.children().length; ++i) {
+          var child = serializeAction(action.children()[i]);
+          jsonAction.children.push(child);
+        }
+      }
+
+      return jsonAction;
+    };
+
+    /**
+     * Serialize a plan
+     */
+    self.serializePlan = function (plan) {
+      var jsonPlan = [];
+      for (var i = 0; i &lt; plan.actions().length; ++i) {
+        plan.push(serializeAction(plan.actions()[i]));
+      }
+      return jsonPlan;
+    };
+  };
+})
+</code>
+    </property>
+    <property>
+      <name>Define the SerializerHelper class</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
+    <number>14</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>b1ddcaf9-7a8e-4ef5-a07a-c35070860954</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Represent the list of XClasses that should be excluded from the migration and handle the UI widget that display it.
+ * @since 0.8
+ */
+define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, utils) {
+  /**
+   * Construct an ExcludedXClasses.
+   */
+   return function() {
+     var self = this;
+
+     /**
+      * The list of XClasses to exclude, as a String.
+      */
+     self.excludedXClasses = ko.observable( 'XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass,XWiki.RedirectClass' );
+
+     self.excludedXClasses.extend({ notify: 'always' });
+
+     /**
+      * The list of all XClasses that the wiki holds.
+      */
+     self.allXClasses = [];
+
+     /**
+      * Either if the list of classes with checkboxes should be displayed or not.
+      */
+     self.areCheckboxesDisplayed = ko.observable(false);
+
+     /**
+      * Display/Hide the list of classes with checkboxes.
+      */
+     self.toggleCheckboxVisibility = function () {
+       self.areCheckboxesDisplayed(!self.areCheckboxesDisplayed());
+     };
+
+     /**
+      * Display the list of classes with checkboxes.
+      */
+     self.showCheckboxes = function () {
+       self.areCheckboxesDisplayed(true);
+     };
+
+     /**
+      * Hide the list of classes with checkboxes.
+      */
+     self.hideCheckboxes = function () {
+       self.areCheckboxesDisplayed(false);
+     };
+
+     /**
+      * @return the list of excluded XClasses  as a JavaScript array
+      */
+     self._excludedXClassesAsArray = function () {
+       return self.excludedXClasses().split(',');
+     };
+
+     /**
+      * @param xclass the name of the XClass
+      * @return either or not the XClass is excluded or not
+      */
+     self.isExcluded = function(xclass) {
+       return $.inArray(xclass, self._excludedXClassesAsArray()) &gt;= 0;
+     };
+
+     /**
+      * Update the ExcludedXClasses textarea with the value selected by the checkboxes.
+      * @param xclass the name of an XClass
+      * @param exclude either the XClass should be excluded or not
+      */
+     self._updateExcludedXClasses = function (xclass, exclude) {
+       var newList = '';
+       var oldList = self._excludedXClassesAsArray();
+       // We walk through the old list to respect the order written in it to avoid a WTF effect
+       for (var i = 0; i &lt; oldList.length; ++i) {
+         if (oldList[i] != xclass) {
+           newList = utils.appendToString(newList, oldList[i]);
+         }
+       }
+       if (exclude) {
+         newList = utils.appendToString(newList, xclass);
+       }
+       self.excludedXClasses(newList);
+     };
+
+     /**
+      * Initialize the checkboxes
+      */
+     self._initCheckbox = function (name) {
+       var selected = ko.computed({
+         read: function () {
+           return self.isExcluded(name);
+         },
+         write: function (value) {
+           self._updateExcludedXClasses(name, value);
+         }
+       });
+       return {'name': name, 'selected': selected};
+     };
+
+     /**
+      * Initialize the XClasses fields.
+      */
+     var xclasses = $('#excludedObjectClasses').attr('data-xclasses').split(',');
+     for (var i = 0; i &lt; xclasses.length; ++i) {
+       self.allXClasses.push(self._initCheckbox(xclasses[i]));
+     }
+
+   };
+});
+</code>
+    </property>
+    <property>
+      <name>Define the ExcludedXClasses class</name>
+    </property>
+    <property>
+      <parse/>
     </property>
     <property>
       <use>currentPage</use>

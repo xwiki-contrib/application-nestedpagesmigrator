@@ -65,9 +65,10 @@
     css: {
       'jstree-closed': !displayChildren(),
       'jstree-open'  : displayChildren(),
-      'jstree-leaf'  : getNumberOfChildren() == 0 &amp;&amp; getNumberOfPreferences() == 0 &amp;&amp; getNumberOfRights()&gt; 0,
+      'jstree-leaf'  : getNumberOfChildren() == 0 &amp;&amp; getNumberOfPreferences() == 0 &amp;&amp; getNumberOfRights() == 0,
       'jstree-last'  : ${escapetool.d}index() == ${escapetool.d}parent.actions.length - 1
-    }"&gt;
+    },
+    movable: true"&gt;
     ## Display the tree branch
     &lt;i class="jstree-icon jstree-ocl" role="presentation" data-bind="click: toggleDisplayChildren"&gt;&lt;/i&gt;
     ##  Display the checkbox
@@ -75,7 +76,7 @@
     ## Display the 'all' link
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
     ## Display the place where the user can drag the current item
-    &lt;span class="movablePicker"&gt;
+    &lt;span class="movablePicker" data-bind="droppable: ${escapetool.d}data"&gt;
       ## Display the arrows
       &lt;span class="fa fa-arrows"&gt;&lt;/span&gt;
       ## Display the document name
@@ -86,7 +87,7 @@
     ## Display if the action is a change or not
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     ## Display if a previous document will be deleted
-    &lt;strong data-bind="visible: deletePrevious"&gt;(duplicated document will be deleted)&lt;/strong&gt;
+    &lt;strong data-bind="visible: deletePrevious"&gt;(previous document will be deleted)&lt;/strong&gt;
     ## Display the exclude page button
     &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
     ## Display the exclude space button
@@ -122,7 +123,7 @@
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       ## Display children documents
-      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', data: {'actions': children()} }, movable: true" class="jstree-children"/&gt;
+      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', data: {'actions': children()} }" class="jstree-children"/&gt;
     &lt;!-- /ko --&gt;
   &lt;/li&gt;
   &lt;!-- /ko --&gt;
@@ -171,9 +172,15 @@
         &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()"&gt;&lt;/span&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"&gt;&lt;/span&gt;&lt;/li&gt;
       &lt;/ul&gt;
     &lt;/div&gt;
-    &lt;ul data-bind="if: plan.actions() &amp;&amp; !isComputing() &amp;&amp; !plan.isEmpty(), movable: true" id="planTree" class="jstree jstree-xwiki jstree-xwiki-responsive jstree-container-ul"&gt;
-      &lt;!-- ko template: {name: 'MigrationActionTemplate', data: {'actions': plan.actions() }} --&gt;
-      &lt;!-- /ko --&gt;
+    &lt;ul data-bind="if: plan.actions() &amp;&amp; !isComputing() &amp;&amp; !plan.isEmpty()" id="planTree" class="jstree jstree-xwiki jstree-xwiki-responsive jstree-container-ul"&gt;
+      &lt;li class="jstree-node jstree-open jstree-last"&gt;
+        &lt;i class="jstree-icon jstree-ocl" role="presentation"&gt;&lt;/i&gt;
+        &lt;span data-bind="droppable"&gt;$services.icon.renderHTML('wiki') $services.wiki.currentWikiDescriptor.prettyName&lt;/span&gt;
+        &lt;ul class="jstree-children"&gt;
+          &lt;!-- ko template: {name: 'MigrationActionTemplate', data: {'actions': plan.actions() }} --&gt;
+          &lt;!-- /ko --&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
     &lt;/ul&gt;
     &lt;!-- ko if: !isComputing() &amp;&amp; plan.isEmpty() --&gt;
     &lt;div class="box infomessage"&gt;
@@ -183,7 +190,7 @@
     &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
     &lt;!-- /ko --&gt;
   &lt;/div&gt;
-&lt;/Script&gt;
+&lt;/script&gt;
 &lt;!------------------------------------------
   Display configuration
   -------------------------------------------&gt;
@@ -780,6 +787,7 @@ require.config({
       self.isPlanExecuting(true);
       self.progress(0);
 
+      // TODO: remove this part
       var getDisabledActions = function (action) {
         var disabledActions = '';
         if (!action.enabled()) {
@@ -813,14 +821,15 @@ require.config({
         'data': {
           'action'               : 'executePlan',
           'addRedirection'       : self.configuration.addRedirection(),
-          'disabledActions'      : disabledActions
+          'disabledActions'      : disabledActions,
+          'plan'                 : self.plan.getAsJSON()
         },
         'method': 'POST',
         'data-type': 'json'
       }).done(function (data) {
         self.jobId = data.jobId;
         self.logs.removeAll();
-        self.getJobStatusAndLogs('executemigrationplan', function() { self.success(true); });
+        self._getJobStatusAndLogs('executemigrationplan', function() { self.success(true); });
       }).fail(function () {
         console.log('ERROR: Failed to execute the plan.');
       });
@@ -2091,70 +2100,54 @@ define('Log', function() {
  */
 define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function (ko, $) {
 
-  var _getActionFromTarget = function (action, serializedTarget) {
-    if (action.serializedTargetDocument() == serializedTarget) {
-      return action;
+  ko.bindingHandlers.droppable = {
+    init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      $(element).droppable({
+        tolerance  : 'pointer',
+        activeClass: 'droppable-active',
+        hoverClass : 'droppable-hover',
+        drop : function(event, ui) {
+          var draggable          = $(ui.draggable);
+          var action             = draggable.data('action');
+          var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.plan.actions;
+          var newParentAction    = valueAccessor();
+          var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.plan.actions;
+          action.updateParent(newParentAction);
+          parentContainer.remove(action);
+          newParentContainer.push(action);
+          if (newParentAction) {
+            newParentAction.displayChildren(true);
+          }
+        }
+      });
     }
-    var child = false;
-    for (var i = 0; i &lt; action.children().length; ++i) {
-      child = _getActionFromTarget(action.children()[i], serializedTarget);
-      if (child) {
-        return child;
-      }
-    }
-    return child;
-  };
-
-  var getActionFromDOM = function (dom, viewModel) {
-    var serializedTarget = dom.find('&gt;span.monospace').text();
-    for (var i = 0; i &lt; viewModel.plan.actions().length; ++i) {
-      var action = viewModel.plan.actions()[i];
-      var result = _getActionFromTarget(action, serializedTarget);
-      if (result) {
-        return result;
-      }
-    }
-    return false;
-  };
+  }
 
   ko.bindingHandlers.movable = {
     init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-      $(element).addClass('movable').sortable({
-        items: '&gt; li',
-        handle: '&gt;.movablePicker',
-        connectWith: '.movable',
-        start: function (event, ui) {
-          ui.item.removeClass('jstree-node');
-          ui.item.find('&gt; ul').hide();
-          ui.item.find('.jstree-icon').hide();
-        },
-        stop: function (event, ui) {
-          ui.item.addClass('jstree-node');
-          ui.item.find('&gt; ul').show();
-          ui.item.find('.jstree-icon').show();
-        },
-        /**
-         * Called when a migration action is moved unside the plan.
-         */
-        update: function (event, ui) {
-          // If we drop an action as a child of an other action, both "sortable" widget will call the update()
-          // event. To prevent performing the move in the model twice, we dismiss the update() call when the new
-          // parent of the dropped action is not the current "sortable" widget.
-          // The other "sortable" widget will do the job instead.
-          if (element != ui.item.parent('ul')[0]) {
-            return;
-          }
-          var action             = getActionFromDOM(ui.item, bindingContext.$root);
-          var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.plan.actions;
-          var newParent          = ui.item.parents('li');
-          var newParentAction    = getActionFromDOM(newParent, bindingContext.$root);
-          var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.plan.actions;
-          if (parentContainer != newParentContainer) {
-            action.updateParent(newParentAction);
-            parentContainer.remove(action);
-            newParentContainer.push(action);
-          }
-        }
+      var movableElement = $(element);
+      movableElement.data('action', bindingContext.$rawData);
+      movableElement.draggable({
+         handle: '&gt; .movablePicker',
+         revert: 'invalid',
+         revertDuration: 200,
+         zIndex: 1000,
+         containment: '#planTree',
+
+         start: function (event, ui) {
+           movableElement.removeClass('jstree-node');
+           movableElement.find('&gt; ul').hide();
+           movableElement.find('.jstree-icon').hide();
+         },
+
+         /**
+          * Called when a migration action is moved unside the plan.
+          */
+         stop: function (event, ui) {
+           movableElement.addClass('jstree-node');
+           movableElement.find('&gt; ul').show();
+           movableElement.find('.jstree-icon').show();
+         }
       });
     }
   };
@@ -2806,7 +2799,21 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
   text-transform: uppercase;
   font-size: 0.9em;
   font-weight: bold;
-}</code>
+}
+
+.sortable-placeholder {
+  display: block;
+  background-color: red;
+}
+
+.droppable-active {
+  background-color: lightblue;
+}
+
+.droppable-hover {
+  background-color: lightgreen !important;
+}
+</code>
     </property>
     <property>
       <contentType>CSS</contentType>

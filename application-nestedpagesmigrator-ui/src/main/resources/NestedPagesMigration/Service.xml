@@ -192,7 +192,7 @@
   ###
   ### Start the job
   ###
-  #set ($job = $services.nestedpagesmigrator.startMigration($configuration))
+  #set ($job = $services.nestedpagesmigrator.startMigration($configuration, $request.plan))
   ###
   ### Print the job id
   ###

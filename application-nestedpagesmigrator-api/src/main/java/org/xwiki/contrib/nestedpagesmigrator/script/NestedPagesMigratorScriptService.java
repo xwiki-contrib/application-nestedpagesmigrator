@@ -27,9 +27,10 @@ import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
-import org.xwiki.contrib.nestedpagesmigrator.internal.serializer.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.NestedPagesMigrator;
+import org.xwiki.contrib.nestedpagesmigrator.internal.serializer.MigrationPlanDeserializer;
+import org.xwiki.contrib.nestedpagesmigrator.internal.serializer.MigrationPlanSerializer;
 import org.xwiki.contrib.nestedpagesmigrator.script.internal.StatusAndLogSerializer;
 import org.xwiki.job.Job;
 import org.xwiki.model.reference.WikiReference;
@@ -57,6 +58,9 @@ public class NestedPagesMigratorScriptService implements ScriptService
 
     @Inject
     private DocumentAccessBridge documentAccessBridge;
+
+    @Inject
+    private MigrationPlanDeserializer deserializer;
     
     private void checkAdminAccess(WikiReference wikiReference) throws AccessDeniedException
     {
@@ -123,8 +127,7 @@ public class NestedPagesMigratorScriptService implements ScriptService
     {
         checkAdminAccess(configuration.getWikiReference());
 
-
-        MigrationPlanTree plan = nestedPagesMigrator.getPlan(configuration.getWikiReference().getName());
+        MigrationPlanTree plan = deserializer.deserialize(serializedPlan, configuration.getWikiReference());
 
         return nestedPagesMigrator.startMigration(plan, configuration);
     }

@@ -46,7 +46,7 @@ public class MigrationPlanDeserializer
     @Inject
     private DocumentReferenceResolver<String> resolver;
 
-    public MigrationPlanTree deserialize(String json, WikiReference wikiReference) throws Exception
+    public MigrationPlanTree deserialize(String json, WikiReference wikiReference) throws MigrationException
     {
         MigrationPlanTree plan = new MigrationPlanTree();
 
@@ -54,7 +54,7 @@ public class MigrationPlanDeserializer
         JsonElement root = parser.parse(json);
 
         if (!root.isJsonArray()) {
-            throw new Exception("Unexpected JSON schema.");
+            throw new MigrationException("Unexpected JSON schema.");
         }
 
         for (JsonElement item : root.getAsJsonArray()) {

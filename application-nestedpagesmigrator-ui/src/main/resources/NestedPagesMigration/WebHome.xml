@@ -513,7 +513,7 @@ require.config({
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery', 'xwiki-meta', 'knockout', 'utils', 'MigrationAction', 'Preference', 'Right', 'Breakage', 'Log', 'AppConfiguration', 'MigrationPlan', 'movable-binding-handler'], function ($, xm, ko, utils, MigrationAction, Preference, Right, Breakage, Log, AppConfiguration, MigrationPlan, SerializerHelper) {
+      <code>require(['jquery', 'xwiki-meta', 'knockout', 'utils', 'MigrationAction', 'Preference', 'Right', 'Breakage', 'Log', 'AppConfiguration', 'MigrationPlan', 'movable-binding-handler'], function ($, xm, ko, utils, MigrationAction, Preference, Right, Breakage, Log, AppConfiguration, MigrationPlan) {
 
   /**
    * The model of the application. All data and functions used by the application view are stored here.
@@ -2453,7 +2453,7 @@ define('SerializerHelper', function() {
       if (action.rights.length &gt; 0) {
         jsonAction.rights = [];
         for (var i = 0; i &lt; action.rights.length; ++i) {
-          jsonAction.rights.push(serializeRight(action.rights[i]));
+          jsonAction.rights.push(self.serializeRight(action.rights[i]));
         }
       }
 
@@ -2461,7 +2461,7 @@ define('SerializerHelper', function() {
       if (action.children().length &gt; 0) {
         jsonAction.children = [];
         for (var i = 0; i &lt; action.children().length; ++i) {
-          var child = serializeAction(action.children()[i]);
+          var child = self.serializeAction(action.children()[i]);
           jsonAction.children.push(child);
         }
       }
@@ -2475,7 +2475,7 @@ define('SerializerHelper', function() {
     self.serializePlan = function (plan) {
       var jsonPlan = [];
       for (var i = 0; i &lt; plan.actions().length; ++i) {
-        plan.push(serializeAction(plan.actions()[i]));
+        jsonPlan.push(self.serializeAction(plan.actions()[i]));
       }
       return jsonPlan;
     };
@@ -2589,6 +2589,8 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
       */
      self.excludedXClasses = ko.observable( 'XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass,XWiki.RedirectClass' );
 
+     // Make the observable reactive to each keyboard action so the user can immediatly see the checkboxes updated
+     // during her typing.
      self.excludedXClasses.extend({ notify: 'always' });
 
      /**

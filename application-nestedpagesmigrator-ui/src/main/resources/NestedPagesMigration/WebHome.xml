@@ -66,7 +66,8 @@
       'jstree-closed': !displayChildren(),
       'jstree-open'  : displayChildren(),
       'jstree-leaf'  : getNumberOfChildren() == 0 &amp;&amp; getNumberOfPreferences() == 0 &amp;&amp; getNumberOfRights() == 0,
-      'jstree-last'  : ${escapetool.d}index() == ${escapetool.d}parent.actions.length - 1
+      'jstree-last'  : ${escapetool.d}index() == ${escapetool.d}parent.actions.length - 1,
+      'moved-action' : ${escapetool.d}root.lastMovedAction() == ${escapetool.d}data
     },
     movable: true"&gt;
     ## Display the tree branch
@@ -543,6 +544,7 @@ require.config({
     self.isPlanExecuting         = ko.observable(false);
     self.success                 = ko.observable(false);
     self.json                    = ko.observable();
+    self.lastMovedAction         = ko.observable();
 
     // Do not refresh logs too often (to get better performances, because a lot of logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
@@ -2118,6 +2120,13 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
           if (newParentAction) {
             newParentAction.displayChildren(true);
           }
+          // Mark this action with the "last moved action" tag, which is displayed with a special color so that the user
+          // can see where her selection has finally been moved.
+          bindingContext.$root.lastMovedAction(action);
+          // However, remove this tag after 4 seconds, otherwise it might be confusing.
+          setTimeout(function() {
+            bindingContext.$root.lastMovedAction(false);
+          }, 4000);
         }
       });
     }
@@ -2132,7 +2141,6 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
          revert: 'invalid',
          revertDuration: 200,
          zIndex: 1000,
-         containment: '#planTree',
 
          start: function (event, ui) {
            movableElement.removeClass('jstree-node');
@@ -2801,16 +2809,15 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
   font-weight: bold;
 }
 
-.sortable-placeholder {
-  display: block;
-  background-color: red;
-}
-
 .droppable-active {
   background-color: lightblue;
 }
 
 .droppable-hover {
+  background-color: lightgreen !important;
+}
+
+.moved-action {
   background-color: lightgreen !important;
 }
 </code>

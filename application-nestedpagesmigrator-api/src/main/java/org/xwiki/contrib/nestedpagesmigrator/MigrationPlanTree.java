@@ -89,6 +89,13 @@ public class MigrationPlanTree
         }
         Collections.sort(topLevelAction.getChildren());
     }
+
+    public void clearPreferences()
+    {
+        for (MigrationAction action : actions.values()) {
+            action.getPreferences().clear();
+        }
+    }
     
     public void addListener(MigrationPlanTreeListener listener)
     {

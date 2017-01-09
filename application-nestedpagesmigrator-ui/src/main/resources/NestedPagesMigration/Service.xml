@@ -46,6 +46,8 @@
 #set ($action = "$!request.action")
 #if ($action == 'createPlan')
   #createPlan()
+#elseif ($action == 'convertPreferences')
+  #convertPreferences()
 #elseif ($action == 'startBreakageDetection')
   #startBreakageDetection()
 #elseif ($action == 'printPlan')
@@ -133,6 +135,26 @@
   ### Start the job
   ###
   #set ($job = $services.nestedpagesmigrator.startMigrationPlanCreation($configuration))
+  ###
+  ### Print the job id
+  ###
+  #set ($map = {'jobId': $stringtool.join($job.request.id, '/')})
+  #set ($discard = $response.setContentType('application/json'))
+  $jsontool.serialize($map)
+#end
+#************************************************************************
+ * Convert Preferences
+ ************************************************************************#
+#macro(convertPreferences)
+  ###
+  ### Load the configuration
+  ###
+  #set ($configuration = $services.nestedpagesmigrator.newMigrationConfiguration($services.wiki.currentWikiId))
+  #loadConfiguration($configuration)
+  ###
+  ### Start the job
+  ###
+  #set ($job = $services.nestedpagesmigrator.startPreferencesMigrationPlanCreation($configuration, $request.plan))
   ###
   ### Print the job id
   ###

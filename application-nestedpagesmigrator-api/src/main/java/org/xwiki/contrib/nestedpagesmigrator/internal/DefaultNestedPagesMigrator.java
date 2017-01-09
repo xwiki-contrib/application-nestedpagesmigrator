@@ -79,6 +79,22 @@ public class DefaultNestedPagesMigrator implements NestedPagesMigrator
     }
 
     @Override
+    public Job startPreferencesMigrationPlanCreation(MigrationPlanTree plan, MigrationConfiguration configuration)
+            throws MigrationException
+    {
+        try {
+            MigrationPlanRequest migrationPlanRequest = new MigrationPlanRequest();
+            migrationPlanRequest.setId(getJobId(configuration.getWikiReference().getName(), CREATE_PLAN));
+            migrationPlanRequest.setConfiguration(configuration);
+            migrationPlanRequest.setPlan(plan);
+            plan.clearPreferences();
+            return jobExecutor.execute(MigrationPlanCreatorJob.JOB_TYPE, migrationPlanRequest);
+        } catch (JobException e) {
+            throw new MigrationException("Failed to create a migration plan.", e);
+        }
+    }
+
+    @Override
     public MigrationPlanTree getPlan(String wikiId)
     {
         MigrationPlanCreatorJobStatus jobStatus = (MigrationPlanCreatorJobStatus) getStatus(wikiId, CREATE_PLAN);

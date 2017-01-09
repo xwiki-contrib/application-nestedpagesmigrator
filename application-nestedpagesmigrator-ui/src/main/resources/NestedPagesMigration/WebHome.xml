@@ -260,6 +260,7 @@
     &lt;h2&gt;Actions&lt;/h2&gt;
     &lt;button class="btn btn-success" data-bind="click: startBreakageDetection, disable: isComputing() || isPlanExecuting()"&gt;Detect breakages&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
+    &lt;button class="btn btn-primary" data-bind="click: convertPreferences, disable: isComputing() || isPlanExecuting()"&gt;Recompute preferences&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: plan.actions().length == 0 || isPlanExecuting() || plan.tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: genJSON"&gt;Plan as JSON&lt;/button&gt;
@@ -565,20 +566,24 @@ require.config({
      */
     self._startComputationJob = function (action, callback) {
       self.isComputing(true);
+      var data = {
+        'action'               : action,
+        'excludeHiddenPages'   : self.configuration.excludeHiddenPages(),
+        'excludeClassPages'    : self.configuration.excludeClassPages(),
+        'dontMoveChildren'     : self.configuration.dontMoveChildren(),
+        'addRedirection'       : self.configuration.addRedirection(),
+        'convertPreferences'   : self.configuration.convertPreferences(),
+        'convertRights'        : self.configuration.convertRights(),
+        'excludedPages'        : self.configuration.excludedPages(),
+        'excludedSpaces'       : self.configuration.excludedSpaces(),
+        'includedSpaces'       : self.configuration.includedSpaces(),
+        'excludedObjectClasses': self.configuration.excludedXClasses.excludedXClasses()
+      };
+      if (action == 'convertPreferences') {
+        data.plan = self.plan.getAsJSON();
+      }
       self.cleanAll();
-      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
-          'action'               : action,
-          'excludeHiddenPages'   : self.configuration.excludeHiddenPages(),
-          'excludeClassPages'    : self.configuration.excludeClassPages(),
-          'dontMoveChildren'     : self.configuration.dontMoveChildren(),
-          'addRedirection'       : self.configuration.addRedirection(),
-          'convertPreferences'   : self.configuration.convertPreferences(),
-          'convertRights'        : self.configuration.convertRights(),
-          'excludedPages'        : self.configuration.excludedPages(),
-          'excludedSpaces'       : self.configuration.excludedSpaces(),
-          'includedSpaces'       : self.configuration.includedSpaces(),
-          'excludedObjectClasses': self.configuration.excludedXClasses.excludedXClasses()
-        })
+      $.post(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), data)
         .done(callback)
         .fail(function () {
           console.log(action == 'startBreakageDetection' ? 'ERROR: Failed to start the breakage detection.'
@@ -593,6 +598,18 @@ require.config({
       self.isPlanRequested(true);
       self.isBreakageListRequested(false);
       self._startComputationJob('createPlan', function (data) {
+        self.jobId = data.jobId;
+        self._getJobStatusAndLogs('createmigrationplan', function() { self._getMigrationPlan(); });
+      });
+    };
+
+    /**
+     * Send an ajax request to start a new job for the convertion of the preferences.
+     */
+    self.convertPreferences = function() {
+      self.isPlanRequested(true);
+      self.isBreakageListRequested(false);
+      self._startComputationJob('convertPreferences', function (data) {
         self.jobId = data.jobId;
         self._getJobStatusAndLogs('createmigrationplan', function() { self._getMigrationPlan(); });
       });
@@ -2293,7 +2310,7 @@ define('MigrationPlan', ['knockout', 'SerializerHelper'], function(ko, Serialize
     /**
      * Generate a JSON representation of a plan.
      */
-    self.getAsJSON = function (plan) {
+    self.getAsJSON = function () {
       return JSON.stringify(SerializerHelper.serializePlan(self), null, '  ');
     };
   };

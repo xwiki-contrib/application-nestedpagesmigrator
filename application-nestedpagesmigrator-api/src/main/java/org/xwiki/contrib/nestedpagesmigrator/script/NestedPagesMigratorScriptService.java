@@ -86,6 +86,26 @@ public class NestedPagesMigratorScriptService implements ScriptService
     }
 
     /**
+     * Start a job that will convert the preferences of a plan.
+     *
+     * @param configuration the migration configuration
+     * @param serializedPlan the plan to execute, JSON-serialized
+     * @return the job handling the computation of the plan
+     *
+     * @throws MigrationException if error happens
+     * @throws AccessDeniedException if the user have not the right to execute this method
+     */
+    public Job startPreferencesMigrationPlanCreation(MigrationConfiguration configuration, String serializedPlan)
+            throws MigrationException, AccessDeniedException
+    {
+        checkAdminAccess(configuration.getWikiReference());
+
+        MigrationPlanTree plan = deserializer.deserialize(serializedPlan, configuration.getWikiReference());
+
+        return nestedPagesMigrator.startPreferencesMigrationPlanCreation(plan, configuration);
+    }
+
+    /**
      * Create a new migration configuration.
      *
      * @param wikiId the id of the wiki where the migration will be done

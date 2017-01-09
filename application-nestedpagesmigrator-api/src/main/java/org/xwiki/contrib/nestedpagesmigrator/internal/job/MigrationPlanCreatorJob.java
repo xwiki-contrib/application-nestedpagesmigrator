@@ -26,6 +26,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.contrib.nestedpagesmigrator.internal.pages.PagesMigrationPlanCreator;
 import org.xwiki.contrib.nestedpagesmigrator.internal.preferences.PreferencesMigrationPlanCreator;
@@ -56,39 +57,13 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
     protected void runInternal() throws Exception
     {
         try {
+            MigrationPlanTree plan = request.getPlan();
             MigrationConfiguration configuration = request.getConfiguration();
 
-            // Announce the number of steps
-            int numberOfSteps = 1;
-            if (configuration.isConvertPreferences()) {
-                numberOfSteps++;
-            }
-            if (configuration.isConvertRights()) {
-                numberOfSteps++;
-            }
-            progressManager.pushLevelProgress(numberOfSteps, this);
-
-            // Step 1: convert pages
-            progressManager.startStep(this);
-            logger.info("Compute the new page hierarchy.");
-            PagesMigrationPlanCreator pagesMigrationPlanCreator
-                    = componentManager.getInstance(PagesMigrationPlanCreator.class);
-            MigrationPlanTree plan = pagesMigrationPlanCreator.computeMigrationPlan(configuration);
-
-            // Step 2: convert preferences
-            if (configuration.isConvertPreferences()) {
-                progressManager.startStep(this);
-                logger.info("Compute the new page preferences.");
-                PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
-                        = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
-                preferencesMigrationPlanCreator.convertPreferences(plan, configuration);
-            }
-
-            // Step 3: convert rights
-            if (configuration.isConvertRights()) {
-                progressManager.startStep(this);
-                logger.info("Compute the new page rights.");
-                rightsMigrationPlanCreator.convertRights(plan);
+            if (plan == null) {
+                plan = createFullPlan();
+            } else {
+                convertPreferences(plan, configuration);
             }
 
             // End
@@ -99,6 +74,66 @@ public class MigrationPlanCreatorJob extends AbstractJob<MigrationPlanRequest, M
             logger.error("Failed to compute the migration plan.", e);
             e.printStackTrace();
         }
+    }
+
+    private MigrationPlanTree createFullPlan()
+            throws org.xwiki.component.manager.ComponentLookupException, MigrationException
+    {
+        MigrationConfiguration configuration = request.getConfiguration();
+
+        // Announce the number of steps
+        int numberOfSteps = 1;
+        if (configuration.isConvertPreferences()) {
+            numberOfSteps++;
+        }
+        if (configuration.isConvertRights()) {
+            numberOfSteps++;
+        }
+        progressManager.pushLevelProgress(numberOfSteps, this);
+
+        // Step 1: convert pages
+        MigrationPlanTree plan = convertPages(configuration);
+
+        // Step 2: convert preferences
+        if (configuration.isConvertPreferences()) {
+            convertPreferences(plan, configuration);
+        }
+
+        // Step 3: convert rights
+        if (configuration.isConvertRights()) {
+            convertRights(plan);
+        }
+
+        return plan;
+    }
+
+    private MigrationPlanTree convertPages(MigrationConfiguration configuration)
+            throws org.xwiki.component.manager.ComponentLookupException, MigrationException
+    {
+        MigrationPlanTree plan;
+        progressManager.startStep(this);
+        logger.info("Compute the new page hierarchy.");
+        PagesMigrationPlanCreator pagesMigrationPlanCreator
+                = componentManager.getInstance(PagesMigrationPlanCreator.class);
+        plan = pagesMigrationPlanCreator.computeMigrationPlan(configuration);
+        return plan;
+    }
+
+    private void convertRights(MigrationPlanTree plan) throws MigrationException
+    {
+        progressManager.startStep(this);
+        logger.info("Compute the new page rights.");
+        rightsMigrationPlanCreator.convertRights(plan);
+    }
+
+    private void convertPreferences(MigrationPlanTree plan, MigrationConfiguration configuration)
+            throws org.xwiki.component.manager.ComponentLookupException, MigrationException
+    {
+        progressManager.startStep(this);
+        logger.info("Compute the new page preferences.");
+        PreferencesMigrationPlanCreator preferencesMigrationPlanCreator
+                = componentManager.getInstance(PreferencesMigrationPlanCreator.class);
+        preferencesMigrationPlanCreator.convertPreferences(plan, configuration);
     }
 
     @Override

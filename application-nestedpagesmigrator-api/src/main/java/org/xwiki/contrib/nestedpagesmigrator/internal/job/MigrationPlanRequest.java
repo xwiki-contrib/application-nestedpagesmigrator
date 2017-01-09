@@ -20,6 +20,7 @@
 package org.xwiki.contrib.nestedpagesmigrator.internal.job;
 
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
+import org.xwiki.contrib.nestedpagesmigrator.MigrationPlanTree;
 import org.xwiki.job.AbstractRequest;
 
 /**
@@ -32,6 +33,8 @@ public class MigrationPlanRequest extends AbstractRequest
     private static final String PROPERTY_PREFIX = "npmig.migrationplan.";
 
     private static final String PROPERTY_CONF = PROPERTY_PREFIX + "configuration";
+
+    private static final String PROPERTY_PLAN = PROPERTY_PREFIX + "plan";
 
     /**
      * Set the configuration.
@@ -49,5 +52,23 @@ public class MigrationPlanRequest extends AbstractRequest
     public MigrationConfiguration getConfiguration()
     {
         return (MigrationConfiguration) getProperty(PROPERTY_CONF);
+    }
+
+    /**
+     * Set a plan on which some computations will be made.
+     *
+     * @param plan
+     */
+    public void setPlan(MigrationPlanTree plan)
+    {
+        setProperty(PROPERTY_PLAN, plan);
+    }
+
+    /**
+     * @return a plan on which computations will be made
+     */
+    public MigrationPlanTree getPlan()
+    {
+        return (MigrationPlanTree) getProperty(PROPERTY_PLAN);
     }
 }

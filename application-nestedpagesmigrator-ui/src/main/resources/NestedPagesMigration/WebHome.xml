@@ -60,7 +60,7 @@
   Migration Action Template
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
-  &lt;!-- ko foreach: ${escapetool.d}data.actions --&gt;
+  &lt;!-- ko foreach: ${escapetool.d}data.actions.sort(function (l, r) {return l.getTargetName() &gt; r.getTargetName() ? 1 : -1}) --&gt;
   &lt;li class="jstree-node" data-bind="
     css: {
       'jstree-closed': !displayChildren(),
@@ -156,6 +156,9 @@
       &lt;div class="ui-progress-background"&gt;
         &lt;div class="ui-progress-bar green" data-bind="style: {width: progress() + '%'}"&gt;&lt;/div&gt;
       &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div data-bind="if: isPlanModified() &amp;&amp; !isComputing()"&gt;
+      &lt;p class="box warningmessage"&gt;Since you have moved some pages, you may want to recompute the preferences to be sure they will be preserved after the migration.&lt;/p&gt;
     &lt;/div&gt;
     &lt;div class="box warningmessage" data-bind="visible: plan.duplicates().length &gt; 0"&gt;
       &lt;p&gt;The migration have detected some duplicated documents, that are probably the consequences of a failed attempt to run the migrator.&lt;br /&gt;
@@ -260,7 +263,7 @@
     &lt;h2&gt;Actions&lt;/h2&gt;
     &lt;button class="btn btn-success" data-bind="click: startBreakageDetection, disable: isComputing() || isPlanExecuting()"&gt;Detect breakages&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="click: computePlan, disable: isComputing() || isPlanExecuting()"&gt;Compute plan&lt;/button&gt;
-    &lt;button class="btn btn-primary" data-bind="click: convertPreferences, disable: isComputing() || isPlanExecuting()"&gt;Recompute preferences&lt;/button&gt;
+    &lt;button class="btn" data-bind="click: convertPreferences, disable: isComputing() || isPlanExecuting(), css: {'btn-primary': isPlanModified(), 'btn-default': !isPlanModified()}"&gt;Recompute preferences&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: plan.actions().length == 0 || isPlanExecuting() || plan.tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: genJSON"&gt;Plan as JSON&lt;/button&gt;
@@ -546,6 +549,7 @@ require.config({
     self.success                 = ko.observable(false);
     self.json                    = ko.observable();
     self.lastMovedAction         = ko.observable();
+    self.isPlanModified          = ko.observable(false);
 
     // Do not refresh logs too often (to get better performances, because a lot of logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
@@ -595,6 +599,9 @@ require.config({
      * Send an ajax request to start a new job for the creation of a plan.
      */
     self.computePlan = function() {
+      if (!self.plan.isEmpty() &amp;&amp; !confirm('Please confirm you want to recompute the plan. The current one will be lost.')) {
+        return;
+      }
       self.isPlanRequested(true);
       self.isBreakageListRequested(false);
       self._startComputationJob('createPlan', function (data) {
@@ -607,6 +614,9 @@ require.config({
      * Send an ajax request to start a new job for the convertion of the preferences.
      */
     self.convertPreferences = function() {
+      if (!self.plan.isEmpty() &amp;&amp; !confirm('Please confirm you want to recompute the preferences. The current ones will be lost.')) {
+        return;
+      }
       self.isPlanRequested(true);
       self.isBreakageListRequested(false);
       self._startComputationJob('convertPreferences', function (data) {
@@ -684,6 +694,7 @@ require.config({
         }
         // Plan is loaded
         self.isComputing(false);
+        self.isPlanModified(false);
         console.log('INFO: Plan have been parsed.');
       }).fail(function () {
         new XWiki.widgets.Notification('Failed to load the computed plan', 'error');
@@ -695,7 +706,7 @@ require.config({
      * Generate the JSON representation of the plan.
      */
     self.genJSON = function() {
-      self.json(self.plan.getAsJSON());
+      self.json();
     }
 
     self.startBreakageDetection = function () {
@@ -2119,6 +2130,39 @@ define('Log', function() {
  */
 define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function (ko, $) {
 
+  /**
+   * @return all locations used by the action and its children
+   */
+  var getLocations = function (action, locations) {
+    locations.push(action.serializedTargetDocument());
+    for (var i = 0; i &lt; action.children().length; ++i) {
+      getLocations(action.children()[i], locations);
+    }
+    return locations;
+  };
+
+  /**
+   * Revert the move of an action.
+   */
+  var revertMove = function(action, parentContainer, currentParentAction, notification) {
+    // Put back the action inside its initial parent.
+    // Force the refresh by removing it and adding it again, because there is no way to say to the
+    // draggable element to go back to its initial place asynchronously.
+    parentContainer.remove(action);
+    parentContainer.push(action);
+    action.updateParent(currentParentAction);
+    notification.hide();
+  }
+
+  var hasCollision = function (action, array) {
+    for (var i = 0; i &lt; array.length; ++i) {
+      if (array[i].getTargetName() == action.getTargetName()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   ko.bindingHandlers.droppable = {
     init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
       $(element).droppable({
@@ -2131,19 +2175,40 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
           var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.plan.actions;
           var newParentAction    = valueAccessor();
           var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.plan.actions;
-          action.updateParent(newParentAction);
-          parentContainer.remove(action);
-          newParentContainer.push(action);
-          if (newParentAction) {
-            newParentAction.displayChildren(true);
+          var currentParentAction = action.parent;
+          var notification = new XWiki.widgets.Notification('Looking if the location is free.', 'inprogress');
+          // First look if it there is no colliding action
+          if (hasCollision(action, newParentContainer())) {
+            revertMove(action, parentContainer, currentParentAction, notification);
+            alert('Cannot move this page here because a page [' + action.getTargetName() + '] already exist(s).');
+          } else {
+            action.updateParent(newParentAction);
+            // Test if the locations are availabe
+            var locations = getLocations(action, []);
+            $.post(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'),
+              { action: 'checkLocations', locations: JSON.stringify(locations) }, null, 'json')
+            .done(function (results) {
+              if (results.length == 0) {
+                parentContainer.remove(action);
+                newParentContainer.push(action);
+                bindingContext.$root.isPlanModified(true);
+                if (newParentAction) {
+                  newParentAction.displayChildren(true);
+                }
+                notification.replace(new XWiki.widgets.Notification('Location is free.', 'done'));
+              } else {
+                revertMove(action, parentContainer, currentParentAction, notification);
+                alert('Cannot move this page here because [' + results.join(', ') + '] already exist(s).');
+              }
+              // Mark this action with the "last moved action" tag, which is displayed with a special color so that the user
+              // can see where her selection has finally been moved.
+              bindingContext.$root.lastMovedAction(action);
+              // However, remove this tag after 4 seconds, otherwise it might be confusing.
+              setTimeout(function() {
+                bindingContext.$root.lastMovedAction(false);
+              }, 4000);
+            });
           }
-          // Mark this action with the "last moved action" tag, which is displayed with a special color so that the user
-          // can see where her selection has finally been moved.
-          bindingContext.$root.lastMovedAction(action);
-          // However, remove this tag after 4 seconds, otherwise it might be confusing.
-          setTimeout(function() {
-            bindingContext.$root.lastMovedAction(false);
-          }, 4000);
         }
       });
     }

@@ -60,6 +60,8 @@
   #printStatusAndLogs()
 #elseif ($action == 'cleanPlan')
   #cleanPlan()
+#elseif ($action == 'checkLocations')
+  #checkLocations()
 #end
 #************************************************************************
  * Load configuration
@@ -235,6 +237,18 @@
  ************************************************************************#
 #macro(cleanPlan)
   $services.nestedpagesmigrator.cleanPlan($services.wiki.currentWikiId)
+#end
+#************************************************************************
+ * Check Locations
+ ************************************************************************#
+#macro(checkLocations)
+  #set ($locationsInError = [])
+  #foreach($document in $jsontool.parse($request.locations))
+    #if ($xwiki.exists($document))
+      #set ($discard = $locationsInError.add($document))
+    #end
+  #end
+  $jsontool.serialize($locationsInError)
 #end
 {{/velocity}}
 </content>

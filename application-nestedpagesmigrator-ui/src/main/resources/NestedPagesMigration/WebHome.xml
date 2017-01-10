@@ -2148,9 +2148,9 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
     // Put back the action inside its initial parent.
     // Force the refresh by removing it and adding it again, because there is no way to say to the
     // draggable element to go back to its initial place asynchronously.
+    action.updateParent(currentParentAction);
     parentContainer.remove(action);
     parentContainer.push(action);
-    action.updateParent(currentParentAction);
     notification.hide();
   }
 

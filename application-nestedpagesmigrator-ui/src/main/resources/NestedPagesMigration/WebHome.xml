@@ -89,12 +89,6 @@
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     ## Display if a previous document will be deleted
     &lt;strong data-bind="visible: deletePrevious"&gt;(previous document will be deleted)&lt;/strong&gt;
-    ## Display the exclude page button
-    &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludePage, disable: targetDocument.equals(sourceDocument)"&gt;exclude page&lt;/button&gt;
-    ## Display the exclude space button
-    &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.excludeSpace"&gt;exclude space&lt;/button&gt;
-    ## Display th button to change the parent of ht document
-    &lt;button class="btn btn-default btn-xs" data-bind="click: ${escapetool.d}root.setParent"&gt;set parent&lt;/button&gt;
     ## Display the number of children
     (&lt;span data-bind="text: getNumberOfChildren()"&gt;&lt;/span&gt; children,
     ## Display the number of preferences
@@ -734,76 +728,6 @@ require.config({
       }).fail(function () {
         new XWiki.widgets.Notification('Failed to load the breakages', 'error');
         //TODO: being able to restart the computation
-      });
-    };
-
-    /**
-     * Called when the user click on the "exclude page" button.
-     */
-    self.excludePage = function() {
-      var page = this.serializedSourceDocument();
-      if (confirm('Are you sure to exclude the page ['+page+'] from the migration? The plan may be recomputed.')) {
-        self.configuration.excludedPages(utils.appendToString(self.configuration.excludedPages(), page));
-        // Adding an exclusion can seriously change the plan (if children are moved), so we re-compute it
-        if (!self.configuration.dontMoveChildren()) {
-          self.computePlan();
-        } else {
-          var sourceDoc = this.sourceDocument;
-          var detectAction = function (action) {
-            return action.sourceDocument.equals(sourceDoc);
-          };
-          if (this.parent) {
-            this.parent.children.remove(detectAction);
-          } else {
-            self.plan.actions.remove(detectAction);
-          }
-        }
-      }
-    };
-
-    /**
-     * Called when the user click on the "exclude space" button.
-     */
-    self.excludeSpace = function() {
-      var space = XWiki.Model.serialize(this.sourceDocument.extractReference(XWiki.EntityType.SPACE));
-      if (confirm('Are you sure to exclude the space ['+space+'] from the migration? The plan will be recomputed.')) {
-        self.configuration.excludedSpaces(utils.appendToString(self.configuration.excludedSpaces(), space));
-        self.computePlan();
-      }
-    };
-
-    /**
-     * Called when the user click on the "set parent" button.
-     */
-    self.setParent = function () {
-      // The reference needs to be complete in order to use XWiki.Document#getRestURL()
-      if (this.sourceDocument.getRoot().type != XWiki.EntityType.WIKI) {
-        this.sourceDocument.appendParent(xm.documentReference.extractReference(XWiki.EntityType.WIKI))
-      };
-      // First get the current parent
-      var restURL = new XWiki.Document(this.sourceDocument).getRestURL('', 'media=json');
-      var notification = new XWiki.widgets.Notification('Getting information', 'inprogress');
-      $.getJSON(restURL).done(function (data) {
-        notification.hide();
-        // Now ask the new parent to set
-        var parent = prompt("Enter the fullName of the parent that you want to set: (this will be applied immediatly)", data.parent);
-        if (parent != null) {
-          notification = new XWiki.widgets.Notification('Saving...', 'inprogress');
-          // Set the new parent using the REST API
-          $.ajax(restURL, {
-            dataType: 'json',
-            data:   {'parent': parent},
-            method: 'PUT'
-          }).done(function(data) {
-            // TODO: put something here, and handle error;
-            self.computePlan();
-            notification.replace(new XWiki.widgets.Notification('New parent was set, computing the new plan.', 'done'));
-          }).fail(function() {
-            notification.replace(new XWiki.widgets.Notification('Failed to save the page.', 'error'));
-          });
-        }
-      }).fail(function() {
-        notification.replace(new XWiki.widgets.Notification('Failed to get the current parent of the page which may not exist.', 'error'));
       });
     };
 
@@ -2150,7 +2074,7 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
     // draggable element to go back to its initial place asynchronously.
     action.updateParent(currentParentAction);
     parentContainer.remove(action);
-    parentContainer.push(action);
+    parentContainer.push(action);  
     notification.hide();
   }
 
@@ -2180,7 +2104,7 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
           // First look if it there is no colliding action
           if (hasCollision(action, newParentContainer())) {
             revertMove(action, parentContainer, currentParentAction, notification);
-            alert('Cannot move this page here because a page [' + action.getTargetName() + '] already exist(s).');
+            alert('Cannot move this page here because a page [' + action.getTargetName() + '] already exist(s) in the plan.');
           } else {
             action.updateParent(newParentAction);
             // Test if the locations are availabe
@@ -2198,7 +2122,7 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
                 notification.replace(new XWiki.widgets.Notification('Location is free.', 'done'));
               } else {
                 revertMove(action, parentContainer, currentParentAction, notification);
-                alert('Cannot move this page here because [' + results.join(', ') + '] already exist(s).');
+                alert('Cannot move this page here because [' + results.join(', ') + '] already exist(s) in the wiki.');
               }
               // Mark this action with the "last moved action" tag, which is displayed with a special color so that the user
               // can see where her selection has finally been moved.

@@ -50,6 +50,17 @@ public class Right implements Serializable
         this.origin = origin;
     }
 
+    public Right(DocumentReference user, DocumentReference group, String level, boolean allow,
+            DocumentReference origin, boolean enabled)
+    {
+        this.user = user;
+        this.group = group;
+        this.level = level;
+        this.allow = allow;
+        this.origin = origin;
+        this.enabled = enabled;
+    }
+
     public DocumentReference getUser()
     {
         return user;

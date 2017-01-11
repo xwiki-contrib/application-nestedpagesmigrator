@@ -91,7 +91,8 @@ public class MigrationPlanDeserializer
                 action.addPreference(new Preference(
                         jsonPreference.getAsJsonPrimitive("name").getAsString(),
                         jsonPreference.getAsJsonPrimitive("value").getAsString(),
-                        resolver.resolve(jsonPreference.getAsJsonPrimitive("origin").getAsString(), wikiReference)
+                        resolver.resolve(jsonPreference.getAsJsonPrimitive("origin").getAsString(), wikiReference),
+                        jsonPreference.getAsJsonPrimitive("enabled").getAsBoolean()
                 ));
             }
         }
@@ -114,7 +115,8 @@ public class MigrationPlanDeserializer
                         group,
                         jsonRight.getAsJsonPrimitive("level").getAsString(),
                         "true".equalsIgnoreCase(jsonRight.getAsJsonPrimitive("allow").getAsString()),
-                        resolver.resolve(jsonRight.getAsJsonPrimitive("origin").getAsString(), wikiReference)
+                        resolver.resolve(jsonRight.getAsJsonPrimitive("origin").getAsString(), wikiReference),
+                        jsonRight.getAsJsonPrimitive("enabled").getAsBoolean()
                 ));
             }
         }

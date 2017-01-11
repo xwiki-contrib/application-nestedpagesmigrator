@@ -84,7 +84,7 @@
       &lt;strong class="documentName" data-bind="text: getTargetName(), css: { 'bg-danger': isTooLong() }"&gt;&lt;/strong&gt;
     &lt;/span&gt;
     ## Display the target location
-    [&lt;span data-bind="text: serializedTargetDocument()" class="monospace"&gt;&lt;/span&gt;]
+    [&lt;span data-bind="text: serializedTargetDocument()" class="monospace targetLocation"&gt;&lt;/span&gt;]
     ## Display if the action is a change or not
     &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     ## Display if a previous document will be deleted
@@ -96,15 +96,15 @@
     ## Display the number of rights
     &lt;span data-bind="text: getNumberOfRights()"&gt;&lt;/span&gt; rights)
     ## Display the original location
-    from &lt;a target="_blank" class="monospace" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}"&gt;&lt;/a&gt;
+    from &lt;a target="_blank" class="monospace sourceLocation" data-bind="text: serializedSourceDocument(), attr: {href: getSourceLink()}"&gt;&lt;/a&gt;
     ## Display all children
     &lt;!-- ko if: displayChildren() --&gt;
       ## Display preferences
       &lt;!-- ko if: preferences.length &gt; 0 --&gt;
-        &lt;ul data-bind="foreach: preferences" class="jstree-children"&gt;
+        &lt;ul data-bind="foreach: preferences" class="jstree-children preferences"&gt;
           &lt;li class="text-warning jstree-node jstree-leaf"&gt;
             &lt;i class="jstree-icon jstree-ocl" role="presentation"&gt;&lt;/i&gt;
-            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property"&gt;&lt;/span&gt; : &lt;span data-bind="text: value"&gt;&lt;/span&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}"&gt;&lt;/a&gt;)
+            &lt;input type="checkbox" data-bind="checked: enabled"/&gt; &lt;strong&gt;[Preferences] &lt;span data-bind="text: property" class="preferenceProperty"&gt;&lt;/span&gt; : &lt;span data-bind="text: value" class="preferenceValue"&gt;&lt;/span&gt;&lt;/strong&gt; (coming from &lt;a target="_blank" class="monospace" data-bind="text: getSerializedOrigin(), attr: {href: getOriginLink()}"&gt;&lt;/a&gt;)
           &lt;/li&gt;
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
@@ -118,7 +118,7 @@
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       ## Display children documents
-      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', data: {'actions': children()} }" class="jstree-children"/&gt;
+      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', data: {'actions': children()} }" class="jstree-children childrenActions"/&gt;
     &lt;!-- /ko --&gt;
   &lt;/li&gt;
   &lt;!-- /ko --&gt;
@@ -260,7 +260,6 @@
     &lt;button class="btn" data-bind="click: convertPreferences, disable: isComputing() || isPlanExecuting(), css: {'btn-primary': isPlanModified(), 'btn-default': !isPlanModified()}"&gt;Recompute preferences&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: plan.actions().length == 0 || isPlanExecuting() || plan.tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
-    &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: genJSON"&gt;Plan as JSON&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
 &lt;!--
@@ -305,7 +304,7 @@
   &lt;/div&gt;
   &lt;div data-bind="ifnot: isComputing"&gt;
     &lt;p&gt;If you don't migrate your pages, &lt;strong data-bind="text: breakageList().size()"&gt;&lt;/strong&gt; documents will lose their current parent.&lt;/p&gt;
-    &lt;ul data-bind="foreach: breakageList"&gt;
+    &lt;ul data-bind="foreach: breakageList" id="breakageList"&gt;
       &lt;li&gt;Page &lt;span data-bind="text: document" class="monospace box infomessage" &gt;&lt;/span&gt; will lose its current parent &lt;span data-bind="text: actualParent" class="monospace box infomessage"&gt;&lt;/span&gt; because its location parent is &lt;span data-bind="text: locationParent" class="monospace box infomessage"&gt;&lt;/span&gt;.&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/div&gt;
@@ -321,8 +320,6 @@
   &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
 &lt;!-- /ko --&gt;
-&lt;pre class="box" data-bind="text: json"&gt;
-&lt;/pre&gt;
 &lt;/script&gt;
 &lt;!-- Now we just include this part thanks to the "template" binding of knockout: we make sure that this part is
      displayed only if knockout is loaded... --&gt;

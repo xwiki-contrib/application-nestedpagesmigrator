@@ -105,6 +105,7 @@ public class MigrationPlanExecutorTest
         XWikiDocument doc = mock(XWikiDocument.class);
         when(xwiki.getDocument(any(DocumentReference.class), eq(context))).thenReturn(doc);
         when(doc.getAuthorReference()).thenReturn(new DocumentReference("xwiki", "XWiki", "Author"));
+        when(xwiki.exists(any(DocumentReference.class), any(XWikiContext.class))).thenReturn(true);
     }
 
     @Test
@@ -131,7 +132,7 @@ public class MigrationPlanExecutorTest
                 plan);
 
         action3.addPreference(new Preference("skin", "xwiki:XWiki.MoviesSkin", null));
-        action3.addPreference(new Preference("iconTheme", "silk", null));
+        action3.addPreference(new Preference("iconTheme", "silk", null, false));
         action3.addPreference(new Preference("colorTheme", "MoviesColorTheme", null));
 
         MigrationAction action4 = MigrationAction.createInstance(
@@ -151,7 +152,8 @@ public class MigrationPlanExecutorTest
 
         action5.addRight(new Right(new DocumentReference("xwiki", "XWiki", "UserB"), null, "admin", true, null));
         action5.addRight(new Right(null, new DocumentReference("xwiki", "XWiki", "GroupB"), "delete", false, null));
-        action5.addRight(new Right(null, new DocumentReference("xwiki", "XWiki", "GroupC"), "delete", false, null));
+        action5.addRight(new Right(null, new DocumentReference("xwiki", "XWiki", "GroupC"), "delete", false, null,
+                false));
         action5.addPreference(new Preference("skin", "xwiki:XWiki.Titanic3DSkin", null));
         action5.addPreference(new Preference("colorTheme", "Titanic3DColorTheme", null));
 
@@ -164,6 +166,7 @@ public class MigrationPlanExecutorTest
                 new DocumentReference("xwiki", Arrays.asList("Movies", "StarWars"), "WebHome"),
                 plan.getTopLevelAction(),
                 plan);
+        action7.setEnabled(false);
 
         // Create mocks
         XWikiDocument docRebbeccaPreferences = mock(XWikiDocument.class);
@@ -200,10 +203,6 @@ public class MigrationPlanExecutorTest
 
         // Configuration
         MigrationConfiguration configuration = new MigrationConfiguration(new WikiReference("xwiki"));
-        configuration.addDisabledAction("xwiki:Movies.Rebbecca_preference_1");
-        configuration.addDisabledAction("xwiki:Movies.Titanic3D_right_2");
-        configuration.addDisabledAction("xwiki:Movies.StarWars_page");
-
         // Test
         mocker.getComponentUnderTest().performMigration(plan, configuration);
 

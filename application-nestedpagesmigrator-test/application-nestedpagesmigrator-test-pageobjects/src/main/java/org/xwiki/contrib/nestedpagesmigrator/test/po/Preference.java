@@ -17,63 +17,49 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.nestedpagesmigrator;
+package org.xwiki.contrib.nestedpagesmigrator.test.po;
 
-import java.io.Serializable;
-
-import org.xwiki.model.reference.DocumentReference;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.xwiki.test.ui.XWikiWebDriver;
 
 /**
  * @version $Id: $
- * @since 0.3
  */
-public class Preference implements Serializable
+public class Preference
 {
-    private String name;
+    private String propertyName;
 
-    private Object value;
+    private String value;
 
-    private DocumentReference origin;
+    private WebElement checkbox;
 
-    private boolean enabled = true;
-
-    public Preference(String name, Object value, DocumentReference origin)
+    public Preference(XWikiWebDriver driver, WebElement li)
     {
-        this.name = name;
-        this.value = value;
-        this.origin = origin;
+        propertyName = li.findElement(By.className("preferenceProperty")).getText();
+        value = li.findElement(By.className("preferenceValue")).getText();
+        checkbox = li.findElement(By.tagName("input"));
     }
 
-    public Preference(String name, Object value, DocumentReference origin, boolean enabled)
+    public String getPropertyName()
     {
-        this.name = name;
-        this.value = value;
-        this.origin = origin;
-        this.enabled = enabled;
+        return propertyName;
     }
 
-    public String getName()
-    {
-        return name;
-    }
-
-    public Object getValue()
+    public String getValue()
     {
         return value;
     }
 
-    public DocumentReference getOrigin()
-    {
-        return origin;
-    }
-
     public boolean isEnabled()
     {
-        return enabled;
+        return checkbox.isSelected();
     }
 
     public void setEnabled(boolean enabled)
     {
-        this.enabled = enabled;
+        if (isEnabled() != enabled) {
+            checkbox.click();
+        }
     }
 }

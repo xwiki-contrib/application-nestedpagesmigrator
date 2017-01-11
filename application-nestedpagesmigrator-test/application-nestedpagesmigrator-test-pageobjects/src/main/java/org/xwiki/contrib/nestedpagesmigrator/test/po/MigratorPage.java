@@ -19,6 +19,9 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.test.po;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -39,6 +42,9 @@ public class MigratorPage extends ViewPage
     @FindBy(xpath = "//button[contains(text(), 'Compute plan')]")
     private WebElement btComputePlan;
 
+    @FindBy(xpath = "//button[contains(text(), 'Detect breakages')]")
+    private WebElement btDetectBreakagePlan;
+
     @FindBy(xpath = "//button[contains(text(), 'Execute plan')]")
     private WebElement btExecutePlan;
 
@@ -46,6 +52,24 @@ public class MigratorPage extends ViewPage
     {
         getUtil().gotoPage(new DocumentReference("xwiki", "NestedPagesMigration", "WebHome"));
         return new MigratorPage();
+    }
+
+    public List<String> detectBreakages()
+    {
+        btDetectBreakagePlan.click();
+
+        getDriver().waitUntilElementIsVisible(By.id("breakageList"));
+
+        // Quite ugly but sometimes knockout displays a thing for a millisecond before hiding it again and so we cannot
+        // rely on the visibility of an element to check if the plan is empty or displayed.
+        // By waiting "a bit", we make sure knockout really ends its work.
+        try {
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            // Don't care
+        }
+
+        return getBreakages();
     }
 
     public void computePlan()
@@ -91,5 +115,21 @@ public class MigratorPage extends ViewPage
         getDriver().makeConfirmDialogSilent(true);
         btExecutePlan.click();
         getDriver().waitUntilElementIsVisible(By.id("planExecuted"));
+    }
+
+    public List<String> getBreakages()
+    {
+        List<String> results = new ArrayList<>();
+
+        for (WebElement element : getDriver().findElements(By.cssSelector("#breakageList > li"))) {
+            results.add(element.getText());
+        }
+
+        return results;
+    }
+
+    public MigrationPlan getPlan()
+    {
+        return new MigrationPlan(getDriver(), getDriver().findElement( By.cssSelector("#planTree > li > ul")));
     }
 }

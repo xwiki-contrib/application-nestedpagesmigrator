@@ -27,8 +27,11 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.xwiki.contrib.nestedpagesmigrator.test.po.MigrationAction;
+import org.xwiki.contrib.nestedpagesmigrator.test.po.MigrationPlan;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.MigratorPage;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.MyViewPage;
+import org.xwiki.contrib.nestedpagesmigrator.test.po.Preference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rest.model.jaxb.Page;
 import org.xwiki.test.ui.AbstractTest;
@@ -58,9 +61,32 @@ public class NestedPagesMigratorTest extends AbstractTest
 
         MigratorPage migratorPage = MigratorPage.gotoPage();
 
+        // Detect breakages
+        List<String> breakages = migratorPage.detectBreakages();
+        assertEquals(3, breakages.size());
+        assertEquals("Page xwiki:Comedies.AFishCalledWanda will lose its current parent xwiki:Movies.WebHome because " +
+                "its location parent is xwiki:Comedies.WebHome.", breakages.get(0));
+        assertEquals("Page xwiki:Comedies.VeryBadTrip will lose its current parent xwiki:Movies.WebHome because " +
+                "its location parent is xwiki:Comedies.WebHome.", breakages.get(1));
+        assertEquals("Page xwiki:Main.Movies.AFishCalledWanda.WebHome will lose its current parent " +
+                "xwiki:Movies.WebHome because its location parent is xwiki:Main.Movies.WebHome.", breakages.get(2));
+
         // Compute a plan
         migratorPage.computePlan();
         assertFalse(migratorPage.isPlanEmpty());
+
+        // Disable some actions
+        MigrationPlan plan = migratorPage.getPlan();
+        MigrationAction moviesAction = plan.getActions().get(0).getChildren().get(0);
+        MigrationAction veryBadTripAction = moviesAction.getChildren().get(3);
+        assertEquals("Main.Movies.VeryBadTrip.WebHome", veryBadTripAction.getTarget());
+        assertEquals("Comedies.VeryBadTrip", veryBadTripAction.getSource());
+        veryBadTripAction.setEnabled(false);
+
+        MigrationAction wandaAction = moviesAction.getChildren().get(0);
+        List<Preference> preferences = wandaAction.getPreferences();
+        assertEquals(4, preferences.size());
+        preferences.get(3).setEnabled(false);
 
         // Execute it
         migratorPage.executePlan();
@@ -93,12 +119,8 @@ public class NestedPagesMigratorTest extends AbstractTest
         assertEquals("Panels.Welcome", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_rightPanels")));
         assertEquals("0", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_showLeftPanels")));
         assertEquals("1", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_showRightPanels")));
-        assertEquals("Large", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_rightPanelsWidth")));
-
-        // Go back to the migrator, the computed plan must be empty now
-        migratorPage = MigratorPage.gotoPage();
-        migratorPage.computePlan();
-        assertTrue(migratorPage.isPlanEmpty());
+        // Verify this property has not been changed!
+        assertEquals("---", objects.get(0).getFieldValue(By.id("XWiki.XWikiPreferences_0_rightPanelsWidth")));
 
         // That's all!
     }

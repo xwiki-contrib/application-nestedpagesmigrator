@@ -79,6 +79,12 @@ public class MigrationPlanExecutor
     @Inject
     private ObservationManager observationManager;
 
+    private XWikiContext context;
+
+    private XWiki xwiki;
+
+    private DocumentReference redirectClass;
+
     private MigrationConfiguration configuration;
 
     private DocumentReference rightsClassReference;
@@ -95,6 +101,11 @@ public class MigrationPlanExecutor
     public void performMigration(MigrationPlanTree plan, MigrationConfiguration configuration) throws MigrationException
     {
         observationManager.notify(new BeginMigrationEvent(configuration.getWikiReference().getName()), this);
+
+        context = contextProvider.get();
+        xwiki = context.getWiki();
+        redirectClass = new DocumentReference("RedirectClass",
+                new SpaceReference("XWiki", configuration.getWikiReference()));
 
         try {
             this.configuration = configuration;
@@ -132,8 +143,7 @@ public class MigrationPlanExecutor
 
         try {
             // Move the document (if this action is enabled by the user)
-            if (action.isEnabled() && !action.isIdentity()
-                    && configuration.isActionEnabled(String.format("%s_page", sourceDocument))) {
+            if (action.isEnabled() && !action.isIdentity() && isDocumentUnMigratedYet(action.getSourceDocument())) {
                 if (action.shouldDeletePrevious()) {
                     deleteDocument(action);
                 }
@@ -153,6 +163,25 @@ public class MigrationPlanExecutor
         for (MigrationAction child : action.getChildren()) {
             performAction(child);
         }
+    }
+
+    /**
+     * If the user executes the same plan twice (because of a failure in the middle of the execution, for
+     * example), we must not move again a migrated document (data would be lost).
+     *
+     * @return if the document has not been already migrated
+     */
+    private boolean isDocumentUnMigratedYet(DocumentReference documentReference) throws XWikiException
+    {
+        // If the document do not exist anymore, it must have been migrated
+        if (!xwiki.exists(documentReference, context)) {
+            return false;
+        }
+
+        XWikiDocument document = xwiki.getDocument(documentReference, context);
+
+        // The document has not been migrated if there is no redirect object in it.
+        return document.getXObject(redirectClass) == null;
     }
 
     /**
@@ -250,15 +279,12 @@ public class MigrationPlanExecutor
      */
     private void applyPreferences(MigrationAction action, XWikiDocument document, XWikiContext context)
     {
-        String sourceDocument = serializer.serialize(action.getSourceDocument());
         BaseObject obj = document.getXObject(preferencesClassReference, true, context);
-        int iter = 0;
         for (Preference preference : action.getPreferences()) {
             // Check that this preference migration is enabled by the user
-            if (configuration.isActionEnabled(String.format("%s_preference_%d", sourceDocument, iter))) {
+            if (preference.isEnabled()) {
                 obj.set(preference.getName(), preference.getValue(), context);
             }
-            iter++;
         }
     }
 
@@ -273,12 +299,10 @@ public class MigrationPlanExecutor
      */
     private void applyRights(MigrationAction action, XWikiDocument document, XWikiContext context) throws XWikiException
     {
-        String sourceDocument = serializer.serialize(action.getSourceDocument());
-        int iter = 0;
         // Create one XWikiGlobalRights object per right
         for (Right right : action.getRights()) {
             // Check that this right migration is enabled by the user
-            if (configuration.isActionEnabled(String.format("%s_right_%d", sourceDocument, iter))) {
+            if (right.isEnabled()) {
                 BaseObject obj = document.newXObject(rightsClassReference, context);
                 if (right.getUser() != null) {
                     obj.set("users", serializer.serialize(right.getUser()), context);
@@ -289,7 +313,6 @@ public class MigrationPlanExecutor
                 obj.set("levels", right.getLevel(), context);
                 obj.set("allow", right.isAllow() ? 1 : 0, context);
             }
-            iter++;
         }
     }
 }

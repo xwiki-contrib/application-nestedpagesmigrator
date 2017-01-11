@@ -208,11 +208,6 @@
   #set ($configuration = $services.nestedpagesmigrator.newMigrationConfiguration($services.wiki.currentWikiId))
   #set ($addRedirection = "$!request.addRedirection" == 'true')
   #set ($discard = $configuration.setAddAutoRedirect($addRedirection))
-  #set ($disabledActions = "$!request.disabledActions")
-  ## We might have problem if ',' is used in the page name
-  #foreach ($disabledAction in $disabledActions.split(','))
-    #set ($discard = $configuration.addDisabledAction($disabledAction))
-  #end
   ###
   ### Start the job
   ###

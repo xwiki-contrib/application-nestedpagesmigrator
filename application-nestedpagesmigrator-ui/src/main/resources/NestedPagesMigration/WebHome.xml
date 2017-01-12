@@ -61,7 +61,7 @@
   -------------------------------------------&gt;
 &lt;script id="MigrationActionTemplate" type="text/html"&gt;
   &lt;!-- ko foreach: ${escapetool.d}data.actions.sort(function (l, r) {return l.getTargetName() &gt; r.getTargetName() ? 1 : -1}) --&gt;
-  &lt;li class="jstree-node" data-bind="
+  &lt;li class="migration-action jstree-node" data-bind="
     css: {
       'jstree-closed': !displayChildren(),
       'jstree-open'  : displayChildren(),
@@ -77,7 +77,7 @@
     ## Display the 'all' link
     &lt;a href="#" data-bind="visible: !enabled() &amp;&amp; (getNumberOfChildren() &gt; 0 || getNumberOfPreferences() &gt; 0 || getNumberOfRights()&gt; 0), click: enableWithChildren" &gt;(all)&lt;/a&gt;
     ## Display the place where the user can drag the current item
-    &lt;span class="movablePicker" data-bind="droppable: ${escapetool.d}data"&gt;
+    &lt;span class="movablePicker" data-bind="droppable: ${escapetool.d}data, editable: ${escapetool.d}data"&gt;
       ## Display the arrows
       &lt;span class="fa fa-arrows"&gt;&lt;/span&gt;
       ## Display the document name
@@ -86,7 +86,7 @@
     ## Display the target location
     [&lt;span data-bind="text: serializedTargetDocument()" class="monospace targetLocation"&gt;&lt;/span&gt;]
     ## Display if the action is a change or not
-    &lt;em data-bind="visible: targetDocument.equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
+    &lt;em data-bind="visible: targetDocument().equals(sourceDocument)"&gt;(unchanged)&lt;/em&gt;
     ## Display if a previous document will be deleted
     &lt;strong data-bind="visible: deletePrevious"&gt;(previous document will be deleted)&lt;/strong&gt;
     ## Display the number of children
@@ -270,7 +270,7 @@
 &lt;!------------------------------------------
   Display plan
   -------------------------------------------&gt;
-&lt;div data-bind="if: isPlanRequested() &amp;&amp; !isPlanExecuting()"&gt;
+&lt;div id="migrationPlan" data-bind="if: isPlanRequested() &amp;&amp; !isPlanExecuting()"&gt;
   ## We escape the dollar of the knockout variable '$root' because $root also exists in velocity
   &lt;!-- ko template: {name: 'DisplayPlan', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
@@ -516,7 +516,7 @@ require.config({
       <cache>long</cache>
     </property>
     <property>
-      <code>require(['jquery', 'xwiki-meta', 'knockout', 'utils', 'MigrationAction', 'Preference', 'Right', 'Breakage', 'Log', 'AppConfiguration', 'MigrationPlan', 'movable-binding-handler'], function ($, xm, ko, utils, MigrationAction, Preference, Right, Breakage, Log, AppConfiguration, MigrationPlan) {
+      <code>require(['jquery', 'xwiki-meta', 'knockout', 'utils', 'MigrationAction', 'Preference', 'Right', 'Breakage', 'Log', 'AppConfiguration', 'MigrationPlan', 'movable-binding-handler', 'editable-binding-handler'], function ($, xm, ko, utils, MigrationAction, Preference, Right, Breakage, Log, AppConfiguration, MigrationPlan) {
 
   /**
    * The model of the application. All data and functions used by the application view are stored here.
@@ -538,7 +538,6 @@ require.config({
     self.progress                = ko.observable(0);
     self.isPlanExecuting         = ko.observable(false);
     self.success                 = ko.observable(false);
-    self.json                    = ko.observable();
     self.lastMovedAction         = ko.observable();
     self.isPlanModified          = ko.observable(false);
 
@@ -693,13 +692,6 @@ require.config({
       });
     };
 
-    /**
-     * Generate the JSON representation of the plan.
-     */
-    self.genJSON = function() {
-      self.json();
-    }
-
     self.startBreakageDetection = function () {
       self.isPlanRequested(false);
       self.isBreakageListRequested(true);
@@ -797,6 +789,18 @@ require.config({
         self.isPlanRequested(false);
         self.cleanAll();
       });
+    };
+
+    /**
+     * Mark an action with the "last moved action" tag, which is displayed with a special color so that the user
+     * can see where her selection has finally been moved.
+     */
+    self.updateLastMovedAction = function (action) {
+      self.lastMovedAction(action);
+      // However, remove this tag after 4 seconds, otherwise it might be confusing.
+      setTimeout(function() {
+        self.lastMovedAction(false);
+      }, 4000);
     };
 
   };
@@ -1029,6 +1033,29 @@ define('utils', ['xwiki-meta'], function(xm) {
       }
       result += toAppend;
       return result;
+    },
+
+    /**
+     * @return all locations used by the action and its children
+     */
+    getLocations: function (action, locations) {
+      locations.push(action.serializedTargetDocument());
+      for (var i = 0; i &lt; action.children().length; ++i) {
+        this.getLocations(action.children()[i], locations);
+      }
+      return locations;
+    },
+
+    /**
+     * @return if the target name is already used in the array of actions
+     */
+    hasCollision: function (targetName, arrayOfActions) {
+      for (var i = 0; i &lt; arrayOfActions.length; ++i) {
+        if (arrayOfActions[i].getTargetName() == targetName) {
+          return true;
+        }
+      }
+      return false;
     }
   };
 });
@@ -1140,7 +1167,7 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
 
     self.parent          = parent;
     self.sourceDocument  = utils.resolveLocally(source);
-    self.targetDocument  = utils.resolveLocally(target);
+    self.targetDocument  = ko.observable(utils.resolveLocally(target));
     self.children        = ko.observableArray();
     self.displayChildren = ko.observable(false);
     self.enabled         = ko.observable(true);
@@ -1159,7 +1186,7 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
      * @return the serialized document reference of the target
      */
     self.serializedTargetDocument = function () {
-      return XWiki.Model.serialize(self.targetDocument);
+      return XWiki.Model.serialize(self.targetDocument());
     };
 
     /**
@@ -1177,7 +1204,7 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
      * @return the document name of the destination
      */
     self.getTargetName = function () {
-      return self.targetDocument.getName() == 'WebHome' ? self.targetDocument.parent.getName() : self.targetDocument.getName();
+      return self.targetDocument().getName() == 'WebHome' ? self.targetDocument().parent.getName() : self.targetDocument().getName();
     }
 
     /**
@@ -1267,32 +1294,32 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
         // Therefore the new space is "C.D.B".
         var newSpace = new XWiki.EntityReference(
           // Get the name of the space of the current target document (in our example, it's "B").
-          self.targetDocument.extractReferenceValue(XWiki.EntityType.SPACE),
+          self.targetDocument().extractReferenceValue(XWiki.EntityType.SPACE),
           // The entity is a space
           XWiki.EntityType.SPACE,
           // Extract the space of the new parent (in our example it's "C.D").
-          newParent.targetDocument.extractReference(XWiki.EntityType.SPACE)
+          newParent.targetDocument().extractReference(XWiki.EntityType.SPACE)
         );
         // Finally compute the new target document.
-        self.targetDocument = new XWiki.EntityReference(
+        self.targetDocument(new XWiki.EntityReference(
           // Use the sane name (should be "WebHome")
-          self.targetDocument.name,
+          self.targetDocument().name,
           // The entity is a document
           XWiki.EntityType.DOCUMENT,
           // The parent is the space we have computed aboved.
           newSpace
-        );
+        ));
       } else {
         // If no parent, then we want to have a top-level document.
         // For example: "A.B.WebHome" becomes "B.WebHome".
         // Note: in this application we want to deal with local references only.
-        self.targetDocument = new XWiki.DocumentReference(
+        self.targetDocument(new XWiki.DocumentReference(
           '',
           // Extract the space name of the current target (In our example, it's "B").
-          self.targetDocument.extractReferenceValue(XWiki.EntityType.SPACE),
+          self.targetDocument().extractReferenceValue(XWiki.EntityType.SPACE),
           // Use the sane name (should be "WebHome")
-          self.targetDocument.name
-        ).relativeTo(new XWiki.WikiReference(''));
+          self.targetDocument().name
+        ).relativeTo(new XWiki.WikiReference('')));
       }
 
       // Update children too
@@ -2049,18 +2076,7 @@ define('Log', function() {
  * Custom binding used to enable the move of actions with a drag &amp; drop.
  * @since 0.8
  */
-define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function (ko, $) {
-
-  /**
-   * @return all locations used by the action and its children
-   */
-  var getLocations = function (action, locations) {
-    locations.push(action.serializedTargetDocument());
-    for (var i = 0; i &lt; action.children().length; ++i) {
-      getLocations(action.children()[i], locations);
-    }
-    return locations;
-  };
+define('movable-binding-handler', ['knockout', 'jquery', 'utils', 'jquery-ui'], function (ko, $, utils) {
 
   /**
    * Revert the move of an action.
@@ -2071,21 +2087,13 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
     // draggable element to go back to its initial place asynchronously.
     action.updateParent(currentParentAction);
     parentContainer.remove(action);
-    parentContainer.push(action);  
+    parentContainer.push(action);
     notification.hide();
-  }
-
-  var hasCollision = function (action, array) {
-    for (var i = 0; i &lt; array.length; ++i) {
-      if (array[i].getTargetName() == action.getTargetName()) {
-        return true;
-      }
-    }
-    return false;
   }
 
   ko.bindingHandlers.droppable = {
     init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      var model = bindingContext.$root;
       $(element).droppable({
         tolerance  : 'pointer',
         activeClass: 'droppable-active',
@@ -2093,41 +2101,37 @@ define('movable-binding-handler', ['knockout', 'jquery', 'jquery-ui'], function 
         drop : function(event, ui) {
           var draggable          = $(ui.draggable);
           var action             = draggable.data('action');
-          var parentContainer    = action.parent ? action.parent.children : bindingContext.$root.plan.actions;
+          var parentContainer    = action.parent ? action.parent.children : model.plan.actions;
           var newParentAction    = valueAccessor();
-          var newParentContainer = newParentAction ? newParentAction.children : bindingContext.$root.plan.actions;
+          var newParentContainer = newParentAction ? newParentAction.children : model.plan.actions;
           var currentParentAction = action.parent;
           var notification = new XWiki.widgets.Notification('Looking if the location is free.', 'inprogress');
           // First look if it there is no colliding action
-          if (hasCollision(action, newParentContainer())) {
+          if (utils.hasCollision(action.getTargetName(), newParentContainer())) {
             revertMove(action, parentContainer, currentParentAction, notification);
-            alert('Cannot move this page here because a page [' + action.getTargetName() + '] already exist(s) in the plan.');
+            alert('Cannot move this page here because a page [' + action.getTargetName() + '] already exists in the plan.');
+            model.updateLastMovedAction(action, bindingContext);
           } else {
             action.updateParent(newParentAction);
             // Test if the locations are availabe
-            var locations = getLocations(action, []);
+            var locations = utils.getLocations(action, []);
             $.post(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'),
               { action: 'checkLocations', locations: JSON.stringify(locations) }, null, 'json')
             .done(function (results) {
-              if (results.length == 0) {
+              notification.hide();
+              // We allowed the move if there is no collision or if it collides with the source document (identity action).
+              if (results.length == 0 || results[0] == action.serializedSourceDocument()) {
                 parentContainer.remove(action);
                 newParentContainer.push(action);
-                bindingContext.$root.isPlanModified(true);
+                model.isPlanModified(true);
                 if (newParentAction) {
                   newParentAction.displayChildren(true);
                 }
-                notification.replace(new XWiki.widgets.Notification('Location is free.', 'done'));
               } else {
                 revertMove(action, parentContainer, currentParentAction, notification);
                 alert('Cannot move this page here because [' + results.join(', ') + '] already exist(s) in the wiki.');
               }
-              // Mark this action with the "last moved action" tag, which is displayed with a special color so that the user
-              // can see where her selection has finally been moved.
-              bindingContext.$root.lastMovedAction(action);
-              // However, remove this tag after 4 seconds, otherwise it might be confusing.
-              setTimeout(function() {
-                bindingContext.$root.lastMovedAction(false);
-              }, 4000);
+              model.updateLastMovedAction(action, bindingContext);
             });
           }
         }
@@ -2702,6 +2706,232 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
   </object>
   <object>
     <name>NestedPagesMigration.WebHome</name>
+    <number>15</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>00e81af4-481a-4f3d-aa23-9e32a757c563</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>/**
+ * Binding handler that implement the ability to change the target name of an action..
+ * @since 0.8
+ */
+define('editable-binding-handler', ['knockout', 'jquery', 'utils'], function (ko, $, utils) {
+
+  ko.bindingHandlers.editable = {
+    init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      var editableElement = $(element);
+      var action = bindingContext.$rawData;
+
+      // Add an "pencil" button to after the target name
+      var button = $('&lt;button&gt;').addClass('fa fa-pencil btn btn-default btn-xs');
+      editableElement.after(button);
+
+      /**
+       * Replace the target name displayer by an form that let the user type an other target name.
+       */
+      button.click(function() {
+        // Hide the displayer and the button
+        editableElement.hide();
+        button.hide();
+
+        // Construct the form
+        var form = $('&lt;form&gt;');
+        button.before(form);
+        form.css('display', 'inline');
+        var input = $('&lt;input type="text" class="input-sm"&gt;').attr('placeholder', action.getTargetName());
+        form.append(input);
+        var accept = $('&lt;button type="submit" class="fa fa-check btn btn-success btn-sm"&gt;');
+        input.after(accept);
+        var cancel = $('&lt;button class="fa fa-close btn btn-default btn-sm"&gt;');
+        accept.after(cancel);
+
+        // Give focus to the input so that the user can immediatly type the new name
+        input.focus();
+
+        /**
+         * Remove the form and make the displayer visible again
+         */
+        var removeForm = function () {
+          form.remove();
+          button.show();
+          editableElement.show();
+        };
+
+        /**
+         * Close the form when the cancel button is clicked
+         */
+        cancel.click(removeForm);
+
+        /**
+         * Close the form when the "escape" button is pressed
+         */
+        input.keyup(function(event) {
+          if (event.which == 27) {
+            removeForm();
+          }
+        });
+
+        /**
+         * Check if the new name is acceptable and update the action if it is
+         */
+        accept.click(function (event) {
+          // We do not want the form to be executed by the browser, all the business logic is inside this javascript
+          event.preventDefault();
+
+          // Get the value and stop if it is blank or if it has not changed
+          var value = input.val().trim();
+          if (value.length == 0 || value == action.getTargetName()) {
+            removeForm();
+            return;
+          }
+
+          // Save the old target so that we could put it back if something is wrong afterwards.
+          var oldTarget = action.targetDocument();
+
+          // Compute the new target document
+          var newTarget = new XWiki.EntityReference(
+            // Use the sane name (should be "WebHome")
+            oldTarget.name,
+            // The entity is a document
+            XWiki.EntityType.DOCUMENT,
+            // The parent is a space holding the new name
+            new XWiki.EntityReference(
+              value,
+              XWiki.EntityType.SPACE,
+              oldTarget.parent.parent
+            )
+          );
+
+          // Check if the new name is not already used by a sibling action
+          var parentContainer = action.parent ? action.parent.children : bindingContext.$root.plan.actions;
+          if (utils.hasCollision(value, parentContainer())) {
+            alert('Cannot use this name because a page [' + value + '] already exists here in the plan.');
+            return;
+          }
+
+          // Update the target document
+          action.targetDocument(newTarget);
+          // Trick: when you call updateParent() on an action, it also update all its children
+          action.updateParent(action.parent);
+
+          // If the user wants to use the same name than the source document, it's ok, we don't need more checks
+          if (newTarget.equals(action.sourceDocument)) {
+            bindingContext.$root.updateLastMovedAction(action, bindingContext);
+            removeForm();
+            return;
+          }
+
+          // Test if the locations of the action and its children are available
+          var notification = new XWiki.widgets.Notification('Looking if the location is free.', 'inprogress');
+          var locations = utils.getLocations(action, []);
+          $.post(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'),
+            { action: 'checkLocations', locations: JSON.stringify(locations) }, null, 'json')
+          .done(function (results) {
+            notification.hide();
+            if (results.length &gt; 0) {
+              alert('Cannot rename this page here because [' + results.join(', ') + '] already exist(s) in the wiki.');
+              // Rollback
+              action.targetDocument(oldTarget);
+              // See above why we do that
+              action.updateParent(action.parent);
+            } else {
+              new XWiki.widgets.Notification('Location is free.', 'done');
+            }
+            bindingContext.$root.updateLastMovedAction(action, bindingContext);
+            removeForm();
+          });
+        });
+      });
+    }
+  };
+});
+</code>
+    </property>
+    <property>
+      <name>Define editable-binding-handler</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <object>
+    <name>NestedPagesMigration.WebHome</name>
     <number>0</number>
     <className>XWiki.StyleSheetExtension</className>
     <guid>b5d5a928-6d36-416b-9504-1d525373dc49</guid>
@@ -2818,6 +3048,10 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
 
 .droppable-hover {
   background-color: lightgreen !important;
+}
+
+.migration-action {
+  transition: background-color 1s;
 }
 
 .moved-action {

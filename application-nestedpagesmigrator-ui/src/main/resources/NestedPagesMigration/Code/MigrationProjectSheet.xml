@@ -20,22 +20,20 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.2" reference="NestedPagesMigration.WebHome" locale="">
-  <web>NestedPagesMigration</web>
-  <name>WebHome</name>
+<xwikidoc version="1.2" reference="NestedPagesMigration.Code.MigrationProjectSheet" locale="">
+  <web>NestedPagesMigration.Code</web>
+  <name>MigrationProjectSheet</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
   <creationDate>1252454400000</creationDate>
-  <!-- Set itself as parent so this page will not be migrated! -->
-  <parent>NestedPagesMigration.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <date>1452784366000</date>
   <contentUpdateDate>1452783789000</contentUpdateDate>
   <version>1.1</version>
-  <title>Nested Pages Migration</title>
+  <title/>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
@@ -45,7 +43,13 @@
   {{error}}
   You don't have the right to use this tool on this wiki. You need to be administrator.
   {{/error}}
+#elseif ($xcontext.action != 'view')
+  {{error}}
+  Only view mode is supported!
+  {{/error}}
 #else
+#set ($discard = $xwiki.ssx.use('NestedPagesMigration.Code.MigrationProjectSheet'))
+#set ($discard = $xwiki.jsx.use('NestedPagesMigration.Code.MigrationProjectSheet'))
 ## Both job.css and extension.css are needed because the ui-progress classes that we need to display
 ## a progress bar are in one of these 2 files depending on the XWiki version
 #set ($discard = $xwiki.ssfx.use('uicomponents/job/job.css', true))
@@ -262,6 +266,7 @@
     &lt;button class="btn" data-bind="click: convertPreferences, disable: isComputing() || isPlanExecuting(), css: {'btn-primary': isPlanModified(), 'btn-default': !isPlanModified()}"&gt;Recompute preferences&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: plan.actions().length == 0 || isPlanExecuting() || plan.tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
+    &lt;button class="btn btn-success" data-bind="disable: isPlanExecuting(), click: saveProject"&gt;Save the project&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
 &lt;/script&gt;
@@ -342,10 +347,10 @@
 {{/velocity}}
 </content>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>1</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>565cd161-a494-4916-bcd8-4e6252f6862f</guid>
+    <guid>0378b449-4da2-4a22-8133-4ce238e9f126</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -449,10 +454,10 @@ require.config({
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>2</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>dbfa6b73-0016-47ab-8bcf-7e3a67863b54</guid>
+    <guid>08ce319b-b3c0-498e-bb1e-739b775be769</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -589,7 +594,7 @@ require.config({
         data.plan = self.plan.getAsJSON();
       }
       self.cleanAll();
-      $.post(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), data)
+      $.post(utils.getServiceURL(), data)
         .done(callback)
         .fail(function () {
           console.log(action == 'startBreakageDetection' ? 'ERROR: Failed to start the breakage detection.'
@@ -632,7 +637,7 @@ require.config({
      * logs UI.
      */
     self._getJobStatusAndLogs = function (jobAction, successCallback) {
-      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+      $.getJSON(utils.getServiceURL(), {
         'action' : 'printStatusAndLogs',
         'jobAction' : jobAction
       }).done(function (data) {
@@ -658,7 +663,7 @@ require.config({
      * Get the migration plan that have been computed, in order to display it.
      */
     self._getMigrationPlan = function () {
-      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+      $.getJSON(utils.getServiceURL(), {
         'action': 'printPlan'
       }).done(function (data) {
         console.log('INFO: Plan computed');
@@ -718,7 +723,7 @@ require.config({
      * Get breakage list that have been computed, in order to display it.
      */
     self._getBreakages = function () {
-      $.getJSON(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+      $.getJSON(utils.getServiceURL(), {
         'action': 'printBreakages'
       }).done(function (data) {
         for (var i = 0; i &lt; data.length; ++i) {
@@ -772,7 +777,7 @@ require.config({
         disabledActions += getDisabledActions(action);
       }
 
-      $.ajax(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+      $.ajax(utils.getServiceURL(), {
         'data': {
           'action'               : 'executePlan',
           'addRedirection'       : self.configuration.addRedirection(),
@@ -794,7 +799,7 @@ require.config({
      * Clean the plan to free the memory on the server.
      */
     self.cleanPlan = function() {
-      $.ajax(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'), {
+      $.ajax(utils.getServiceURL(), {
         'data': {'action': 'cleanPlan'},
         'method': 'POST'
       }).done(function() {
@@ -815,6 +820,18 @@ require.config({
       }, 4000);
     };
 
+    self.saveProject = function () {
+      var notification = new XWiki.widgets.Notification('Page is saving', 'inprogress');
+      var url = xm.restURL + '/objects/NestedPagesMigration.Code.MigrationProjectClass/0';
+      $.ajax(url, {method: 'PUT', data: {
+        'property#excludedPages': 'Marina Cristalle',
+        'property#jsonPlan': '{json: true}'
+      }}).done(function(){
+        notification.hide();
+        new XWiki.widgets.Notification('Page is saved', 'done');
+      });
+    };
+
   };
 
   // Activates knockout.js
@@ -833,10 +850,10 @@ require.config({
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>3</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>19bc7fee-b585-4ec5-b1b8-b504924e3bd9</guid>
+    <guid>98595644-d883-4972-b3f5-f240baa461f1</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -915,6 +932,7 @@ require.config({
       <code>require(['jquery'], function ($) {
   $(document).ready(function() {
     $(".edit_section").remove();
+    $('#tmEdit').hide();
   });
 });
 </code>
@@ -930,10 +948,10 @@ require.config({
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>4</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>31c3d420-1759-44bb-8f8a-6e1315564f91</guid>
+    <guid>39242f0a-9037-4247-9b6a-a70f5807fb82</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -1016,6 +1034,19 @@ require.config({
 define('utils', ['xwiki-meta'], function(xm) {
   return {
     /**
+     * Return the URL of the Nested Pages Migration Service
+     */
+    getServiceURL: function() {
+      return new XWiki.Document(
+        new XWiki.DocumentReference(
+          xm.documentReference.extractReferenceValue(XWiki.EntityType.WIKI),
+          ['NestedPagesMigration', 'Code'],
+          'Service'
+        )
+      ).getURL('get', 'outputSyntax=plain');
+    },
+
+    /**
      * Generate the fullName of a document without the wiki part (e.g. "Main.WebHome").
      * @param document the serialized reference of a document (e.g. "mywiki:Main.WebHome")
      */
@@ -1084,10 +1115,10 @@ define('utils', ['xwiki-meta'], function(xm) {
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>5</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>1a312b7c-da1d-49d9-ade2-01694aebbcc2</guid>
+    <guid>922734a6-e106-4af5-82ad-9ef9c2e698d8</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -1411,10 +1442,10 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>6</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>3623b1a5-1d8e-4613-852e-236228b65b76</guid>
+    <guid>837f32a4-a8d6-4df9-9e96-69faf4599aed</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -1537,10 +1568,10 @@ define('Preference', ['utils', 'knockout'], function (utils, ko) {
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>7</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>5636c052-9345-4260-9ae1-3879dd50a1e8</guid>
+    <guid>7374329f-b715-4a40-a518-16d43062c0f3</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -1673,10 +1704,10 @@ define('Right', ['utils', 'knockout'], function (utils, ko) {
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>8</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>d6c03c5d-01b4-49e8-8eb4-578f86a68666</guid>
+    <guid>d85d5c8d-9f4a-4ec0-b9a6-11eb58bafd62</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -1780,10 +1811,10 @@ define('Breakage', function() {
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>9</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>62a1be4b-9931-4a19-9afd-701f92e5890f</guid>
+    <guid>e9efc1a8-6d6f-4621-9a68-a586e57ccedc</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -1893,10 +1924,10 @@ define('AppConfiguration', ['utils', 'knockout', 'ExcludedXClasses'], function(u
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>10</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>eaf85949-0e53-4716-8faf-3480db3acafc</guid>
+    <guid>2cd0e86f-8594-4b30-9569-3fff9aebf13c</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -2005,10 +2036,10 @@ define('Log', function() {
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>11</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>b241c0e4-a11e-453b-aa15-9cfbe72bfa16</guid>
+    <guid>3754bed6-da7f-4d0b-bacf-f4d326dcf175</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -2127,7 +2158,7 @@ define('movable-binding-handler', ['knockout', 'jquery', 'utils', 'jquery-ui'], 
             action.updateParent(newParentAction);
             // Test if the locations are availabe
             var locations = utils.getLocations(action, []);
-            $.post(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'),
+            $.post(utils.getServiceURL(),
               { action: 'checkLocations', locations: JSON.stringify(locations) }, null, 'json')
             .done(function (results) {
               notification.hide();
@@ -2164,7 +2195,7 @@ define('movable-binding-handler', ['knockout', 'jquery', 'utils', 'jquery-ui'], 
          start: function (event, ui) {
            movableElement.removeClass('jstree-node');
            movableElement.find('&gt; ul').hide();
-           movableElement.find('.jstree-icon').hide();
+           movableElement.find('.jstree-button').hide();
          },
 
          /**
@@ -2173,7 +2204,7 @@ define('movable-binding-handler', ['knockout', 'jquery', 'utils', 'jquery-ui'], 
          stop: function (event, ui) {
            movableElement.addClass('jstree-node');
            movableElement.find('&gt; ul').show();
-           movableElement.find('.jstree-icon').show();
+           movableElement.find('.jstree-button').show();
          }
       });
     }
@@ -2192,10 +2223,10 @@ define('movable-binding-handler', ['knockout', 'jquery', 'utils', 'jquery-ui'], 
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>12</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>2e82271d-7908-49fb-94b3-929b22df503e</guid>
+    <guid>bb41847e-cf95-49af-b0a7-4fdc0691f0d1</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -2330,10 +2361,10 @@ define('MigrationPlan', ['knockout', 'SerializerHelper'], function(ko, Serialize
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>13</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>0dcd9eb5-8618-40a8-b23a-60c7301612bf</guid>
+    <guid>54803832-19ad-4a00-8dc7-3080183011ae</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -2514,10 +2545,10 @@ define('SerializerHelper', function() {
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>14</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>b1ddcaf9-7a8e-4ef5-a07a-c35070860954</guid>
+    <guid>1fa7e4ef-b77d-4da3-8a60-d00b1d7ab297</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -2717,10 +2748,10 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>15</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>00e81af4-481a-4f3d-aa23-9e32a757c563</guid>
+    <guid>73dc05f8-b98c-4bc3-a661-a753aa0fe66f</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -2909,7 +2940,7 @@ define('editable-binding-handler', ['knockout', 'jquery', 'utils'], function (ko
           // Test if the locations of the action and its children are available
           var notification = new XWiki.widgets.Notification('Looking if the location is free.', 'inprogress');
           var locations = utils.getLocations(action, []);
-          $.post(new XWiki.Document('Service', 'NestedPagesMigration').getURL('get', 'outputSyntax=plain'),
+          $.post(utils.getServiceURL(),
             { action: 'checkLocations', locations: JSON.stringify(locations) }, null, 'json')
           .done(function (results) {
             notification.hide();
@@ -2943,10 +2974,10 @@ define('editable-binding-handler', ['knockout', 'jquery', 'utils'], function (ko
     </property>
   </object>
   <object>
-    <name>NestedPagesMigration.WebHome</name>
+    <name>NestedPagesMigration.Code.MigrationProjectSheet</name>
     <number>0</number>
     <className>XWiki.StyleSheetExtension</className>
-    <guid>b5d5a928-6d36-416b-9504-1d525373dc49</guid>
+    <guid>c6eebc03-7f5c-425b-9c3a-ae876f6fde21</guid>
     <class>
       <name>XWiki.StyleSheetExtension</name>
       <customClass/>

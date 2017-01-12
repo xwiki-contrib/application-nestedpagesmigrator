@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.2" reference="NestedPagesMigration.Code.WebHomeSheet" locale="">
+  <web>NestedPagesMigration.Code</web>
+  <name>WebHomeSheet</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <creationDate>1484229566000</creationDate>
+  <parent>NestedPagesMigration.Code.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <date>1484232883000</date>
+  <contentUpdateDate>1484232883000</contentUpdateDate>
+  <version>1.1</version>
+  <title>Nested Pages Migration</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity}}
+####################
+## CONTROLLER
+####################
+#set ($action = "$!request.action")
+#if ($action == 'create')
+  #createProject()
+#else
+  #displayHome()
+#end
+####################
+## DISPLAY HOME
+####################
+#macro(displayHome)
+{{warning}}
+  This application is complex. We highly recommend to read the [[documentation first&gt;&gt;http://platform.xwiki.org/xwiki/bin/view/Features/ContentOrganization/NestedPagesMigration/]].
+{{/warning}}
+
+  {{html clean="false"}}
+    &lt;form action="$doc.getURL()" method="post" class="xformInline"&gt;
+      &lt;input type="hidden" name="action" value="create" /&gt;
+      &lt;label for="projectName"&gt;Create a migration project:&lt;/label&gt;
+      &lt;input type="text" id="projectName" name="projectName" placeholder="Project name" /&gt;
+      &lt;input type="submit" value="Create" class="btn btn-success"/&gt;
+    &lt;/form&gt;
+  {{/html}}
+  #set ($xwql = "from doc.object(NestedPagesMigration.Code.MigrationProjectClass) obj WHERE doc.fullName &lt;&gt; 'NestedPagesMigration.Code.MigrationProjectTemplate'")
+  #set ($results = $services.query.xwql($xwql).execute())
+  #if ($results.size() &gt; 0)
+    = Existing projects =
+    #foreach ($r in $results)
+    * [[$r]]
+    #end
+  #end
+#end
+####################
+## CREATE PROJECT
+####################
+#macro(createProject)
+  #set ($name = "$!request.projectName")
+  #set ($name = $name.trim())
+  #if ($name != '')
+    #set ($reference = $services.model.createSpaceReference($name, $services.model.createSpaceReference('NestedPagesMigration', $doc.documentReference.wikiReference)))
+    #if ($xwiki.exists($reference))
+      {{error}}
+      The project [$name] already exists.
+      {{/error}}
+    #else
+      #set ($document = $xwiki.getDocument($reference))
+      #set ($discard = $document.newObject('NestedPagesMigration.Code.MigrationProjectClass'))
+      #set ($discard = $document.save())
+      #set ($discard = $response.sendRedirect($document.getURL()))
+    #end
+  #end
+#end
+{{/velocity}}
+</content>
+</xwikidoc>

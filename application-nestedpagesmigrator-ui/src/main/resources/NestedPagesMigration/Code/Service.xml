@@ -20,8 +20,8 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.2" reference="NestedPagesMigration.Service" locale="">
-  <web>NestedPagesMigration</web>
+<xwikidoc version="1.2" reference="NestedPagesMigration.Code.Service" locale="">
+  <web>NestedPagesMigration.Code</web>
   <name>Service</name>
   <language/>
   <defaultLanguage/>

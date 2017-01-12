@@ -56,6 +56,7 @@
 ## Needed 'font awesome' to display the 'arrows' icon, which is not present in the Icon Theme Set.
 #set ($discard = $xwiki.ssx.use('IconThemes.FontAwesome'))
 {{html clean="false"}}
+&lt;div id="xclasses" class="hidden" data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/div&gt;
 &lt;!------------------------------------------
   Migration Action Template
   -------------------------------------------&gt;
@@ -192,6 +193,7 @@
 &lt;!------------------------------------------
   Display configuration
   -------------------------------------------&gt;
+&lt;script id="DisplayConfiguration" type="text/html"&gt;
 &lt;form class="xform"&gt;
   &lt;h2&gt;Configuration&lt;/h2&gt;
   &lt;div class="row"&gt;
@@ -242,7 +244,7 @@
       &lt;dt&gt;&lt;label for="excludedObjectClasses" data-bind="click: configuration.excludedXClasses.toggleCheckboxVisibility"&gt;Exclude classes&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;
         &lt;p class="xHint" data-bind="click: configuration.excludedXClasses.toggleCheckboxVisibility"&gt;Exclude pages holding an object of one of the specified classes (separated by a coma ',').&lt;/p&gt;
-        &lt;p&gt;&lt;textarea id="excludedObjectClasses" data-bind="textInput: configuration.excludedXClasses.excludedXClasses, click: configuration.excludedXClasses.showCheckboxes" data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/textarea&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;textarea id="excludedObjectClasses" data-bind="textInput: configuration.excludedXClasses.excludedXClasses, click: configuration.excludedXClasses.showCheckboxes"&gt;&lt;/textarea&gt;&lt;/p&gt;
         &lt;div data-bind="visible: configuration.excludedXClasses.areCheckboxesDisplayed"&gt;
           &lt;a data-bind="click: configuration.excludedXClasses.hideCheckboxes" href="#"&gt;$services.icon.renderHTML('remove') Hide&lt;/a&gt;
           &lt;ul data-bind="foreach: {data: configuration.excludedXClasses.allXClasses, as: 'xclass'}" style="list-style-type: none; padding: 0;"&gt;
@@ -262,11 +264,14 @@
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
+&lt;/script&gt;
 &lt;!--
   This part is contained in a script tag so that nothing is displayed until "knockout" is executed.
   Otherwise, some incomplete plan, logs and progress bar are wrongly displayed and the user may wonder what they are.
 --&gt;
 &lt;script id="interactiveZone" type="text/html"&gt;
+&lt;!-- ko template: {name: 'DisplayConfiguration', data: ${escapetool.d}root} --&gt;
+&lt;!-- /ko --&gt;
 &lt;!------------------------------------------
   Display plan
   -------------------------------------------&gt;
@@ -325,6 +330,13 @@
      displayed only if knockout is loaded... --&gt;
 &lt;!-- ko template: {name: 'interactiveZone', data: ${escapetool.d}root} --&gt;
 &lt;!-- /ko --&gt;
+&lt;!-- Fallback to a loading message --&gt;
+&lt;div data-bind="visible: false" class="box warningmessage"&gt;
+  Loading, please wait...
+  &lt;div class="loading" style="height: 80%;"&gt;
+    &amp;nbsp;
+  &lt;/div&gt;
+&lt;/div&gt;
 {{/html}}
 #end
 {{/velocity}}
@@ -2685,7 +2697,7 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
      /**
       * Initialize the XClasses fields.
       */
-     var xclasses = $('#excludedObjectClasses').attr('data-xclasses').split(',');
+     var xclasses = $('#xclasses').attr('data-xclasses').split(',');
      for (var i = 0; i &lt; xclasses.length; ++i) {
        self.allXClasses.push(self._initCheckbox(xclasses[i]));
      }

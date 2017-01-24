@@ -267,7 +267,6 @@
     &lt;button class="btn" data-bind="click: convertPreferences, disable: isComputing() || isPlanExecuting(), css: {'btn-primary': isPlanModified(), 'btn-default': !isPlanModified()}"&gt;Recompute preferences&lt;/button&gt;
     &lt;button class="btn btn-primary" data-bind="disable: plan.actions().length == 0 || isPlanExecuting() || plan.tooLongs().length &gt; 0, click: executePlan"&gt;Execute plan&lt;/button&gt;
     &lt;button class="btn btn-default" data-bind="disable: plan.actions().length == 0 || isPlanExecuting(), click: cleanPlan"&gt;Clean plan (to free the memory)&lt;/button&gt;
-    &lt;button class="btn btn-success" data-bind="disable: isPlanExecuting(), click: saveProject"&gt;Save the project&lt;/button&gt;
   &lt;/div&gt;
 &lt;/form&gt;
 &lt;/script&gt;
@@ -331,13 +330,16 @@
   &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
 &lt;!-- /ko --&gt;
+&lt;button class="btn btn-success" data-bind="disable: isPlanExecuting(), click: saveProject"&gt;Save the project&lt;/button&gt;
 &lt;/script&gt;
 &lt;!-- Now we just include this part thanks to the "template" binding of knockout: we make sure that this part is
      displayed only if knockout is loaded... --&gt;
+&lt;!-- ko if: isLoaded() --&gt;
 &lt;!-- ko template: {name: 'interactiveZone', data: ${escapetool.d}root} --&gt;
 &lt;!-- /ko --&gt;
+&lt;!-- /ko --&gt;
 &lt;!-- Fallback to a loading message --&gt;
-&lt;div data-bind="visible: false" class="box warningmessage"&gt;
+&lt;div data-bind="visible: !isLoaded()" class="box warningmessage"&gt;
   Loading, please wait...
   &lt;div class="loading" style="height: 80%;"&gt;
     &amp;nbsp;
@@ -558,6 +560,7 @@ require.config({
     self.success                 = ko.observable(false);
     self.lastMovedAction         = ko.observable();
     self.isPlanModified          = ko.observable(false);
+    self.isLoaded                = ko.observable(false);
 
     // Do not refresh logs too often (to get better performances, because a lot of logs
     // are pushed in the same time, so it is better to no refresh the UI at every push).
@@ -661,6 +664,49 @@ require.config({
     };
 
     /**
+     * Load the plan from a JSON source
+     */
+    self._loadPlanFromJSON = function (json) {
+      var parseAction = function (data, parent) {
+        var action = new MigrationAction(data.sourceDocument, data.targetDocument, parent);
+        if (data.children) {
+          for (var i = 0; i &lt; data.children.length; ++i) {
+            action.children.push(parseAction(data.children[i], action));
+          }
+        }
+        if (data.preferences) {
+          for (var i = 0; i &lt; data.preferences.length; ++i) {
+            action.preferences[action.preferences.length] = new Preference(data.preferences[i].name, data.preferences[i].value, data.preferences[i].origin);
+          }
+        }
+        if (data.rights) {
+          for (var i = 0; i &lt; data.rights.length; ++i) {
+            action.rights[action.rights.length] = new Right(data.rights[i].user, data.rights[i].group, data.rights[i].level, data.rights[i].allow == "true", data.rights[i].origin)
+          }
+        }
+        if (data.deletePrevious) {
+          action.deletePrevious = true;
+          self.plan.duplicates.push(action.serializedTargetDocument());
+        }
+        if (action.isTooLong()) {
+          self.plan.tooLongs.push(action);
+        }
+        return action;
+      };
+
+      if (json) {
+        self.plan.actions.removeAll();
+        for (var i = 0; i &lt; json.length; ++i) {
+          self.plan.actions.push(parseAction(json[i], false));
+        }
+      }
+      // Plan is loaded
+      self.isComputing(false);
+      self.isPlanModified(false);
+      console.log('INFO: Plan have been parsed.');
+    };
+
+    /**
      * Get the migration plan that have been computed, in order to display it.
      */
     self._getMigrationPlan = function () {
@@ -668,42 +714,7 @@ require.config({
         'action': 'printPlan'
       }).done(function (data) {
         console.log('INFO: Plan computed');
-        var parseAction = function (data, parent) {
-          var action = new MigrationAction(data.sourceDocument, data.targetDocument, parent);
-          if (data.children) {
-            for (var i = 0; i &lt; data.children.length; ++i) {
-              action.children.push(parseAction(data.children[i], action));
-            }
-          }
-          if (data.preferences) {
-            for (var i = 0; i &lt; data.preferences.length; ++i) {
-              action.preferences[action.preferences.length] = new Preference(data.preferences[i].name, data.preferences[i].value, data.preferences[i].origin);
-            }
-          }
-          if (data.rights) {
-            for (var i = 0; i &lt; data.rights.length; ++i) {
-              action.rights[action.rights.length] = new Right(data.rights[i].user, data.rights[i].group, data.rights[i].level, data.rights[i].allow == "true", data.rights[i].origin)
-            }
-          }
-          if (data.deletePrevious) {
-            action.deletePrevious = true;
-            self.plan.duplicates.push(action.serializedTargetDocument());
-          }
-          if (action.isTooLong()) {
-            self.plan.tooLongs.push(action);
-          }
-          return action;
-        };
-
-        if (data) {
-          for (var i = 0; i &lt; data.length; ++i) {
-            self.plan.actions.push(parseAction(data[i], false));
-          }
-        }
-        // Plan is loaded
-        self.isComputing(false);
-        self.isPlanModified(false);
-        console.log('INFO: Plan have been parsed.');
+        self._loadPlanFromJSON(data);
       }).fail(function () {
         new XWiki.widgets.Notification('Failed to load the computed plan', 'error');
         //TODO: being able to restart the computation
@@ -821,18 +832,45 @@ require.config({
       }, 4000);
     };
 
+    /**
+     * Save current project
+     */
     self.saveProject = function () {
       var notification = new XWiki.widgets.Notification('Page is saving', 'inprogress');
       var url = xm.restURL + '/objects/NestedPagesMigration.Code.MigrationProjectClass/0';
-      $.ajax(url, {method: 'PUT', data: {
-        'property#excludedPages': 'Marina Cristalle',
-        'property#jsonPlan': '{json: true}'
-      }}).done(function(){
+      var data = self.configuration.getValuesForSave();
+      data['property#jsonPlan'] = self.plan.getAsJSON();
+      $.ajax(url, {
+        method: 'PUT',
+        data: data
+      }).done(function(){
         notification.hide();
         new XWiki.widgets.Notification('Page is saved', 'done');
       });
     };
 
+    /**
+     * Load the project
+     */
+    self.loadProject = function () {
+      var url = xm.restURL + '/objects/NestedPagesMigration.Code.MigrationProjectClass/0?media=json';
+      $.get(url).done(function(json){
+        self.configuration.loadFromJSON(json);
+        for (var i = 0; i &lt; json.properties.length; ++i) {
+          if (json.properties[i].name == 'jsonPlan' &amp;&amp; json.properties[i].value.length &gt; 0) {
+            self._loadPlanFromJSON($.parseJSON(json.properties[i].value));
+            break;
+          }
+        }
+        if (self.plan.actions().length) {
+          self.isPlanRequested(true);
+        }
+        self.isLoaded(true);
+      });
+    };
+
+    // Load the project on startup
+    self.loadProject();
   };
 
   // Activates knockout.js
@@ -1900,6 +1938,8 @@ define('AppConfiguration', ['utils', 'knockout', 'ExcludedXClasses'], function(u
    * Construct an AppConfiguration.
    */
   return function () {
+    var self = this;
+
     this.excludeHiddenPages    = ko.observable(true);
     this.excludeClassPages     = ko.observable(true);
     this.dontMoveChildren      = ko.observable(false);
@@ -1910,6 +1950,43 @@ define('AppConfiguration', ['utils', 'knockout', 'ExcludedXClasses'], function(u
     this.excludedSpaces        = ko.observable('XWiki,Admin,NestedPagesMigration');
     this.includedSpaces        = ko.observable('');
     this.excludedXClasses      = new ExcludedXClasses();
+
+    this.getValuesForSave = function () {
+      return {
+        'property#excludedPages'          : self.excludedPages(),
+        'property#excludedSpaces'         : self.excludedSpaces(),
+        'property#includedSpaces'         : self.includedSpaces(),
+        'property#excludeHiddenPages'     : self.excludeHiddenPages() ? 1 : 0,
+        'property#excludePagesHavingClass': self.excludeClassPages() ? 1 : 0,
+        'property#doNotMoveChildren'      : self.dontMoveChildren() ? 1 : 0,
+        'property#addRedirection'         : self.addRedirection() ? 1 : 0,
+        'property#convertPreferences'     : self.convertPreferences() ? 1 : 0,
+        'property#convertRights'          : self.convertRights() ? 1 : 0,
+        'property#excludedClasses'        : self.excludedXClasses.excludedXClasses()
+      };
+    };
+
+    this.loadFromJSON = function (json) {
+      var getPropertyValue = function (propertyName, json) {
+        for (var i = 0; i &lt; json.properties.length; ++i) {
+          if (json.properties[i].name == propertyName) {
+            return json.properties[i].value;
+          }
+        }
+        return false;
+      };
+
+      self.excludedPages(getPropertyValue('excludedPages', json));
+      self.excludedSpaces(getPropertyValue('excludedSpaces', json));
+      self.includedSpaces(getPropertyValue('includedSpaces', json));
+      self.excludeHiddenPages(getPropertyValue('excludeHiddenPages', json));
+      self.excludeClassPages(getPropertyValue('excludePagesHavingClass', json));
+      self.dontMoveChildren(getPropertyValue('doNotMoveChildren', json));
+      self.addRedirection(getPropertyValue('addRedirection', json));
+      self.convertPreferences(getPropertyValue('convertPreferences', json));
+      self.convertRights(getPropertyValue('convertRights', json));
+      self.excludedXClasses.excludedXClasses(getPropertyValue('excludedClasses', json));
+    }
   };
 });
 </code>

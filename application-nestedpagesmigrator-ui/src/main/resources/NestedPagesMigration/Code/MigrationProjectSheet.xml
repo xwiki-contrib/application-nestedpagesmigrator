@@ -846,7 +846,10 @@ require.config({
       }).done(function(){
         notification.hide();
         new XWiki.widgets.Notification('Page is saved', 'done');
-      });
+      }).fail(function(data){
+        notification.hide();
+        new XWiki.widgets.Notification('Failed to save the project (' + data.status + ' ' + data.statusText + ').', 'error');
+      });;
     };
 
     /**
@@ -862,10 +865,12 @@ require.config({
             break;
           }
         }
-        if (self.plan.actions().length) {
+        if (self.plan.actions().length &gt; 0) {
           self.isPlanRequested(true);
         }
         self.isLoaded(true);
+      }).fail(function(data){
+        new XWiki.widgets.Notification('Failed to load the project (' + data.status + ' ' + data.statusText + ').', 'error');
       });
     };
 
@@ -3177,8 +3182,7 @@ define('editable-binding-handler', ['knockout', 'jquery', 'utils'], function (ko
 
 .moved-action {
   background-color: lightgreen !important;
-}
-</code>
+}S</code>
     </property>
     <property>
       <contentType>CSS</contentType>

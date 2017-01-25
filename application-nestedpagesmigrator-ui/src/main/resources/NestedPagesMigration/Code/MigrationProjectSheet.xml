@@ -2578,6 +2578,11 @@ define('SerializerHelper', function() {
         jsonAction.enabled = false;
       }
 
+      // Serialize "deletePrevious" field
+      if (action.deletePrevious) {
+        jsonAction.deletePrevious = true;
+      }
+
       // Serialize preferences
       if (action.preferences.length &gt; 0) {
         jsonAction.preferences = [];

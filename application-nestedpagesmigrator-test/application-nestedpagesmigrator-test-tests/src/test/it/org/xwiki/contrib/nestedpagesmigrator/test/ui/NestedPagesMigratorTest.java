@@ -28,8 +28,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.MigrationAction;
+import org.xwiki.contrib.nestedpagesmigrator.test.po.MigrationApplicationHome;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.MigrationPlan;
-import org.xwiki.contrib.nestedpagesmigrator.test.po.MigratorPage;
+import org.xwiki.contrib.nestedpagesmigrator.test.po.MigrationProjectPage;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.MyViewPage;
 import org.xwiki.contrib.nestedpagesmigrator.test.po.Preference;
 import org.xwiki.model.reference.DocumentReference;
@@ -59,10 +60,15 @@ public class NestedPagesMigratorTest extends AbstractTest
         getUtil().importXar(new File(getClass().
                 getResource("/application-nestedpagesmigrator-test-data.xar").toURI()));
 
-        MigratorPage migratorPage = MigratorPage.gotoPage();
+        MigrationApplicationHome migrationApplicationHome = MigrationApplicationHome.gotoPage();
+        assertTrue(migrationApplicationHome.getProjects().isEmpty());
+
+        MigrationProjectPage migrationProjectPage = migrationApplicationHome.createProject("testMigration");
+        migrationProjectPage.waitUntilLoaded();
+        migrationProjectPage.setExcludedPages("ExcludeMe.WebHome");
 
         // Detect breakages
-        List<String> breakages = migratorPage.detectBreakages();
+        List<String> breakages = migrationProjectPage.detectBreakages();
         assertEquals(3, breakages.size());
         assertEquals("Page xwiki:Comedies.AFishCalledWanda will lose its current parent xwiki:Movies.WebHome because " +
                 "its location parent is xwiki:Comedies.WebHome.", breakages.get(0));
@@ -72,11 +78,11 @@ public class NestedPagesMigratorTest extends AbstractTest
                 "xwiki:Movies.WebHome because its location parent is xwiki:Main.Movies.WebHome.", breakages.get(2));
 
         // Compute a plan
-        migratorPage.computePlan();
-        assertFalse(migratorPage.isPlanEmpty());
+        migrationProjectPage.computePlan();
+        assertFalse(migrationProjectPage.isPlanEmpty());
 
         // Disable some actions
-        MigrationPlan plan = migratorPage.getPlan();
+        MigrationPlan plan = migrationProjectPage.getPlan();
         MigrationAction moviesAction = plan.getActions().get(0).getChildren().get(0);
         MigrationAction veryBadTripAction = moviesAction.getChildren().get(3);
         assertEquals("Main.Movies.VeryBadTrip.WebHome", veryBadTripAction.getTarget());
@@ -88,8 +94,28 @@ public class NestedPagesMigratorTest extends AbstractTest
         assertEquals(4, preferences.size());
         preferences.get(3).setEnabled(false);
 
-        // Execute it
-        migratorPage.executePlan();
+        // Check the save action works
+        migrationProjectPage.saveProject();
+        migrationApplicationHome = MigrationApplicationHome.gotoPage();
+        assertEquals(1, migrationApplicationHome.getProjects().size());
+
+        // Check the load action works
+        migrationProjectPage = migrationApplicationHome.getMigrationPage("testMigration");
+        migrationProjectPage.waitUntilLoaded();
+        assertEquals("ExcludeMe.WebHome", migrationProjectPage.getExcludedPages());
+        assertTrue(migrationProjectPage.isPlanDisplayed());
+        assertFalse(migrationProjectPage.isPlanEmpty());
+
+        // Check everything was saved
+        plan = migrationProjectPage.getPlan();
+        moviesAction = plan.getActions().get(0).getChildren().get(0);
+        veryBadTripAction = moviesAction.getChildren().get(3);
+        assertEquals("Main.Movies.VeryBadTrip.WebHome", veryBadTripAction.getTarget());
+        assertEquals("Comedies.VeryBadTrip", veryBadTripAction.getSource());
+        assertFalse(veryBadTripAction.isEnabled());
+
+        // Execute the plan
+        migrationProjectPage.executePlan();
 
         // Go to the main page
         MyViewPage page = MyViewPage.gotoPage(new DocumentReference("xwiki", "Main", "WebHome"));

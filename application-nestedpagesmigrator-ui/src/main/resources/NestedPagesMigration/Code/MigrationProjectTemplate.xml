@@ -215,31 +215,31 @@
       </jsonPlan>
     </class>
     <property>
-      <addRedirection/>
+      <addRedirection>1</addRedirection>
     </property>
     <property>
-      <convertPreferences/>
+      <convertPreferences>1</convertPreferences>
     </property>
     <property>
-      <convertRights/>
+      <convertRights>0</convertRights>
     </property>
     <property>
-      <doNotMoveChildren/>
+      <doNotMoveChildren>0</doNotMoveChildren>
     </property>
     <property>
-      <excludeHiddenPages/>
+      <excludeHiddenPages>1</excludeHiddenPages>
     </property>
     <property>
-      <excludePagesHavingClass/>
+      <excludePagesHavingClass>1</excludePagesHavingClass>
     </property>
     <property>
-      <excludedClasses/>
+      <excludedClasses>XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass,XWiki.RedirectClass</excludedClasses>
     </property>
     <property>
       <excludedPages/>
     </property>
     <property>
-      <excludedSpaces/>
+      <excludedSpaces>XWiki,Admin,NestedPagesMigration</excludedSpaces>
     </property>
     <property>
       <includedSpaces/>

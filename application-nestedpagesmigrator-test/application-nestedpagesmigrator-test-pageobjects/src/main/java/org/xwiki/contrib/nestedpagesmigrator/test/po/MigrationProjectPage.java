@@ -20,6 +20,7 @@
 package org.xwiki.contrib.nestedpagesmigrator.test.po;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.openqa.selenium.By;
@@ -34,7 +35,7 @@ import org.xwiki.test.ui.po.ViewPage;
  * @version $Id: $
  * @since 0.4
  */
-public class MigratorPage extends ViewPage
+public class MigrationProjectPage extends ViewPage
 {
     private static final String emptyPlanXPath = "//div[contains(@class, 'migration-plan')]" +
             "//div[contains(@class, 'infomessage')]/p[contains(text(), 'There is nothing to do!')]";
@@ -48,10 +49,42 @@ public class MigratorPage extends ViewPage
     @FindBy(xpath = "//button[contains(text(), 'Execute plan')]")
     private WebElement btExecutePlan;
 
-    public static MigratorPage gotoPage()
+    @FindBy(xpath = "//button[contains(text(), 'Save the project')]")
+    private WebElement btSaveProject;
+
+    @FindBy(id = "excludedPages")
+    private WebElement inputExcludedPages;
+
+    public static MigrationProjectPage gotoPage(String projectName)
     {
-        getUtil().gotoPage(new DocumentReference("xwiki", "NestedPagesMigration", "WebHome"));
-        return new MigratorPage();
+        getUtil().gotoPage(new DocumentReference("xwiki", Arrays.asList("NestedPagesMigration", projectName), "WebHome"));
+        return new MigrationProjectPage();
+    }
+
+    public boolean isLoading()
+    {
+        return getDriver().hasElementWithoutWaiting(By.cssSelector("loading"));
+    }
+
+    public void waitUntilLoaded()
+    {
+        getDriver().waitUntilCondition(new ExpectedCondition<Boolean>()
+        {
+            @Override
+            public Boolean apply(WebDriver webDriver)
+            {
+                return !isLoading();
+            }
+        });
+
+        // Quite ugly but sometimes knockout displays a thing for a millisecond before hiding it again and so we cannot
+        // rely on the visibility of an element to check if the plan is empty or displayed.
+        // By waiting "a bit", we make sure knockout really ends its work.
+        try {
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            // Don't care
+        }
     }
 
     public List<String> detectBreakages()
@@ -131,5 +164,22 @@ public class MigratorPage extends ViewPage
     public MigrationPlan getPlan()
     {
         return new MigrationPlan(getDriver(), getDriver().findElement( By.cssSelector("#planTree > li > ul")));
+    }
+
+    public void saveProject()
+    {
+        btSaveProject.click();
+        getDriver().waitUntilElementIsVisible(By.className("xnotification-done"));
+    }
+
+    public void setExcludedPages(String excludedPages)
+    {
+        inputExcludedPages.clear();
+        inputExcludedPages.sendKeys(excludedPages);
+    }
+
+    public String getExcludedPages()
+    {
+        return inputExcludedPages.getAttribute("value");
     }
 }

@@ -87,10 +87,18 @@
       The project [$name] already exists.
       {{/error}}
     #else
-      #set ($document = $xwiki.getDocument($reference))
-      #set ($discard = $document.newObject('NestedPagesMigration.Code.MigrationProjectClass'))
-      #set ($discard = $document.save())
-      #set ($discard = $response.sendRedirect($document.getURL()))
+      #set ($template    = $xwiki.getDocument('NestedPagesMigration.Code.MigrationProjectTemplate'))
+      #set ($templateObj = $template.getObject('NestedPagesMigration.Code.MigrationProjectClass'))
+      #set ($document    = $xwiki.getDocument($reference))
+      ## Needed to avoid having this page migrated too :)
+      #set ($discard     = $document.setParent('NestedPagesMigration.WebHome'))
+      #set ($object      = $document.newObject('NestedPagesMigration.Code.MigrationProjectClass'))
+      #foreach ($prop in $templateObj.properties)
+        #set ($propName  = $prop.name)
+        #set ($discard   = $object.set($propName, $template.getValue($propName, $templateObj)))
+      #end
+      #set ($discard     = $document.save())
+      #set ($discard     = $response.sendRedirect($document.getURL()))
     #end
   #end
 #end

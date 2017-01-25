@@ -676,14 +676,17 @@ require.config({
         }
         if (data.preferences) {
           for (var i = 0; i &lt; data.preferences.length; ++i) {
-            action.preferences[action.preferences.length] = new Preference(data.preferences[i].name, data.preferences[i].value, data.preferences[i].origin);
+            var enabled = data.preferences[i].enabled === undefined || data.preferences[i].enabled;
+            action.preferences[action.preferences.length] = new Preference(data.preferences[i].name, data.preferences[i].value, data.preferences[i].origin, enabled);
           }
         }
         if (data.rights) {
           for (var i = 0; i &lt; data.rights.length; ++i) {
-            action.rights[action.rights.length] = new Right(data.rights[i].user, data.rights[i].group, data.rights[i].level, data.rights[i].allow == "true", data.rights[i].origin)
+            var enabled = data.rights[i].enabled === undefined || data.rights[i].enabled;
+            action.rights[action.rights.length] = new Right(data.rights[i].user, data.rights[i].group, data.rights[i].level, data.rights[i].allow == "true", data.rights[i].origin, enabled);
           }
         }
+        action.enabled(data.enabled === undefined || data.enabled);
         if (data.deletePrevious) {
           action.deletePrevious = true;
           self.plan.duplicates.push(action.serializedTargetDocument());
@@ -1576,13 +1579,13 @@ define('Preference', ['utils', 'knockout'], function (utils, ko) {
    * @param value the value to set
    * @param origin the document reference of the page that initially applies this preference
    */
-  return function(property, value, origin) {
+  return function(property, value, origin, enabled) {
     var self = this;
 
     self.property = property;
     self.value    = value;
     self.origin   = origin;
-    self.enabled  = ko.observable(true);
+    self.enabled  = ko.observable(enabled);
 
     /**
      * @return the serialized reference of the origin
@@ -1699,7 +1702,7 @@ define('Right', ['utils', 'knockout'], function (utils, ko) {
   /**
    * Construct a Right class.
    */
-  return function (user, group, level, allow, origin) {
+  return function (user, group, level, allow, origin, enabled) {
     var self = this;
 
     self.user   = user;
@@ -1707,7 +1710,7 @@ define('Right', ['utils', 'knockout'], function (utils, ko) {
     self.level  = level;
     self.allow  = allow;
     self.origin = origin;
-    self.enabled  = ko.observable(true);
+    self.enabled  = ko.observable(enabled);
 
     self.getType = function () {
       return self.user ? 'user' : 'group';
@@ -1984,12 +1987,12 @@ define('AppConfiguration', ['utils', 'knockout', 'ExcludedXClasses'], function(u
       self.excludedPages(getPropertyValue('excludedPages', json));
       self.excludedSpaces(getPropertyValue('excludedSpaces', json));
       self.includedSpaces(getPropertyValue('includedSpaces', json));
-      self.excludeHiddenPages(getPropertyValue('excludeHiddenPages', json));
-      self.excludeClassPages(getPropertyValue('excludePagesHavingClass', json));
-      self.dontMoveChildren(getPropertyValue('doNotMoveChildren', json));
-      self.addRedirection(getPropertyValue('addRedirection', json));
-      self.convertPreferences(getPropertyValue('convertPreferences', json));
-      self.convertRights(getPropertyValue('convertRights', json));
+      self.excludeHiddenPages(getPropertyValue('excludeHiddenPages', json) == '1');
+      self.excludeClassPages(getPropertyValue('excludePagesHavingClass', json) == '1');
+      self.dontMoveChildren(getPropertyValue('doNotMoveChildren', json) == '1');
+      self.addRedirection(getPropertyValue('addRedirection', json) == '1');
+      self.convertPreferences(getPropertyValue('convertPreferences', json) == '1');
+      self.convertRights(getPropertyValue('convertRights', json) == '1');
       self.excludedXClasses.excludedXClasses(getPropertyValue('excludedClasses', json));
     }
   };
@@ -2721,7 +2724,7 @@ define('ExcludedXClasses', ['jquery', 'knockout', 'utils'], function($, ko, util
      /**
       * The list of XClasses to exclude, as a String.
       */
-     self.excludedXClasses = ko.observable( 'XWiki.XWikiUsers,XWiki.XWikiSkins,Panels.PanelClass,Blog.BlogClass,Blog.BlogPostClass,Blog.CategoryClass,ColorThemes.ColorThemeClass,FlamingoThemesCode.ThemeClass,IconThemesCode.IconThemeClass,XWiki.SchedulerJobClass,Menu.MenuClass,XWiki.RedirectClass' );
+     self.excludedXClasses = ko.observable('');
 
      // Make the observable reactive to each keyboard action so the user can immediatly see the checkboxes updated
      // during her typing.

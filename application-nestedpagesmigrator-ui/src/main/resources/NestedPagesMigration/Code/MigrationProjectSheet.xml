@@ -39,7 +39,28 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{velocity}}
+  <content>{{velocity output="false"}}
+#************************************************************************
+ * Compute and return the maximum authorized length for the full name.
+ ************************************************************************#
+#macro(getLocalReferenceMaxLength)
+ #set ($localReferenceMaxLength = '255')
+ ## Available since XWiki 11.4RC1.
+ #if ($doc.localReferenceMaxLength)
+   #set ($localReferenceMaxLength = $doc.localReferenceMaxLength)
+ #end
+ ## The document reference size limit was increased from 255 to 768 (the maximum supported by MySQL) in XWiki 13.2.
+ #if ($services.extension.core.getCoreExtension('org.xwiki.platform:xwiki-platform-model').id.version.compareTo('13.2') &lt;= 0)
+   #set ($localReferenceMaxLength = $mathtool.sub($localReferenceMaxLength, $xcontext.database.length()))
+ #else
+   ## To avoid issues with documents with path too long, take some extra margin, higher than the wiki name length.
+   #set ($localReferenceMaxLength = $mathtool.sub($localReferenceMaxLength, 50))
+ #end
+ $localReferenceMaxLength
+#end
+{{/velocity}}
+
+{{velocity}}
 #if (!$services.security.authorization.hasAccess('admin', $xcontext.userReference, $doc.documentReference.wikiReference))
   {{error}}
   You don't have the right to use this tool on this wiki. You need to be administrator.
@@ -61,7 +82,8 @@
 ## Needed 'font awesome' to display the 'arrows' icon, which is not present in the Icon Theme Set.
 #set ($discard = $xwiki.ssx.use('IconThemes.FontAwesome'))
 {{html clean="false"}}
-&lt;div id="xclasses" class="hidden" data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/div&gt;
+&lt;div id="xclasses" class="hidden" data-localReferenceMaxLength="#getLocalReferenceMaxLength()"
+  data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/div&gt;
 &lt;!------------------------------------------
   Migration Action Template
   -------------------------------------------&gt;
@@ -170,7 +192,7 @@
       &lt;p&gt;If you are ok with it, just run the migrator and these documents will be overwritten.&lt;/p&gt;
     &lt;/div&gt;
      &lt;div class="box errormessage" data-bind="visible: plan.tooLongs().length &gt; 0"&gt;
-      &lt;p&gt;We have detected some pages that will have too long path after the migration (limit is 255). You should rename them (or rename one of their parents) before computing a new plan.&lt;/p&gt;
+      &lt;p&gt;We have detected some pages that will have too long path after the migration (limit is #getLocalReferenceMaxLength()). You should rename them (or rename one of their parents) before computing a new plan.&lt;/p&gt;
       &lt;p&gt;Theses pages are:&lt;/p&gt;
       &lt;ul data-bind="foreach: {data: plan.tooLongs(), as: 'action'}"&gt;
         &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()"&gt;&lt;/span&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"&gt;&lt;/span&gt;&lt;/li&gt;
@@ -1146,6 +1168,13 @@ define('utils', ['xwiki-meta'], function(xm) {
         }
       }
       return false;
+    },
+
+    /**
+     * @return the maximum authorized length for the full name
+     */
+    getLocalReferenceMaxLength: function() {
+      return $('xclasses').readAttribute('data-localReferenceMaxLength');
     }
   };
 });
@@ -1264,6 +1293,7 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
     self.preferences     = [];
     self.rights          = [];
     self.deletePrevious  = false;
+    self.localReferenceMaxLength = utils.getLocalReferenceMaxLength();
 
     /**
      * @return the serialized document reference of the source
@@ -1301,7 +1331,7 @@ define('MigrationAction', ['utils', 'knockout'], function (utils, ko) {
      * @return if the document path is too long (and then cannot be saved in the database)
      */
     self.isTooLong = function () {
-      return self.serializedTargetDocument().length &gt; 255;
+      return self.serializedTargetDocument().length &gt; self.localReferenceMaxLength;
     }
 
     /**

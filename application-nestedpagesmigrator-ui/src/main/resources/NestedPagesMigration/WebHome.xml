@@ -252,7 +252,7 @@
       &lt;dt&gt;&lt;label for="excludedObjectClasses" data-bind="click: toggleXClassList"&gt;Exclude classes&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;
         &lt;p class="xHint" data-bind="click: toggleXClassList"&gt;Exclude pages holding an object of one of the specified classes (separated by a coma ',').&lt;/p&gt;
-        &lt;p&gt;&lt;textarea id="excludedObjectClasses" data-bind="textInput: configuration.excludedObjectClasses, click: showXClassList" data-localReferenceMaxLength="#getLocalReferenceMaxLength()" data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/textarea&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;textarea id="excludedObjectClasses" data-bind="textInput: configuration.excludedObjectClasses, click: showXClassList" data-localReferenceMaxLength="#getLocalReferenceMaxLength()" data-xclasses="#foreach($class in $xwiki.classList)#if($foreach.count&gt;1),#end${class}#end"&gt;&lt;/textarea&gt;&lt;/p&gt;
         &lt;div data-bind="visible: xclassListVisible"&gt;
           &lt;a data-bind="click: hideXClassList" href="#"&gt;$services.icon.renderHTML('remove') Hide&lt;/a&gt;
           &lt;ul data-bind="foreach: {data: xclasses, as: 'xclass'}" style="list-style-type: none; padding: 0;"&gt;

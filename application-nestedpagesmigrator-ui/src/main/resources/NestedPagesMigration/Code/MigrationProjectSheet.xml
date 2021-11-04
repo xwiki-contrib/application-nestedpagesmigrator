@@ -83,7 +83,7 @@
 #set ($discard = $xwiki.ssx.use('IconThemes.FontAwesome'))
 {{html clean="false"}}
 &lt;div id="xclasses" class="hidden" data-localReferenceMaxLength="#getLocalReferenceMaxLength()"
-  data-xclasses="#foreach($class in $xwiki.classList)#if($velocityCount&gt;1),#end${class}#end"&gt;&lt;/div&gt;
+  data-xclasses="#foreach($class in $xwiki.classList)#if($foreach.count&gt;1),#end${class}#end"&gt;&lt;/div&gt;
 &lt;!------------------------------------------
   Migration Action Template
   -------------------------------------------&gt;

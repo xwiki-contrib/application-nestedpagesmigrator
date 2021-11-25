@@ -21,6 +21,7 @@ package org.xwiki.contrib.nestedpagesmigrator.internal.pages;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -43,7 +44,6 @@ import org.xwiki.job.event.status.JobProgressManager;
 import org.xwiki.logging.Message;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
-import org.xwiki.text.StringUtils;
 
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
@@ -407,17 +407,17 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             XWikiDocument targetDoc = xwiki.getDocument(targetDocument, context);
 
             // Not the same author: obviously not a duplicate
-            if (!sourceDoc.getAuthorReference().equals(targetDoc.getAuthorReference())) {
+            if (!Objects.equals(sourceDoc.getAuthorReference(), targetDoc.getAuthorReference())) {
                 return false;
             }
 
             // Not the same creator: same measure
-            if (!sourceDoc.getCreatorReference().equals(targetDoc.getCreatorReference())) {
+            if (!Objects.equals(sourceDoc.getCreatorReference(), targetDoc.getCreatorReference())) {
                 return false;
             }
 
             // Same for the content author
-            if (!sourceDoc.getContentAuthorReference().equals(targetDoc.getContentAuthorReference())) {
+            if (!Objects.equals(sourceDoc.getContentAuthorReference(), targetDoc.getContentAuthorReference())) {
                 return false;
             }
 
@@ -425,7 +425,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             // Even if the "rename backlinks" can modify the content, the content should be the same because the
             // migration must have failed during this rename operation (so no other modification should have been made
             // since).
-            return StringUtils.equals(sourceDoc.getContent(), targetDoc.getContent());
+            return Objects.equals(sourceDoc.getContent(), targetDoc.getContent());
 
         } catch (XWikiException e) {
             // This exception shows that one of the documents is not readable for some technical reasons.

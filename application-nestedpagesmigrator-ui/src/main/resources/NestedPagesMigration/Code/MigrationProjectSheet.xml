@@ -146,7 +146,7 @@
         &lt;/ul&gt;
       &lt;!-- /ko --&gt;
       ## Display children documents
-      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', data: {'actions': children()} }" class="jstree-children childrenActions"/&gt;
+      &lt;ul data-bind="template: { name: 'MigrationActionTemplate', data: {'actions': children()} }" class="jstree-children childrenActions"&gt;&lt;/ul&gt;
     &lt;!-- /ko --&gt;
   &lt;/li&gt;
   &lt;!-- /ko --&gt;

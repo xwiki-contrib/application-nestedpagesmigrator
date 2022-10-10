@@ -56,7 +56,7 @@
   </scm>
   <issueManagement>
     <system>jira</system>
-    <url>http://jira.xwiki.org/jira/browse/NPMIG</url>
+    <url>http://jira.xwiki.org/browse/NPMIG</url>
   </issueManagement>
   <modules>
     <!-- Sorted Alphabetically -->

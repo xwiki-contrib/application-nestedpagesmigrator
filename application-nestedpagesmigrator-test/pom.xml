@@ -30,6 +30,10 @@
   <packaging>pom</packaging>
   <description>Integration tests for the Nested Pages Migrator Application.</description>
   <name>Nested Pages Migrator - Test - Parent POM</name>
+  <properties>
+    <!-- Don't run Checkstyle in test modules -->
+    <xwiki.checkstyle.skip>true</xwiki.checkstyle.skip>
+  </properties>
   <modules>
     <module>application-nestedpagesmigrator-test-data</module>
     <module>application-nestedpagesmigrator-test-pageobjects</module>

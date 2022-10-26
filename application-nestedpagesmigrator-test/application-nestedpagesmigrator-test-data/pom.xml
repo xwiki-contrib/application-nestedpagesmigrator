@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-nestedpagesmigrator-test</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1-SNAPSHOT</version>
   </parent>
   <artifactId>application-nestedpagesmigrator-test-data</artifactId>
   <packaging>xar</packaging>

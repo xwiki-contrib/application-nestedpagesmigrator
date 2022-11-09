@@ -31,28 +31,28 @@ import org.xwiki.text.StringUtils;
 
 /**
  * An atomic operation of a {@link MigrationPlanTree}.
- *  
+ * 
  * @version $Id: $
  */
 public class MigrationAction implements Serializable, Comparable
 {
     private DocumentReference sourceDocument;
-    
+
     private DocumentReference targetDocument;
 
     private Collection<Preference> preferences;
 
     private Collection<Right> rights;
-    
+
     private List<MigrationAction> children;
 
     /**
-     * {@see shouldDeletePrevious()}
+     * @see #shouldDeletePrevious()
      */
     private boolean deletePrevious = false;
 
     /**
-     * {@see isEnabled()}
+     * @see #isEnabled()
      */
     private boolean enabled = true;
 
@@ -62,11 +62,10 @@ public class MigrationAction implements Serializable, Comparable
      * @param sourceDocument the source document
      * @param targetDocument the target location
      * @param plan the plan
-     *
      * @return the created instance
      */
     public static MigrationAction createInstance(DocumentReference sourceDocument, DocumentReference targetDocument,
-            MigrationPlanTree plan) throws MigrationException
+        MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
         plan.addAction(action);
@@ -79,11 +78,10 @@ public class MigrationAction implements Serializable, Comparable
      * @param sourceDocument the source document
      * @param targetReference the target location
      * @param plan the plan
-     *
      * @return the created instance
      */
     public static MigrationAction createInstance(DocumentReference sourceDocument, TargetReference targetReference,
-            MigrationPlanTree plan) throws MigrationException
+        MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = createInstance(sourceDocument, targetReference.getTargetDocument(), plan);
         action.setDeletePrevious(targetReference.getState() == TargetState.DUPLICATE);
@@ -97,11 +95,10 @@ public class MigrationAction implements Serializable, Comparable
      * @param targetDocument the target location
      * @param parentAction the parent action
      * @param plan the plan
-     *
      * @return the created instance
      */
     public static MigrationAction createInstance(DocumentReference sourceDocument, DocumentReference targetDocument,
-            MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
+        MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = new MigrationAction(sourceDocument, targetDocument);
         parentAction.addChild(action);
@@ -116,11 +113,10 @@ public class MigrationAction implements Serializable, Comparable
      * @param targetReference the target location
      * @param parentAction the parent action
      * @param plan the plan
-     *
      * @return the created instance
      */
     public static MigrationAction createInstance(DocumentReference sourceDocument, TargetReference targetReference,
-            MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
+        MigrationAction parentAction, MigrationPlanTree plan) throws MigrationException
     {
         MigrationAction action = new MigrationAction(sourceDocument, targetReference.getTargetDocument());
         action.setDeletePrevious(targetReference.getState() == TargetState.DUPLICATE);
@@ -137,11 +133,10 @@ public class MigrationAction implements Serializable, Comparable
      * @param parentAction the parent action
      * @param plan the plan
      * @param enabled if the user has enabled the action
-     *
      * @return the created instance
      */
     public static MigrationAction createInstance(DocumentReference sourceDocument, TargetReference targetReference,
-            MigrationAction parentAction, MigrationPlanTree plan, boolean enabled) throws MigrationException
+        MigrationAction parentAction, MigrationPlanTree plan, boolean enabled) throws MigrationException
     {
         MigrationAction action = createInstance(sourceDocument, targetReference, parentAction, plan);
         action.setEnabled(enabled);
@@ -150,6 +145,7 @@ public class MigrationAction implements Serializable, Comparable
 
     /**
      * Construct a new MigrationAction.
+     * 
      * @param sourceDocument the source document
      * @param targetDocument the target location
      */
@@ -168,16 +164,17 @@ public class MigrationAction implements Serializable, Comparable
     {
         return targetDocument;
     }
-    
+
+    @Override
     public boolean equals(Object o)
     {
         if (o instanceof MigrationAction) {
             MigrationAction otherAction = (MigrationAction) o;
-            
+
             return sourceDocument.equals(otherAction.sourceDocument)
-                    && targetDocument.equals(otherAction.targetDocument);
+                && targetDocument.equals(otherAction.targetDocument);
         }
-        
+
         return false;
     }
 
@@ -214,7 +211,7 @@ public class MigrationAction implements Serializable, Comparable
         }
         children.add(action);
     }
-    
+
     public List<MigrationAction> getChildren()
     {
         return children != null ? children : Collections.<MigrationAction>emptyList();
@@ -225,13 +222,13 @@ public class MigrationAction implements Serializable, Comparable
     {
         if (o instanceof MigrationAction) {
             MigrationAction otherAction = (MigrationAction) o;
-            return this.getTargetDocument().getLastSpaceReference().getName().compareTo(
-                    otherAction.getTargetDocument().getLastSpaceReference().getName());
+            return this.getTargetDocument().getLastSpaceReference().getName()
+                .compareTo(otherAction.getTargetDocument().getLastSpaceReference().getName());
         }
-        
+
         return 0;
     }
-    
+
     @Override
     public String toString()
     {
@@ -248,6 +245,7 @@ public class MigrationAction implements Serializable, Comparable
 
     /**
      * Add a preference to store in the WebPreferences after the page conversion.
+     * 
      * @param newPreference preference to add
      */
     public void addPreference(Preference newPreference)
@@ -289,7 +287,7 @@ public class MigrationAction implements Serializable, Comparable
 
     /**
      * @return the reference of the WebPreferences document that should store preferences concerning the target
-     * document.
+     *         document.
      */
     public DocumentReference getWebPreferencesReference()
     {

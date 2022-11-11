@@ -183,7 +183,7 @@
       &lt;p class="box warningmessage"&gt;Since you have moved some pages, you may want to recompute the preferences to be sure they will be preserved after the migration.&lt;/p&gt;
     &lt;/div&gt;
     &lt;div class="box warningmessage" data-bind="visible: plan.duplicates().length &gt; 0"&gt;
-      &lt;p&gt;The migration have detected some duplicated documents, that are probably the consequences of a failed attempt to run the migrator.&lt;br /&gt;
+      &lt;p&gt;The migration has detected some duplicated documents, that are probably the consequences of a failed attempt to run the migrator.&lt;br /&gt;
       &lt;p&gt;If it's the first time you run the migrator, you might have a problem.&lt;/p&gt;
       &lt;p&gt;Theses documents are:&lt;/p&gt;
       &lt;ul data-bind="foreach: {data: plan.duplicates(), as: 'doc'}"&gt;
@@ -192,7 +192,7 @@
       &lt;p&gt;If you are ok with it, just run the migrator and these documents will be overwritten.&lt;/p&gt;
     &lt;/div&gt;
      &lt;div class="box errormessage" data-bind="visible: plan.tooLongs().length &gt; 0"&gt;
-      &lt;p&gt;We have detected some pages that will have too long path after the migration (limit is #getLocalReferenceMaxLength()). You should rename them (or rename one of their parents) before computing a new plan.&lt;/p&gt;
+      &lt;p&gt;We have detected some pages that will have too long paths after the migration (limit is #getLocalReferenceMaxLength()). You should rename them (or rename one of their parents) before computing a new plan.&lt;/p&gt;
       &lt;p&gt;Theses pages are:&lt;/p&gt;
       &lt;ul data-bind="foreach: {data: plan.tooLongs(), as: 'action'}"&gt;
         &lt;li class="monospace"&gt;&lt;a data-bind="attr: {href: action.getSourceLink()}" target="_blank"&gt;&lt;span data-bind="text: action.serializedSourceDocument()"&gt;&lt;/span&gt;&lt;/a&gt; -&amp;gt; &lt;span data-bind="text: action.serializedTargetDocument()"&gt;&lt;/span&gt;&lt;/li&gt;
@@ -251,7 +251,7 @@
     &lt;dl id="advancedSettings" class="collapse well"&gt;
       &lt;!-- Exclude hidden pages --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="excludeHiddenPages" data-bind="checked: configuration.excludeHiddenPages"&gt; &lt;label for="excludeHiddenPages"&gt;Exclude hidden pages&lt;/label&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;span class="xHint"&gt;Most of the hidden pages are techinal content. Moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Most of the hidden pages are technical content. Moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
       &lt;!-- Exclude class pages --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="excludeClassPages" data-bind="checked: configuration.excludeClassPages"&gt; &lt;label for="excludeClassPages"&gt;Exclude pages having a class&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;&lt;span class="xHint"&gt;The pages are technical and moving them can break applications.&lt;/span&gt;&lt;/dd&gt;
@@ -263,7 +263,7 @@
       &lt;dd&gt;&lt;span class="xHint"&gt;Add a redirection in the old location.&lt;/span&gt;&lt;/dd&gt;
       &lt;!-- Convert preferences --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="convertPreferences" data-bind="checked: configuration.convertPreferences"&gt; &lt;label for="convertPreferences"&gt;Convert preferences&lt;/label&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the preferences applied on the page remain the same after the move, by dupplicating the preferences on the target document.&lt;/span&gt;&lt;/dd&gt;
+      &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the preferences applied on the page remain the same after the move, by duplicating the preferences on the target document.&lt;/span&gt;&lt;/dd&gt;
       &lt;!-- Convert rights --&gt;
       &lt;dt&gt;&lt;input type="checkbox" id="convertRights" data-bind="checked: configuration.convertRights"&gt; &lt;label for="convertRights"&gt;Convert rights (experimental)&lt;/label&gt;&lt;/dt&gt;
       &lt;dd&gt;&lt;span class="xHint"&gt;Make sure that the rights applied on the page remain the same after the move &lt;span class="text-danger"&gt;(Currently bugged)&lt;/span&gt;.&lt;/span&gt;&lt;/dd&gt;
@@ -347,7 +347,7 @@
   -------------------------------------------&gt;
 &lt;!-- ko if: success() --&gt;
   &lt;div class="box successmessage" id="planExecuted"&gt;
-  The plan have been executed!
+  The plan has been executed!
   &lt;/div&gt;
   &lt;!-- ko template: {name: 'DisplayLogs', data: ${escapetool.d}root} --&gt;
   &lt;!-- /ko --&gt;
@@ -728,11 +728,11 @@ require.config({
       // Plan is loaded
       self.isComputing(false);
       self.isPlanModified(false);
-      console.log('INFO: Plan have been parsed.');
+      console.log('INFO: Plan has been parsed.');
     };
 
     /**
-     * Get the migration plan that have been computed, in order to display it.
+     * Get the migration plan that has been computed, in order to display it.
      */
     self._getMigrationPlan = function () {
       $.getJSON(utils.getServiceURL(), {
@@ -757,7 +757,7 @@ require.config({
     };
 
     /**
-     * Get breakage list that have been computed, in order to display it.
+     * Get breakage list that has been computed, in order to display it.
      */
     self._getBreakages = function () {
       $.getJSON(utils.getServiceURL(), {

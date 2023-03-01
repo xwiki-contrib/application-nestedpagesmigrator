@@ -62,6 +62,11 @@
       <artifactId>xwiki-platform-refactoring-api</artifactId>
       <version>${platform.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-search-solr-api</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
     <!-- Used for the JSON serialization of the plan -->
     <dependency>
       <groupId>com.google.code.gson</groupId>

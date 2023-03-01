@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.nestedpagesmigrator.internal.executor;
 
+import java.lang.InterruptedException;
 import java.util.Arrays;
 
 import javax.inject.Inject;
@@ -33,6 +34,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.refactoring.job.MoveRequest;
 import org.xwiki.refactoring.job.RefactoringJobs;
+import org.xwiki.search.solr.internal.api.SolrIndexer;
 
 /**
  * Execute the rename Job in the current thread.
@@ -46,6 +48,9 @@ public class RenameJobExecutor
 {
     @Inject
     private ComponentManager componentManager;
+
+    @Inject
+    private SolrIndexer solrIndexer;
 
     public void rename(DocumentReference origin, DocumentReference target, DocumentReference author,
             MigrationConfiguration configuration)
@@ -70,6 +75,16 @@ public class RenameJobExecutor
         // Create the job and run it
         Job job = componentManager.getInstance(Job.class, RefactoringJobs.RENAME);
         job.initialize(request);
+
+        // Wait until SOLR finish indexing previously renamed page before running the job
+        do {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // Do nothing
+            }
+        } while (this.solrIndexer.getQueueSize() != 0);
+
         job.run();
     }
 }

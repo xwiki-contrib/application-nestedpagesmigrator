@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-nestedpagesmigrator</artifactId>
-    <version>0.9.1-SNAPSHOT</version>
+    <version>0.9.1</version>
   </parent>
   <artifactId>application-nestedpagesmigrator-ui</artifactId>
   <packaging>xar</packaging>

@@ -240,7 +240,7 @@ public class MigrationPlanExecutor
      */
     private void moveDocument(MigrationAction action) throws Exception
     {
-        DocumentReference author = getDocumentAuthor(action.getSourceDocument())    ;
+        DocumentReference author = this.configuration.getUserReference();
 
         // Rename the document
         renameJobExecutor.rename(action.getSourceDocument(), action.getTargetDocument(), author, configuration);

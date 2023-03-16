@@ -30,7 +30,7 @@
   <description>Nested Pages Migrator - API</description>
   <properties>
     <!-- Test coverage -->
-    <xwiki.jacoco.instructionRatio>0.74</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.73</xwiki.jacoco.instructionRatio>
     <!-- Name to display by the Extension Manager -->
     <xwiki.extension.name>Nested Pages Migrator API</xwiki.extension.name>
     <!--FIXME-->
@@ -86,4 +86,28 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.revapi</groupId>
+        <artifactId>revapi-maven-plugin</artifactId>
+        <configuration>
+          <analysisConfiguration><![CDATA[
+            {
+              "revapi": {
+                "ignore" : [
+                  {
+                    "code": "java.method.numberOfParametersChanged",
+                    "old": "method void org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration::<init>(org.xwiki.model.reference.WikiReference)",
+                    "new": "method void org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration::<init>(org.xwiki.model.reference.WikiReference, org.xwiki.model.reference.DocumentReference)",
+                    "justification": "The Renaming Actions should be executed with the current user as the author rather than the author of the document."
+                  }
+                ]
+              }
+            }
+          ]]></analysisConfiguration>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

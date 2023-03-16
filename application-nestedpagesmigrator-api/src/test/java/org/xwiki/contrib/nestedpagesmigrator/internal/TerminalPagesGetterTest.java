@@ -78,6 +78,8 @@ public class TerminalPagesGetterTest
     private QueryFilter uniqueFilter;
     private QueryFilter hiddenFilter;
 
+    private final DocumentReference adminRef = new DocumentReference("someWiki", "XWiki", "Admin");
+
     @Before
     public void setUp() throws Exception
     {
@@ -164,7 +166,7 @@ public class TerminalPagesGetterTest
 
 
         // Test
-        MigrationConfiguration configuration = new MigrationConfiguration(wikiReference);
+        MigrationConfiguration configuration = new MigrationConfiguration(wikiReference, this.adminRef);
         configuration.addExcludedPage(new DocumentReference("someWiki", "someSpace", "excludeMe"));
         configuration.addExcludedSpace(new SpaceReference("someWiki", "excludeMe"));
         configuration.addExcludedObjectClass(new DocumentReference("someWiki", "someSpace", "excludeClass"));
@@ -195,7 +197,8 @@ public class TerminalPagesGetterTest
         // Test
         MigrationException caughtException = null;
         try {
-            mocker.getComponentUnderTest().getPagesToConvert(new MigrationConfiguration(new WikiReference("someWiki")));
+            mocker.getComponentUnderTest()
+                .getPagesToConvert(new MigrationConfiguration(new WikiReference("someWiki"), this.adminRef));
         } catch (MigrationException e) {
             caughtException = e;
         }
@@ -227,7 +230,7 @@ public class TerminalPagesGetterTest
         when(rd1.getParentReference()).thenReturn(new DocumentReference("xwiki", "Main", "WebHome"));
 
         // Test
-        MigrationConfiguration configuration = new MigrationConfiguration(wikiReference);
+        MigrationConfiguration configuration = new MigrationConfiguration(wikiReference, this.adminRef);
         configuration.setExcludeHiddenPages(false);
         configuration.setDontMoveChildren(true);
         configuration.setExcludeClassPages(false);

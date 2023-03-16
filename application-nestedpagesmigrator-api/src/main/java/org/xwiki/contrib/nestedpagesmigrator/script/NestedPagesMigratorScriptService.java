@@ -114,7 +114,7 @@ public class NestedPagesMigratorScriptService implements ScriptService
      */
     public MigrationConfiguration newMigrationConfiguration(String wikiId)
     {
-        return new MigrationConfiguration(new WikiReference(wikiId));
+        return new MigrationConfiguration(new WikiReference(wikiId), documentAccessBridge.getCurrentUserReference());
     }
 
     /**

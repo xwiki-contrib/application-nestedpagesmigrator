@@ -262,14 +262,6 @@ public class MigrationPlanExecutor
         }
     }
 
-    private DocumentReference getDocumentAuthor(DocumentReference documentReference) throws XWikiException
-    {
-        XWikiContext context = contextProvider.get();
-        XWiki xwiki = context.getWiki();
-        XWikiDocument doc = xwiki.getDocument(documentReference, context);
-        return doc.getAuthorReference();
-    }
-
     /**
      * Apply the preferences of the given action on the given document.
      *

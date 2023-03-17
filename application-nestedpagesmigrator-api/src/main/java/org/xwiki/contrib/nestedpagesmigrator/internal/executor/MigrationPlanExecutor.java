@@ -210,7 +210,7 @@ public class MigrationPlanExecutor
      */
     private void moveDocument(MigrationAction action) throws Exception
     {
-        DocumentReference author = getDocumentAuthor(action.getSourceDocument())    ;
+        DocumentReference author = this.configuration.getUserReference();
 
         // Rename the document
         renameJobExecutor.rename(action.getSourceDocument(), action.getTargetDocument(), author, configuration);
@@ -230,14 +230,6 @@ public class MigrationPlanExecutor
                 context.setUserReference(currentUser);
             }
         }
-    }
-
-    private DocumentReference getDocumentAuthor(DocumentReference documentReference) throws XWikiException
-    {
-        XWikiContext context = contextProvider.get();
-        XWiki xwiki = context.getWiki();
-        XWikiDocument doc = xwiki.getDocument(documentReference, context);
-        return doc.getAuthorReference();
     }
 
     /**

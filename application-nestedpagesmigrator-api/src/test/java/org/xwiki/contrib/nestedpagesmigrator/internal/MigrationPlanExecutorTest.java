@@ -78,6 +78,8 @@ public class MigrationPlanExecutorTest
     private XWiki xwiki;
     private Job job;
 
+    private final DocumentReference adminRef = new DocumentReference("someWiki", "XWiki", "Admin");
+
     @Before
     public void setUp() throws Exception
     {
@@ -199,7 +201,7 @@ public class MigrationPlanExecutorTest
                 eq(true), eq(context))).thenReturn(objTitanic3DPreferences);
 
         // Configuration
-        MigrationConfiguration configuration = new MigrationConfiguration(new WikiReference("xwiki"));
+        MigrationConfiguration configuration = new MigrationConfiguration(new WikiReference("xwiki"), this.adminRef);
         configuration.addDisabledAction("xwiki:Movies.Rebbecca_preference_1");
         configuration.addDisabledAction("xwiki:Movies.Titanic3D_right_2");
         configuration.addDisabledAction("xwiki:Movies.StarWars_page");
@@ -281,7 +283,8 @@ public class MigrationPlanExecutorTest
                 eq(context))).thenThrow(e);
 
         // Test
-        mocker.getComponentUnderTest().performMigration(plan, new MigrationConfiguration(new WikiReference("xwiki")));
+        mocker.getComponentUnderTest()
+            .performMigration(plan, new MigrationConfiguration(new WikiReference("xwiki"), this.adminRef));
 
         // Verify
         verify(progressManager).pushLevelProgress(eq(1), any(MigrationPlanExecutor.class));

@@ -65,8 +65,6 @@ public class PagesMigrationPlanCreatorTest
     private XWikiContext context;
     private XWiki xwiki;
     private PagesToTransformGetter pagesToTransformGetter;
-
-    private final DocumentReference adminRef = new DocumentReference("someWiki", "XWiki", "Admin");
     
     private void assertNotEquals(MigrationPlanTree plan, Object o1, Object o2) throws Exception
     {
@@ -164,8 +162,7 @@ public class PagesMigrationPlanCreatorTest
         Example example = new Example(exampleName);
         setUpExample(example);
 
-        MigrationConfiguration migrationConfiguration =
-            new MigrationConfiguration(new WikiReference("xwiki"), this.adminRef);
+        MigrationConfiguration migrationConfiguration = new MigrationConfiguration(new WikiReference("xwiki"));
         migrationConfiguration.setDontMoveChildren(example.isDontMoveChildrenEnabled());
 
         when(pagesToTransformGetter.getPagesToConvert(any(MigrationConfiguration.class)))

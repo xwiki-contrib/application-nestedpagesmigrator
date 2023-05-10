@@ -61,14 +61,11 @@ public class MigrationConfiguration implements Serializable
     
     private WikiReference wikiReference;
 
-    private DocumentReference userReference;
-
     /**
      * Create a new configuration.
      * @param wikiReference the reference of the wiki where the migration will occur
-     * @param userReference the reference of the user that starts the migration.
      */
-    public MigrationConfiguration(WikiReference wikiReference, DocumentReference userReference)
+    public MigrationConfiguration(WikiReference wikiReference)
     {
         excludeHiddenPages = true;
         excludeClassPages = true;
@@ -77,7 +74,6 @@ public class MigrationConfiguration implements Serializable
         convertPreferences = true;
         convertRights = false;
         this.wikiReference = wikiReference;
-        this.userReference = userReference;
     }
 
     /**
@@ -248,11 +244,6 @@ public class MigrationConfiguration implements Serializable
     public WikiReference getWikiReference()
     {
         return wikiReference;
-    }
-
-    public DocumentReference getUserReference()
-    {
-        return userReference;
     }
 
     public void setWikiReference(WikiReference wikiReference)

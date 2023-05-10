@@ -57,7 +57,7 @@ public class NestedPagesMigratorScriptService implements ScriptService
 
     @Inject
     private DocumentAccessBridge documentAccessBridge;
-
+    
     private void checkAdminAccess(WikiReference wikiReference) throws AccessDeniedException
     {
         // User need to be admin to run this application
@@ -69,14 +69,15 @@ public class NestedPagesMigratorScriptService implements ScriptService
      *
      * @param configuration the migration configuration
      * @return the job handling the computation of the plan
+     *
      * @throws MigrationException if error happens
      * @throws AccessDeniedException if the user have not the right to execute this method
      */
     public Job startMigrationPlanCreation(MigrationConfiguration configuration)
-        throws MigrationException, AccessDeniedException
+            throws MigrationException, AccessDeniedException
     {
         checkAdminAccess(configuration.getWikiReference());
-
+        
         return nestedPagesMigrator.startMigrationPlanCreation(configuration);
     }
 
@@ -84,23 +85,24 @@ public class NestedPagesMigratorScriptService implements ScriptService
      * Create a new migration configuration.
      *
      * @param wikiId the id of the wiki where the migration will be done
+     *
      * @return a new migration configuration for that wiki
      */
     public MigrationConfiguration newMigrationConfiguration(String wikiId)
     {
-        return new MigrationConfiguration(new WikiReference(wikiId),
-            this.documentAccessBridge.getCurrentUserReference());
+        return new MigrationConfiguration(new WikiReference(wikiId));
     }
 
     /**
      * @param wikiId the id of the wiki where the plan have been computed
      * @return a JSON-serialized version of the computed plan for the given wiki
+     *
      * @throws AccessDeniedException if the user have not the right to execute this method
      */
     public String getSerializedPlan(String wikiId) throws AccessDeniedException
     {
         checkAdminAccess(new WikiReference(wikiId));
-
+        
         return MigrationPlanSerializer.serialize(nestedPagesMigrator.getPlan(wikiId));
     }
 
@@ -109,8 +111,10 @@ public class NestedPagesMigratorScriptService implements ScriptService
      *
      * @param configuration the configuration of the migration
      * @return the job which executes the migration
+     *
      * @throws AccessDeniedException if the current user has not ADMIN right on the wiki
      * @throws AccessDeniedException if the user have not the right to execute this method
+     *
      * @since 0.4
      */
     public Job startMigration(MigrationConfiguration configuration) throws AccessDeniedException, MigrationException
@@ -128,7 +132,9 @@ public class NestedPagesMigratorScriptService implements ScriptService
      * @param wikiId id of the wiki
      * @param action "createmigrationplan" or "executemigrationplan"
      * @return the status and the logs as JSON
+     *
      * @throws AccessDeniedException if the user have not the right to execute this method
+     *
      * @since 0.4.3
      */
     public String getStatusAndLogs(String wikiId, String action) throws AccessDeniedException
@@ -142,6 +148,7 @@ public class NestedPagesMigratorScriptService implements ScriptService
      * Remove the plan from the memory.
      *
      * @param wikiId id of the wiki where there is the plan to clear
+     *
      * @since 0.4.2
      */
     public void clearPlan(String wikiId) throws AccessDeniedException
@@ -156,12 +163,14 @@ public class NestedPagesMigratorScriptService implements ScriptService
      *
      * @param configuration the migration configuration
      * @return the job handling the detection
+     *
      * @throws MigrationException if error happens
      * @throws AccessDeniedException if the user have not the right to execute this method
+     *
      * @since 0.7
      */
     public Job startBreakageDetection(MigrationConfiguration configuration) throws AccessDeniedException,
-        MigrationException
+            MigrationException
     {
         checkAdminAccess(configuration.getWikiReference());
 
@@ -171,7 +180,9 @@ public class NestedPagesMigratorScriptService implements ScriptService
     /**
      * @param wikiId the id of the wiki where the plan have been computed
      * @return a JSON-serialized version of the breakage list for the given wiki
+     *
      * @throws AccessDeniedException if the user have not the right to execute this method
+     *
      * @since 0.7
      */
     public String getSerializedBreakages(String wikiId) throws AccessDeniedException

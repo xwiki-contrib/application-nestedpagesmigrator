@@ -58,9 +58,7 @@ public class PreferencesMigrationPlanCreatorTest
     private PreferencesPropertiesGetter preferencesPropertiesGetter;
     private DocumentAccessBridge documentAccessBridge;
     private JobProgressManager progressManager;
-
-    private final DocumentReference adminRef = new DocumentReference("someWiki", "XWiki", "Admin");
-
+    
     @Before
     public void setUp() throws Exception
     {
@@ -147,7 +145,7 @@ public class PreferencesMigrationPlanCreatorTest
 
         // Run the component
         mocker.getComponentUnderTest().convertPreferences(plan,
-                new MigrationConfiguration(new WikiReference("xwiki"), this.adminRef));
+                new MigrationConfiguration(new WikiReference("xwiki")));
 
         // Verify
         verifyPreferences(example, plan);

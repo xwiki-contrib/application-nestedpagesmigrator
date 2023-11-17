@@ -32,7 +32,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.component.descriptor.ComponentInstantiationStrategy;
 import org.xwiki.component.phase.Initializable;
-import org.xwiki.component.phase.InitializationException;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationAction;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationConfiguration;
 import org.xwiki.contrib.nestedpagesmigrator.MigrationException;
@@ -82,12 +81,12 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
 
     private List<DocumentReference> concernedDocuments;
 
-    private Set<DocumentReference> visitedDocuments = new HashSet<>();
+    private final Set<DocumentReference> visitedDocuments = new HashSet<>();
 
     private MigrationConfiguration configuration;
 
     @Override
-    public void initialize() throws InitializationException
+    public void initialize()
     {
         context = contextProvider.get();
         xwiki = context.getWiki();
@@ -145,7 +144,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
     private void convertDocumentAndItsParentWithoutMove(DocumentReference terminalDoc) throws MigrationException
     {
         MigrationAction action = convertDocumentWithoutMove(terminalDoc);
-        // Create an identity action for the the parent to have a nice tree at the end.
+        // Create an identity action for the parent to have a nice tree at the end.
         MigrationAction parentAction = convertParentWithoutMove(terminalDoc);
         parentAction.addChild(action);
     }
@@ -198,8 +197,8 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
         // of documents to convert. Note: the document might not exist. In that case, it is good to compute a plan
         // for it (even not applied) to compute a good path for its children.
         if (!concernedDocuments.contains(documentReference) && xwiki.exists(documentReference, context)) {
-            // Otherwise, we create an "identity" action: it does nothing but it will added to the plan so that action
-            // won't be recomputed afterwards.
+            // Otherwise, we create an "identity" action: it does nothing, but it will be added to the plan so that
+            // action won't be recomputed afterward.
             // Note that this action is added as child of the top-level action, because we want to have it in the plan 
             // tree.
             return IdentityMigrationAction.createInstance(documentReference, plan.getTopLevelAction(), plan);
@@ -265,7 +264,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
                 // [Space.WebHome, no parent] => [Space.WebHome, no parent].
             }
         } else if (!parentReference.getWikiReference().equals(configuration.getWikiReference())) {
-            // The parent is on an other wiki
+            // The parent is on another wiki
             parentReference = null;
         }
 
@@ -299,7 +298,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
                 action = MigrationAction.createInstance(documentReference, targetReference, parentAction, plan);
             }
         } else {
-            // The parent is the top level action, ie. the document is orphan
+            // The parent is the top level action, i.e. the document is orphan
             if (isTerminal(documentReference)) {
                 // We only need to convert the document to nested
                 // [Space.Page] => [Space.Page.WebHome].
@@ -322,7 +321,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
      * @param parentAction the parent action
      *
      * @return the action concerning this document only.
-     * @throws MigrationException
+     * @throws MigrationException when the migration fails
      */
     private MigrationAction createActionForTerminalDocument(DocumentReference documentReference,
             MigrationAction parentAction) throws MigrationException
@@ -358,13 +357,13 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             // The conflicting action should not concern the duplicate of the current document since it would have been
             // already on the right place and would not be part of this migration plan.
             //
-            // By the past, we did this check and it produced http://jira.xwiki.org/browse/NPMIG-44
+            // By the past, we did this check, and it produced http://jira.xwiki.org/browse/NPMIG-44
             // ie: we can confuse an intentionally duplicated document with a document that was duplicated by the
             // migrator because of a crash (see isTargetDuplicate() for more information).
             return TargetState.USED;
         }
 
-        // Problem: the target document already exist.
+        // Problem: the target document already exists.
         if (xwiki.exists(targetDocument, context)) {
             // But it's ok to have a target document that exists if the target document is the source document too.
             // ie: if the action do not move the document (identity action).
@@ -379,15 +378,15 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
         return TargetState.FREE;
     }
 
-    /**
+    /*
      * Check that the existing target document is not the result of a failed attempt to run the migrator.
      *
-     * Explanation: when a document A is rename to B, the action is divided in 2 steps:
+     * Explanation: when a document A is renamed to B, the action is divided in 2 steps:
      * 1 - A is copied to B
      * 2 - A is deleted
      *
-     * Problem: in some occasions, XWiki crashes during the first step (out of memory). Results: A is duplicated
-     * by B. But B might not be a perfect copy of A, because of the crash (the whole history or all the
+     * Problem: in some occasions, XWiki crashes during the first step (out of memory). Results: A is a duplicate
+     * of B. But B might not be a perfect copy of A, because of the crash (the whole history or all the
      * attachments might have been not copied).
      *
      * In such a case, we could consider B as free, as soon as we remove it before the rename operation.
@@ -451,7 +450,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             // Best effort: we could add an interesting information by adding the name of the space of the old
             // document in front of the document name.
             // ie: [Dramas.List, Movies.WebHome] -> [Movies.Dramas.List] instead of [Movies.List_2].
-            // But it make sense only if the space name is not the same than the target parent.
+            // But it makes sense only if the space name is not the same as the target parent.
             // ie: we avoid having [Movies.Dramas.Dramas.List] as target.
             if (parentAction != null && !documentReference.getLastSpaceReference().getName().equals(
                     parentAction.getTargetDocument().getLastSpaceReference().getName())) {
@@ -477,7 +476,7 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
 
     /** 
      * @param documentReference the document to test
-     * @return either or not the document is terminal, ie. its name is not "WebHome".
+     * @return either or not the document is terminal, i.e. its name is not "WebHome".
      */
     private boolean isTerminal(DocumentReference documentReference)
     {

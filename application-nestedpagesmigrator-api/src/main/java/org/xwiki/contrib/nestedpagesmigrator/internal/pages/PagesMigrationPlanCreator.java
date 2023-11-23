@@ -452,11 +452,19 @@ public class PagesMigrationPlanCreator implements Initializable, MigrationPlanTr
             // ie: [Dramas.List, Movies.WebHome] -> [Movies.Dramas.List] instead of [Movies.List_2].
             // But it makes sense only if the space name is not the same as the target parent.
             // ie: we avoid having [Movies.Dramas.Dramas.List] as target.
-            if (parentAction != null && !documentReference.getLastSpaceReference().getName().equals(
-                    parentAction.getTargetDocument().getLastSpaceReference().getName())) {
-                newParentSpace = new SpaceReference(documentReference.getName(),
-                        new SpaceReference(documentReference.getLastSpaceReference().getName(),
+            // It's not useful neither if the source's root space name is the same as the
+            // destination space.
+            // ie: for a parent action FOS.FOSDEM -> FOS.FOSDEM.WebHome we avoid having
+            // FOS.Comments Page -> FOS.FOSDEM.FOS.Comments Page. (when FOS.FOSDEM is the parent of FOS.Comments Page)
+            if (parentAction != null) {
+                String targetLastSpaceName = parentAction.getTargetDocument().getLastSpaceReference().getName();
+                String targetRootSpaceName = parentAction.getTargetDocument().getSpaceReferences().get(0).getName();
+                if (!documentReference.getLastSpaceReference().getName().equals(targetLastSpaceName)
+                    && !targetRootSpaceName.equals(documentReference.getSpaceReferences().get(0).getName())) {
+                    newParentSpace = new SpaceReference(documentReference.getName(),
+                            new SpaceReference(documentReference.getLastSpaceReference().getName(),
                                 parentAction.getTargetDocument().getLastSpaceReference()));
+                }
             }
             
             // This new name could be used already, so we add a number prefix

@@ -1,0 +1,71 @@
+<!--
+  Example where a migration of a space with 3 level of nesting is done again.
+  The following example seems contrived but looks like what actually happens
+  when doing Confluence migrations.
+-->
+<example>
+  <!-- State before the migration -->
+  <before>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <parent/>
+    </page>
+    <page>
+      <fullName>Movies.StarTrek.WebHome</fullName>
+      <parent>Movies.WebHome</parent>
+    </page>
+    <page>
+      <fullName>Movies.StarTrek.Spock.WebHome</fullName>
+      <parent>Movies.StarTrek.WebHome</parent>
+    </page>
+    <!-- New problem: a migration tries to migrate Spock again -->
+    <page>
+      <fullName>Movies.Spock</fullName>
+      <parent>Movies.StarTrek.WebHome</parent>
+    </page>
+  </before>
+  <!-- Expected state after the migration -->
+  <after>
+    <page>
+      <fullName>Movies.WebHome</fullName>
+      <from>Movies.WebHome</from>
+    </page>
+    <page>
+      <fullName>Movies.StarTrek.WebHome</fullName>
+      <from>Movies.StarTrek.WebHome</from>
+    </page>
+    <page>
+      <fullName>Movies.StarTrek.Spock.WebHome</fullName>
+      <from>Movies.StarTrek.Spock.WebHome</from>
+    </page>
+    <page>
+      <fullName>Movies.StarTrek.Spock_2.WebHome</fullName>
+      <from>Movies.Spock</from>
+    </page>
+  </after>
+  <!-- Plan as JSON -->
+  <plan><![CDATA[
+[
+  {
+    "sourceDocument": "xwiki:Movies.WebHome",
+    "targetDocument": "xwiki:Movies.WebHome",
+    "children": [
+      {
+        "sourceDocument": "xwiki:Movies.StarTrek.WebHome",
+        "targetDocument": "xwiki:Movies.StarTrek.WebHome",
+        "children": [
+          {
+            "sourceDocument": "xwiki:Movies.StarTrek.Spock.WebHome",
+            "targetDocument": "xwiki:Movies.StarTrek.Spock.WebHome"
+          },
+          {
+            "sourceDocument": "xwiki:Movies.Spock",
+            "targetDocument": "xwiki:Movies.StarTrek.Spock_2.WebHome"
+          }
+        ]
+      }
+    ]
+  }
+]
+]]></plan>
+</example>

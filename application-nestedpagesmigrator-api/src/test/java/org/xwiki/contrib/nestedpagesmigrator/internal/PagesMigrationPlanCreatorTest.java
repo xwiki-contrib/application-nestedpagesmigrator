@@ -240,4 +240,10 @@ public class PagesMigrationPlanCreatorTest
     {
         testExample("/example10.xml");
     }
+
+    @Test
+    public void testWithConflictsAndThreeLevels() throws Exception
+    {
+        testExample("/example11.xml");
+    }
 }

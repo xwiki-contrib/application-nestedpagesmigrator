@@ -77,13 +77,13 @@ public class RenameJobExecutor
         job.initialize(request);
 
         // Wait until SOLR finish indexing previously renamed page before running the job
-        do {
+        while (this.solrIndexer.getQueueSize() != 0) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 // Do nothing
             }
-        } while (this.solrIndexer.getQueueSize() != 0);
+        }
 
         job.run();
     }

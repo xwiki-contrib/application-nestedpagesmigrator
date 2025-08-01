@@ -23,9 +23,8 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>parent-platform</artifactId>
-    <version>8.4-12</version>
+    <version>8.4-14</version>
   </parent>
-  <groupId>org.xwiki.contrib</groupId>
   <artifactId>application-nestedpagesmigrator</artifactId>
   <version>0.10.2-SNAPSHOT</version>
   <packaging>pom</packaging>

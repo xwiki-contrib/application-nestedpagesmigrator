@@ -26,7 +26,7 @@
     <version>8.4-14</version>
   </parent>
   <artifactId>application-nestedpagesmigrator</artifactId>
-  <version>0.10.2</version>
+  <version>0.10.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <description>Nested Pages Migrator - Parent POM</description>
   <properties>
@@ -43,7 +43,7 @@
     <connection>scm:git:git://github.com/xwiki-contrib/application-nestedpagesmigrator.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/application-nestedpagesmigrator.git</developerConnection>
     <url>https://github.com/xwiki-contrib/application-nestedpagesmigrator/tree/master</url>
-    <tag>application-nestedpagesmigrator-0.10.2</tag>
+    <tag>HEAD</tag>
   </scm>
   <modules>
     <!-- Sorted Alphabetically -->
